@@ -2,21 +2,11 @@ package main
 
 import (
 	"scc/api"
-
-	gin "github.com/gin-gonic/gin"
+	"scc/screen"
 )
 
 func main() {
-	r := gin.Default()
+	go api.Start()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	r.GET("/message", api.GetMessage)
-	r.POST("/message", api.PostMessage)
-
-	r.Run()
+	screen.InitApp()
 }
