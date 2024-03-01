@@ -1,0 +1,79 @@
+package api
+
+import (
+	"fmt"
+	"net/http"
+	"slices"
+
+	gin "github.com/gin-gonic/gin"
+)
+
+type Message struct {
+	Message string `form:"message" json:"message" xml:"message" binding:"required"`
+}
+
+type Header struct {
+	Name string `header:"X-Username"`
+	Ip   string `header:"X-Real-IP"`
+}
+
+var messages uint64 = 0
+var blockedNames = []string{"Paul-Henri Spaak"}
+var blockedIps = []string{}
+var maxMessageLength = 200
+
+func GetMessage(c *gin.Context) {
+	c.JSON(200, gin.H{"messages": messages})
+}
+
+func PostMessage(c *gin.Context) {
+	// Get structs
+	header := &Header{}
+	message := &Message{}
+
+	// Check Header
+	if err := c.ShouldBindHeader(header); err != nil {
+		fmt.Println("Here")
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check Data
+	if err := c.ShouldBindJSON(message); err != nil {
+		fmt.Println("Other")
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Max message length
+	if len(message.Message) > maxMessageLength {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Message too long, maximum " + string(maxMessageLength)})
+		return
+	}
+
+	// Check if sender is blocked
+	sender := ""
+	if header.Name != "" {
+		if slices.Contains(blockedNames, header.Name) {
+			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
+			return
+		}
+		sender = header.Name
+	} else if header.Ip != "" {
+		if slices.Contains(blockedIps, header.Ip) {
+			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
+			return
+		}
+		sender = header.Ip
+
+	}
+
+	// Send message to tty
+
+	fmt.Println("Message received from", sender, ":", message.Message)
+
+	// Increment messages
+	messages++
+
+	c.JSON(http.StatusOK, gin.H{"message": "Message received"})
+}
