@@ -8,11 +8,11 @@ import (
 	gin "github.com/gin-gonic/gin"
 )
 
-type Message struct {
+type message struct {
 	Message string `form:"message" json:"message" xml:"message" binding:"required"`
 }
 
-type Header struct {
+type header struct {
 	Name string `header:"X-Username"`
 	Ip   string `header:"X-Real-IP"`
 }
@@ -22,14 +22,14 @@ var blockedNames = []string{"Paul-Henri Spaak"}
 var blockedIps = []string{}
 var maxMessageLength = 200
 
-func GetMessage(c *gin.Context) {
+func getMessage(c *gin.Context) {
 	c.JSON(200, gin.H{"messages": messages})
 }
 
-func PostMessage(c *gin.Context) {
+func postMessage(c *gin.Context) {
 	// Get structs
-	header := &Header{}
-	message := &Message{}
+	header := &header{}
+	message := &message{}
 
 	// Check Header
 	if err := c.ShouldBindHeader(header); err != nil {
