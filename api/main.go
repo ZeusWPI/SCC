@@ -2,7 +2,6 @@ package api
 
 import (
 	"io"
-
 	"scc/screen"
 
 	"github.com/gin-gonic/gin"

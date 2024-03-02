@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"slices"
 
 	gin "github.com/gin-gonic/gin"
 )
@@ -50,22 +49,23 @@ func postMessage(c *gin.Context) {
 	}
 
 	// Check if sender is blocked and construct message
-	var newMessage string
-	if header.Name != "" {
-		if slices.Contains(blockedNames, header.Name) {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
-			return
-		}
-		newMessage = fmt.Sprintf("[%s] %s", header.Name, message.Message)
-	} else if header.Ip != "" {
-		if slices.Contains(blockedIps, header.Ip) {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
-			return
-		}
-		newMessage = fmt.Sprintf("<%s> %s", header.Ip, message.Message)
-	} else {
-		newMessage = message.Message
-	}
+	// tmp commented out
+	// var newMessage string
+	// if header.Name != "" {
+	// 	if slices.Contains(blockedNames, header.Name) {
+	// 		c.JSON(http.StatusOK, gin.H{"message": "Message received"})
+	// 		return
+	// 	}
+	// 	newMessage = fmt.Sprintf("[%s] %s", header.Name, message.Message)
+	// } else if header.Ip != "" {
+	// 	if slices.Contains(blockedIps, header.Ip) {
+	// 		c.JSON(http.StatusOK, gin.H{"message": "Message received"})
+	// 		return
+	// 	}
+	// 	newMessage = fmt.Sprintf("<%s> %s", header.Ip, message.Message)
+	// } else {
+	// 	newMessage = message.Message
+	// }
 
 	// Increment messages
 	messages++
