@@ -50,3 +50,7 @@ func (q *Queue[T]) SetMaxSize(maxSize int) {
 		q.Items = q.Items[:maxSize]
 	}
 }
+
+func (q *Queue[T]) Size() int {
+	return len(q.Items)
+}

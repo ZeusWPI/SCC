@@ -23,7 +23,7 @@ type Cammie struct {
 func NewCammie(screenApp *ScreenApp) *Cammie {
 	cammie := Cammie{
 		screenApp: screenApp,
-		view:      tview.NewTextView().SetWrap(true).SetWordWrap(true).SetText("pls"),
+		view:      tview.NewTextView().SetWrap(true).SetWordWrap(true).SetScrollable(true),
 
 		queue: utils.NewQueue[string](maxMessages),
 	}
@@ -38,6 +38,7 @@ func NewCammie(screenApp *ScreenApp) *Cammie {
 }
 
 func (cammie *Cammie) Run() {
+	// Wait for the view to be properly set up
 	time.Sleep(5 * time.Second)
 
 	_, _, _, h := cammie.view.GetInnerRect()
@@ -48,12 +49,20 @@ func (cammie *Cammie) Update(message string) {
 	cammie.queue.Enqueue(message)
 
 	cammie.screenApp.execute(func() {
-		cammie.screenApp.app.QueueUpdateDraw(func() {
-			cammie.view.Clear()
+		cammie.view.Clear()
 
-			for _, message := range cammie.queue.Get() {
-				cammie.view.Write([]byte(message + "\n"))
+		w := cammie.view.BatchWriter()
+		defer w.Close()
+		w.Clear()
+
+		for index, message := range cammie.queue.Get() {
+			if index != cammie.queue.Size()-1 {
+				message += "\n"
 			}
-		})
+
+			w.Write([]byte(message))
+		}
+
+		cammie.view.ScrollToEnd()
 	})
 }
