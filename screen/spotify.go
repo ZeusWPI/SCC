@@ -2,9 +2,10 @@ package screen
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"time"
 )
 
 type Spotify struct {

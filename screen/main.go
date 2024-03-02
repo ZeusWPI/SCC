@@ -20,6 +20,12 @@ type s_cammie struct {
 	cammie *tview.TextView
 }
 
+func (screenApp *ScreenApp) execute(f func()) {
+	screenApp.mu.Lock()
+	defer screenApp.mu.Unlock()
+	f()
+}
+
 func NewScreenApp() *ScreenApp {
 	screen := ScreenApp{
 		app: tview.NewApplication(),
