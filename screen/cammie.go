@@ -11,6 +11,7 @@ import (
 // Initial value, gets adjusted once it's known how much space is available
 var maxMessages = 20
 
+// Component that displays messages received from the website aka cammie chat
 type Cammie struct {
 	screenApp *ScreenApp
 	view      *tview.TextView
@@ -20,6 +21,7 @@ type Cammie struct {
 	buffer string
 }
 
+// Create a new cammie struct
 func NewCammie(screenApp *ScreenApp) *Cammie {
 	cammie := Cammie{
 		screenApp: screenApp,
@@ -37,6 +39,7 @@ func NewCammie(screenApp *ScreenApp) *Cammie {
 	return &cammie
 }
 
+// One-time setup
 func (cammie *Cammie) Run() {
 	// Wait for the view to be properly set up
 	time.Sleep(5 * time.Second)
@@ -45,6 +48,8 @@ func (cammie *Cammie) Run() {
 	cammie.queue.SetMaxSize(h)
 }
 
+// Updates the cammie chat
+// Gets called when a new message is received from the website
 func (cammie *Cammie) Update(message string) {
 	cammie.queue.Enqueue(message)
 

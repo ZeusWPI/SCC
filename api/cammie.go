@@ -9,19 +9,21 @@ import (
 	gin "github.com/gin-gonic/gin"
 )
 
+// message struct
 type message struct {
 	Message string `form:"message" json:"message" xml:"message" binding:"required"`
 }
 
+// header struct
 type header struct {
 	Name string `header:"X-Username"`
 	Ip   string `header:"X-Real-IP"`
 }
 
 var messages uint64 = 0
-var blockedNames = []string{"Paul-Henri Spaak"}
-var blockedIps = []string{}
-var maxMessageLength = 200
+var blockedNames = []string{"Paul-Henri Spaak"} // Blocekd names
+var blockedIps = []string{}                     // Blocked IPs
+var maxMessageLength = 200                      // Maximum message length
 
 func getMessage(app *screen.ScreenApp, c *gin.Context) {
 	c.JSON(200, gin.H{"messages": messages})
