@@ -39,10 +39,10 @@ func NewScreenApp() *ScreenApp {
 	screen.app.SetRoot(tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(screen.Spotify.view, 3, 2, false).
 		AddItem(tview.NewFlex().
-			AddItem(tview.NewTextView().SetDynamicColors(true).SetRegions(true).SetWordWrap(true).SetBorder(true).SetTitle("Cammie"), 0, 5, false).
+			AddItem(screen.Cammie.view, 0, 5, false).
 			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-				AddItem(tview.NewBox().SetBorder(true).SetTitle("Graph 1"), 0, 1, false).
-				AddItem(tview.NewBox().SetBorder(true).SetTitle("Graph 2"), 0, 1, false), 0, 4, false), 0, 13, false), true).
+				AddItem(screen.Graph1.view, 0, 1, false).
+				AddItem(screen.Graph2.view, 0, 1, false), 0, 4, false), 0, 13, false), true).
 		EnableMouse(true)
 
 	return &screen
