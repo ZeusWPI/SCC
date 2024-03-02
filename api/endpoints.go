@@ -71,7 +71,4 @@ func postMessage(c *gin.Context) {
 	messages++
 
 	c.JSON(http.StatusOK, gin.H{"message": "Message received"})
-
-	// Add message to cammie chat
-	safeMessageQueue.AddMessage(newMessage)
 }

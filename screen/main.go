@@ -11,6 +11,7 @@ type ScreenApp struct {
 	app *tview.Application
 
 	Spotify *Spotify
+	Cammie  *Cammie
 	// spotify *tview.TextView
 	// cammie  *s_cammie
 	// graph1  *tview.Box
@@ -19,7 +20,6 @@ type ScreenApp struct {
 
 type s_cammie struct {
 	cammie *tview.TextView
-	queue  *SafeMessageQueue
 }
 
 func NewScreenApp() *ScreenApp {
@@ -34,11 +34,12 @@ func NewScreenApp() *ScreenApp {
 	}
 
 	screen.Spotify = NewSpotify(&screen)
+	screen.Cammie = NewCammie(&screen)
 
 	screen.app.SetRoot(tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(screen.Spotify.view, 3, 2, false).
 		AddItem(tview.NewFlex().
-			AddItem(screen.cammie.cammie.SetBorder(true).SetTitle("Cammie"), 0, 5, false).
+			AddItem(screen.Cammie.view, 0, 5, false).
 			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 				AddItem(screen.graph1, 0, 1, false).
 				AddItem(screen.graph2, 0, 1, false), 0, 4, false), 0, 13, false), true).
@@ -47,10 +48,10 @@ func NewScreenApp() *ScreenApp {
 	return &screen
 }
 
-func Start(screen *ScreenApp, queue *SafeMessageQueue) {
+func Start(screen *ScreenApp) {
 
 	go screen.Spotify.Run()
-	go updateCammie()
+	go screen.Cammie.Run()
 
 	if err := screen.app.Run(); err != nil {
 		panic(err)

@@ -8,11 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var safeMessageQueue *screen.SafeMessageQueue
-
-func Start(screenApp *screen.ScreenApp, queue *screen.SafeMessageQueue) {
-	safeMessageQueue = queue
-
+func Start(screenApp *screen.ScreenApp) {
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
 
