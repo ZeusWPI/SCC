@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"scc/screen"
 	"slices"
 
 	gin "github.com/gin-gonic/gin"
@@ -22,58 +23,55 @@ var blockedNames = []string{"Paul-Henri Spaak"}
 var blockedIps = []string{}
 var maxMessageLength = 200
 
-func getMessage(c *gin.Context) {
+func getMessage(app *screen.ScreenApp, c *gin.Context) {
 	c.JSON(200, gin.H{"messages": messages})
 }
 
-func postMessage(c *gin.Context) {
+func postMessage(app *screen.ScreenApp, c *gin.Context) {
 	// Get structs
 	header := &header{}
 	message := &message{}
 
 	// Check Header
 	if err := c.ShouldBindHeader(header); err != nil {
-		fmt.Println("Here")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Check Data
 	if err := c.ShouldBindJSON(message); err != nil {
-		fmt.Println("Other")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Max message length
 	if len(message.Message) > maxMessageLength {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Message too long, maximum " + string(maxMessageLength)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Message too long, maximum " + fmt.Sprint(maxMessageLength)})
 		return
 	}
 
-	// Check if sender is blocked
-	sender := ""
+	// Check if sender is blocked and construct message
+	var newMessage string
 	if header.Name != "" {
 		if slices.Contains(blockedNames, header.Name) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
-		sender = header.Name
+		newMessage = fmt.Sprintf("[%s] %s", header.Name, message.Message)
 	} else if header.Ip != "" {
 		if slices.Contains(blockedIps, header.Ip) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
-		sender = header.Ip
-
+		newMessage = fmt.Sprintf("<%s> %s", header.Ip, message.Message)
+	} else {
+		newMessage = message.Message
 	}
-
-	// Send message to tty
-
-	fmt.Println("Message received from", sender, ":", message.Message)
 
 	// Increment messages
 	messages++
+
+	app.Cammie.Update(newMessage)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 }

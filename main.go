@@ -6,7 +6,9 @@ import (
 )
 
 func main() {
-	go api.Start()
+	screenApp := screen.NewScreenApp()
 
-	screen.InitApp()
+	go api.Start(screenApp)
+
+	screen.Start(screenApp)
 }
