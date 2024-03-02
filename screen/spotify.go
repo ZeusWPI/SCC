@@ -46,6 +46,10 @@ func (spotify *Spotify) Run() {
 			spotify.mu.Lock()
 
 			if len(spotify.buffer) != w {
+				if len(spotify.text) > w {
+					spotify.text = spotify.text[0 : w-4]
+					spotify.text += "..."
+				}
 				spotify.buffer = spotify.text + strings.Repeat(" ", w-len(spotify.text))
 			}
 
