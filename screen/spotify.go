@@ -4,6 +4,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type Spotify struct {
 	screenApp *ScreenApp
 	view      *tview.TextView
 
+	mu     sync.Mutex
 	text   string
 	buffer string
 }
@@ -41,22 +43,28 @@ func (spotify *Spotify) Run() {
 
 		if w != 0 {
 
+			spotify.mu.Lock()
+
 			if len(spotify.buffer) != w {
 				spotify.buffer = spotify.text + strings.Repeat(" ", w-len(spotify.text))
 			}
 
 			spotify.buffer = spotify.buffer[1:] + string(spotify.buffer[0])
 
+			spotify.mu.Unlock()
+
 			spotify.screenApp.app.QueueUpdateDraw(func() {
 				spotify.view.SetText(spotify.buffer)
 			})
-
 		}
-
 		time.Sleep(50 * time.Millisecond)
 	}
 }
 
 func (spotify *Spotify) Update(text string) {
+	spotify.mu.Lock()
+	defer spotify.mu.Unlock()
 
+	spotify.text = text
+	spotify.buffer = ""
 }

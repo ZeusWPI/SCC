@@ -16,5 +16,7 @@ func Start(screenApp *screen.ScreenApp) {
 	r.GET("/message", getMessage)
 	r.POST("/message", postMessage)
 
+	r.POST("/spotify", spotifyHandlerWrapper(screenApp))
+
 	r.Run()
 }
