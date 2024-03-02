@@ -6,7 +6,9 @@ import (
 )
 
 func main() {
-	go api.Start()
+	cammieQueue := screen.NewSafeMessageQueue()
 
-	screen.InitApp()
+	go api.Start(cammieQueue)
+
+	screen.Start(cammieQueue)
 }

@@ -3,10 +3,16 @@ package api
 import (
 	"io"
 
+	"scc/screen"
+
 	"github.com/gin-gonic/gin"
 )
 
-func Start() {
+var safeMessageQueue *screen.SafeMessageQueue
+
+func Start(queue *screen.SafeMessageQueue) {
+	safeMessageQueue = queue
+
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
 
