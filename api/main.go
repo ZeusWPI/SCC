@@ -10,7 +10,7 @@ import (
 
 var safeMessageQueue *screen.SafeMessageQueue
 
-func Start(queue *screen.SafeMessageQueue) {
+func Start(screenApp *screen.ScreenApp, queue *screen.SafeMessageQueue) {
 	safeMessageQueue = queue
 
 	gin.SetMode(gin.ReleaseMode)
