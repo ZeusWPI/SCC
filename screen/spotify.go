@@ -1,40 +1,59 @@
 package screen
 
 import (
-	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"strings"
 	"time"
 )
 
 type Spotify struct {
 	screenApp *ScreenApp
-	app       *tview.Application
 	view      *tview.TextView
+
+	text   string
+	buffer string
 }
 
 func NewSpotify(screenApp *ScreenApp) *Spotify {
 	spotify := Spotify{
 		screenApp: screenApp,
 		view:      tview.NewTextView(),
+
+		text:   "VERY COOL SONG - Le Artist",
+		buffer: "",
 	}
 
 	spotify.view.SetTitle(" Spotify ")
 	spotify.view.SetBorder(true)
 	spotify.view.SetTextColor(tcell.ColorLimeGreen)
 	spotify.view.SetBorderColor(tcell.ColorLimeGreen)
+	spotify.view.SetTitleColor(tcell.ColorLimeGreen)
 
 	return &spotify
 }
 
 func (spotify *Spotify) Run() {
-	i := 0
+	time.Sleep(1 * time.Second)
+
 	for {
-		time.Sleep(1 * time.Second)
-		spotify.app.QueueUpdateDraw(func() {
-			spotify.view.SetText(fmt.Sprintf("%d", i))
-		})
-		i++
+		_, _, w, _ := spotify.view.GetInnerRect()
+
+		if w != 0 {
+
+			if len(spotify.buffer) != w {
+				spotify.buffer = spotify.text + strings.Repeat(" ", w-len(spotify.text))
+			}
+
+			spotify.buffer = spotify.buffer[1:] + string(spotify.buffer[0])
+
+			spotify.screenApp.app.QueueUpdateDraw(func() {
+				spotify.view.SetText(spotify.buffer)
+			})
+
+		}
+
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
