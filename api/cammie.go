@@ -59,7 +59,7 @@ func postMessage(app *screen.ScreenApp, c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
-		newMessage = fmt.Sprintf("[%s] %s", header.Name, message.Message)
+		newMessage = fmt.Sprintf("[%s[] %s", header.Name, message.Message)
 	} else if header.Ip != "" {
 		if slices.Contains(blockedIps, header.Ip) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
