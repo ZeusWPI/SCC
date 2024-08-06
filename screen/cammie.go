@@ -1,7 +1,7 @@
 package screen
 
 import (
-	"scc/utils"
+	"fmt"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -11,49 +11,62 @@ import (
 // Initial value, gets adjusted once it's known how much space is available
 var maxMessages = 20
 
+// Available colors
+var COLORS = [...]tcell.Color{
+	tcell.ColorViolet,
+	tcell.ColorRed,
+	tcell.ColorIndigo,
+	tcell.ColorYellow,
+	tcell.ColorBlue,
+	tcell.ColorGreen,
+	tcell.ColorOrange,
+	tcell.ColorLime,
+	tcell.ColorAqua,
+	tcell.ColorDarkSalmon,
+	tcell.ColorLightBlue,
+	tcell.ColorNavajoWhite,
+}
+var lastColorIndex = 0
+
+// Component that displays messages received from the website aka cammie chat
 type Cammie struct {
 	screenApp *ScreenApp
 	view      *tview.TextView
 
-	queue  *utils.Queue[string]
 	text   string
 	buffer string
 }
 
+// Create a new cammie struct
 func NewCammie(screenApp *ScreenApp) *Cammie {
 	cammie := Cammie{
 		screenApp: screenApp,
-		view:      tview.NewTextView().SetWrap(true).SetWordWrap(true).SetText("pls"),
-
-		queue: utils.NewQueue[string](maxMessages),
+		view:      tview.NewTextView().SetWordWrap(true).SetScrollable(true).SetDynamicColors(true),
 	}
 
 	cammie.view.SetTitle(" Cammie ")
 	cammie.view.SetBorder(true)
-	cammie.view.SetTextColor(tcell.ColorOrange)
 	cammie.view.SetBorderColor(tcell.ColorOrange)
 	cammie.view.SetTitleColor(tcell.ColorOrange)
 
 	return &cammie
 }
 
+// One-time setup
 func (cammie *Cammie) Run() {
+	// Wait for the view to be properly set up
 	time.Sleep(5 * time.Second)
 
-	_, _, _, h := cammie.view.GetInnerRect()
-	cammie.queue.SetMaxSize(h)
 }
 
+// Updates the cammie chat
+// Gets called when a new message is received from the website
 func (cammie *Cammie) Update(message string) {
-	cammie.queue.Enqueue(message)
+	color := COLORS[lastColorIndex].String()
+	lastColorIndex = (lastColorIndex + 1) % len(COLORS)
 
-	cammie.screenApp.execute(func() {
-		cammie.screenApp.app.QueueUpdateDraw(func() {
-			cammie.view.Clear()
+	fmt.Fprintf(cammie.view, "\n[%s]%s", color, message)
 
-			for _, message := range cammie.queue.Get() {
-				cammie.view.Write([]byte(message + "\n"))
-			}
-		})
-	})
+	cammie.view.ScrollToEnd()
+
 }
