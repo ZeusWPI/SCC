@@ -1,11 +1,12 @@
 package screen
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 type Spotify struct {
@@ -43,19 +44,17 @@ func (spotify *Spotify) Run() {
 
 		if w != 0 {
 
-			spotify.mu.Lock()
-
-			if len(spotify.buffer) != w {
-				if len(spotify.text) > w {
-					spotify.text = spotify.text[0 : w-4]
-					spotify.text += "..."
+			spotify.screenApp.execute(func() {
+				if len(spotify.buffer) != w {
+					if len(spotify.text) > w {
+						spotify.text = spotify.text[0 : w-4]
+						spotify.text += "..."
+					}
+					spotify.buffer = spotify.text + strings.Repeat(" ", w-len(spotify.text))
 				}
-				spotify.buffer = spotify.text + strings.Repeat(" ", w-len(spotify.text))
-			}
 
-			spotify.buffer = spotify.buffer[1:] + string(spotify.buffer[0])
-
-			spotify.mu.Unlock()
+				spotify.buffer = spotify.buffer[1:] + string(spotify.buffer[0])
+			})
 
 			spotify.screenApp.app.QueueUpdateDraw(func() {
 				spotify.view.SetText(spotify.buffer)
@@ -66,9 +65,8 @@ func (spotify *Spotify) Run() {
 }
 
 func (spotify *Spotify) Update(text string) {
-	spotify.mu.Lock()
-	defer spotify.mu.Unlock()
-
-	spotify.text = text
-	spotify.buffer = ""
+	spotify.screenApp.execute(func() {
+		spotify.text = text
+		spotify.buffer = ""
+	})
 }

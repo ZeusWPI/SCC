@@ -9,15 +9,15 @@ import (
 	gin "github.com/gin-gonic/gin"
 )
 
-// message struct
-type message struct {
+// messageCammie struct
+type messageCammie struct {
 	Message string `form:"message" json:"message" xml:"message" binding:"required"`
 }
 
-// header struct
-type header struct {
+// headerCammie struct
+type headerCammie struct {
 	Name string `header:"X-Username"`
-	Ip   string `header:"X-Real-IP"`
+	IP   string `header:"X-Real-IP"`
 }
 
 var messages uint64 = 0
@@ -31,8 +31,8 @@ func getMessage(app *screen.ScreenApp, c *gin.Context) {
 
 func postMessage(app *screen.ScreenApp, c *gin.Context) {
 	// Get structs
-	header := &header{}
-	message := &message{}
+	header := &headerCammie{}
+	message := &messageCammie{}
 
 	// Check Header
 	if err := c.ShouldBindHeader(header); err != nil {
@@ -60,12 +60,12 @@ func postMessage(app *screen.ScreenApp, c *gin.Context) {
 			return
 		}
 		newMessage = fmt.Sprintf("[%s[] %s", header.Name, message.Message)
-	} else if header.Ip != "" {
-		if slices.Contains(blockedIps, header.Ip) {
+	} else if header.IP != "" {
+		if slices.Contains(blockedIps, header.IP) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
-		newMessage = fmt.Sprintf("<%s> %s", header.Ip, message.Message)
+		newMessage = fmt.Sprintf("<%s> %s", header.IP, message.Message)
 	} else {
 		newMessage = message.Message
 	}
