@@ -1,0 +1,7 @@
+cammie:
+  blocked_names: []
+  blocked_ips: []
+  max_message_length:
+spotify:
+  client_id:
+  client_secret:

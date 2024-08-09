@@ -3,36 +3,39 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"scc/config"
 	"scc/screen"
 	"slices"
 
 	gin "github.com/gin-gonic/gin"
 )
 
-// messageCammie struct
-type messageCammie struct {
+// cammieMessage struct
+type cammieMessage struct {
 	Message string `form:"message" json:"message" xml:"message" binding:"required"`
 }
 
-// headerCammie struct
-type headerCammie struct {
+// cammieHeader struct
+type cammieHeader struct {
 	Name string `header:"X-Username"`
 	IP   string `header:"X-Real-IP"`
 }
 
-var messages uint64 = 0
-var blockedNames = []string{"Paul-Henri Spaak"} // Blocekd names
-var blockedIps = []string{}                     // Blocked IPs
-var maxMessageLength = 200                      // Maximum message length
+var (
+	cammieMessages         uint64 = 0
+	cammieBlockedNames            = config.GetConfig().Cammie.BlockedNames     // Blocked names
+	cammieBlockedIps              = config.GetConfig().Cammie.BlockedIps       // Blocked IPs
+	cammieMaxMessageLength        = config.GetConfig().Cammie.MaxMessageLength // Maximum message length
+)
 
-func getMessage(app *screen.ScreenApp, c *gin.Context) {
-	c.JSON(200, gin.H{"messages": messages})
+func cammieGetMessage(app *screen.ScreenApp, c *gin.Context) {
+	c.JSON(200, gin.H{"messages": cammieMessages})
 }
 
-func postMessage(app *screen.ScreenApp, c *gin.Context) {
+func cammiePostMessage(app *screen.ScreenApp, c *gin.Context) {
 	// Get structs
-	header := &headerCammie{}
-	message := &messageCammie{}
+	header := &cammieHeader{}
+	message := &cammieMessage{}
 
 	// Check Header
 	if err := c.ShouldBindHeader(header); err != nil {
@@ -47,21 +50,21 @@ func postMessage(app *screen.ScreenApp, c *gin.Context) {
 	}
 
 	// Max message length
-	if len(message.Message) > maxMessageLength {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Message too long, maximum " + fmt.Sprint(maxMessageLength)})
+	if len(message.Message) > cammieMaxMessageLength {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Message too long, maximum " + fmt.Sprint(cammieMaxMessageLength)})
 		return
 	}
 
 	// Check if sender is blocked and construct message
 	var newMessage string
 	if header.Name != "" {
-		if slices.Contains(blockedNames, header.Name) {
+		if slices.Contains(cammieBlockedNames, header.Name) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
 		newMessage = fmt.Sprintf("[%s[] %s", header.Name, message.Message)
 	} else if header.IP != "" {
-		if slices.Contains(blockedIps, header.IP) {
+		if slices.Contains(cammieBlockedIps, header.IP) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
@@ -71,7 +74,7 @@ func postMessage(app *screen.ScreenApp, c *gin.Context) {
 	}
 
 	// Increment messages
-	messages++
+	cammieMessages++
 
 	app.Cammie.Update(newMessage)
 
