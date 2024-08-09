@@ -41,13 +41,16 @@ type Cammie struct {
 func NewCammie(screenApp *ScreenApp) *Cammie {
 	cammie := Cammie{
 		screenApp: screenApp,
-		view:      tview.NewTextView().SetWordWrap(true).SetScrollable(true).SetDynamicColors(true),
+		view: tview.NewTextView().
+			SetWordWrap(true).
+			SetScrollable(true).
+			SetDynamicColors(true),
 	}
 
-	cammie.view.SetTitle(" Cammie ")
-	cammie.view.SetBorder(true)
-	cammie.view.SetBorderColor(tcell.ColorOrange)
-	cammie.view.SetTitleColor(tcell.ColorOrange)
+	cammie.view.SetTitle(" Cammie ").
+		SetBorder(true).
+		SetBorderColor(tcell.ColorOrange).
+		SetTitleColor(tcell.ColorOrange)
 
 	return &cammie
 }
@@ -56,7 +59,6 @@ func NewCammie(screenApp *ScreenApp) *Cammie {
 func (cammie *Cammie) Run() {
 	// Wait for the view to be properly set up
 	time.Sleep(1 * time.Second)
-
 }
 
 // Updates the cammie chat

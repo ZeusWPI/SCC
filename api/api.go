@@ -30,5 +30,9 @@ func Start(screenApp *screen.ScreenApp) {
 	// Spotify routes
 	r.POST("/spotify", handlerWrapper(screenApp, spotifyGetMessage))
 
+	// Start Tap
+	go runTapRequests(screenApp)
+
+	// Start API
 	r.Run()
 }

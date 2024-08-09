@@ -21,10 +21,12 @@ type cammieHeader struct {
 	IP   string `header:"X-Real-IP"`
 }
 
-var cammieMessages uint64 = 0
-var cammieBlockedNames = config.GetConfig().Cammie.BlockedNames         // Blocked names
-var cammieBlockedIps = config.GetConfig().Cammie.BlockedIps             // Blocked IPs
-var cammieMaxMessageLength = config.GetConfig().Cammie.MaxMessageLength // Maximum message length
+var (
+	cammieMessages         uint64 = 0
+	cammieBlockedNames            = config.GetConfig().Cammie.BlockedNames     // Blocked names
+	cammieBlockedIps              = config.GetConfig().Cammie.BlockedIps       // Blocked IPs
+	cammieMaxMessageLength        = config.GetConfig().Cammie.MaxMessageLength // Maximum message length
+)
 
 func cammieGetMessage(app *screen.ScreenApp, c *gin.Context) {
 	c.JSON(200, gin.H{"messages": cammieMessages})

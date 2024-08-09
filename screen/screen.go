@@ -13,7 +13,7 @@ type ScreenApp struct {
 
 	Spotify *Spotify
 	Cammie  *Cammie
-	Tap  *Tap
+	Tap     *Tap
 	Graph2  *Graph2
 }
 
@@ -40,7 +40,7 @@ func NewScreenApp() *ScreenApp {
 		AddItem(screen.Spotify.view, 3, 2, false).
 		AddItem(tview.NewFlex().
 			AddItem(screen.Cammie.view, 0, 5, false).
-			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 				AddItem(screen.Tap.view, 0, 1, false).
 				AddItem(screen.Graph2.view, 0, 1, false), 0, 4, false), 0, 13, false), true).
 		EnableMouse(true)

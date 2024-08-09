@@ -19,9 +19,16 @@ type spotifyConfig struct {
 	ClientSecret string `yaml:"client_secret"`
 }
 
+type tapConfig struct {
+	URL             string   `yaml:"url"`
+	TimestampLayout string   `yaml:"timestamp_layout"`
+	Beers           []string `yaml:"beer"`
+}
+
 type Config struct {
 	Cammie  cammieConfig  `yaml:"cammie"`
 	Spotify spotifyConfig `yaml:"spotify"`
+	Tap     tapConfig     `yaml:"tap"`
 }
 
 var (

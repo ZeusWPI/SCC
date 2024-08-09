@@ -40,11 +40,6 @@ var (
 	spotifyClientSecret       = config.GetConfig().Spotify.ClientSecret
 )
 
-// var spotifyAccessToken = ""
-// var spotifyExpiresOn int64 = 0
-// var spotifyClientID = "d385173507a54bca93cc3327c0c2f5d9"
-// var spotifyClientSecret = "8e78977c1ba54b90b17f9dcd6b301c37"
-
 func spotifyGetMessage(app *screen.ScreenApp, ctx *gin.Context) {
 	message := &spotifyMessage{}
 
