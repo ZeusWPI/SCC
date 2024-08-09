@@ -12,7 +12,7 @@ import (
 var maxMessages = 20
 
 // Available colors
-var COLORS = [...]tcell.Color{
+var colors = [...]tcell.Color{
 	tcell.ColorViolet,
 	tcell.ColorRed,
 	tcell.ColorIndigo,
@@ -52,21 +52,22 @@ func NewCammie(screenApp *ScreenApp) *Cammie {
 	return &cammie
 }
 
-// One-time setup
+// Run one-time setup
 func (cammie *Cammie) Run() {
 	// Wait for the view to be properly set up
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 
 }
 
 // Updates the cammie chat
 // Gets called when a new message is received from the website
 func (cammie *Cammie) Update(message string) {
-	color := COLORS[lastColorIndex].String()
-	lastColorIndex = (lastColorIndex + 1) % len(COLORS)
+	color := colors[lastColorIndex].String()
+	lastColorIndex = (lastColorIndex + 1) % len(colors)
 
-	fmt.Fprintf(cammie.view, "\n[%s]%s", color, message)
+	cammie.screenApp.execute(func() {
+		fmt.Fprintf(cammie.view, "\n[%s]%s", color, message)
 
-	cammie.view.ScrollToEnd()
-
+		cammie.view.ScrollToEnd()
+	})
 }
