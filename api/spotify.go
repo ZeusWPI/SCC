@@ -32,18 +32,12 @@ type spotifyTrackResponse struct {
 	Artists []spotifyArtist `json:"artists"`
 }
 
-var accessToken = ""
-var expiresOn int64 = 0
-var clientID = "d385173507a54bca93cc3327c0c2f5d9"
-var clientSecret = "8e78977c1ba54b90b17f9dcd6b301c37"
+var spotifyAccessToken = ""
+var spotifyExpiresOn int64 = 0
+var spotifyClientID = "d385173507a54bca93cc3327c0c2f5d9"
+var spotifyClientSecret = "8e78977c1ba54b90b17f9dcd6b301c37"
 
-func spotifyHandlerWrapper(app *screen.ScreenApp) func(*gin.Context) {
-	return func(ctx *gin.Context) {
-		spotifyHandler(app, ctx)
-	}
-}
-
-func spotifyHandler(app *screen.ScreenApp, ctx *gin.Context) {
+func spotifyGetMessage(app *screen.ScreenApp, ctx *gin.Context) {
 	message := &spotifyMessage{}
 
 	if err := ctx.ShouldBindJSON(message); err != nil {
@@ -53,13 +47,13 @@ func spotifyHandler(app *screen.ScreenApp, ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"track_id": "Track ID received"})
 
-	if expiresOn < time.Now().Unix() {
-		if err := setAccessToken(); err != nil {
+	if spotifyExpiresOn < time.Now().Unix() {
+		if err := spotifySetAccessToken(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Unable to refresh spotify token: %s", err)
 		}
 	}
 
-	track, err := getTrackTitle(message.TrackID)
+	track, err := spotifyGetTrackTitle(message.TrackID)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Unable to get track information: %s", err)
@@ -68,11 +62,11 @@ func spotifyHandler(app *screen.ScreenApp, ctx *gin.Context) {
 	app.Spotify.Update(track)
 }
 
-func setAccessToken() error {
+func spotifySetAccessToken() error {
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
-	data.Set("client_id", clientID)
-	data.Set("client_secret", clientSecret)
+	data.Set("client_id", spotifyClientID)
+	data.Set("client_secret", spotifyClientSecret)
 
 	// Send the POST request
 	resp, err := http.PostForm("https://accounts.spotify.com/api/token", data)
@@ -91,20 +85,20 @@ func setAccessToken() error {
 		return err
 	}
 
-	accessToken = message.AccessToken
-	expiresOn = time.Now().Unix() + message.ExpiresIn
+	spotifyAccessToken = message.AccessToken
+	spotifyExpiresOn = time.Now().Unix() + message.ExpiresIn
 
 	return nil
 }
 
-func getTrackTitle(trackID string) (string, error) {
+func spotifyGetTrackTitle(trackID string) (string, error) {
 	url := fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Authorization", "Bearer "+spotifyAccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

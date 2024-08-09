@@ -24,11 +24,11 @@ func Start(screenApp *screen.ScreenApp) {
 	// Routes
 
 	// Cammie chat routes
-	r.GET("/message", handlerWrapper(screenApp, getMessage))
-	r.POST("/message", handlerWrapper(screenApp, postMessage))
+	r.GET("/message", handlerWrapper(screenApp, cammieGetMessage))
+	r.POST("/message", handlerWrapper(screenApp, cammiePostMessage))
 
 	// Spotify routes
-	r.POST("/spotify", spotifyHandlerWrapper(screenApp))
+	r.POST("/spotify", handlerWrapper(screenApp, spotifyGetMessage))
 
 	r.Run()
 }
