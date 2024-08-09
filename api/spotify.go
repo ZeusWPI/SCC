@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
-	"os"
+	"scc/config"
 	"scc/screen"
 	"strings"
 	"time"
@@ -32,10 +33,17 @@ type spotifyTrackResponse struct {
 	Artists []spotifyArtist `json:"artists"`
 }
 
-var spotifyAccessToken = ""
-var spotifyExpiresOn int64 = 0
-var spotifyClientID = "d385173507a54bca93cc3327c0c2f5d9"
-var spotifyClientSecret = "8e78977c1ba54b90b17f9dcd6b301c37"
+var (
+	spotifyAccessToken        = ""
+	spotifyExpiresOn    int64 = 0
+	spotifyClientID           = config.GetConfig().Spotify.ClientID
+	spotifyClientSecret       = config.GetConfig().Spotify.ClientSecret
+)
+
+// var spotifyAccessToken = ""
+// var spotifyExpiresOn int64 = 0
+// var spotifyClientID = "d385173507a54bca93cc3327c0c2f5d9"
+// var spotifyClientSecret = "8e78977c1ba54b90b17f9dcd6b301c37"
 
 func spotifyGetMessage(app *screen.ScreenApp, ctx *gin.Context) {
 	message := &spotifyMessage{}
@@ -49,14 +57,14 @@ func spotifyGetMessage(app *screen.ScreenApp, ctx *gin.Context) {
 
 	if spotifyExpiresOn < time.Now().Unix() {
 		if err := spotifySetAccessToken(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Unable to refresh spotify token: %s", err)
+			log.Printf("Error: Unable to refresh spotify token: %s\n", err)
 		}
 	}
 
 	track, err := spotifyGetTrackTitle(message.TrackID)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Unable to get track information: %s", err)
+		log.Printf("Error: Unable to get track information: %s\n", err)
 	}
 
 	app.Spotify.Update(track)

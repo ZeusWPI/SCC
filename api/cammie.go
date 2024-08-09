@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"scc/config"
 	"scc/screen"
 	"slices"
 
@@ -20,13 +21,13 @@ type cammieHeader struct {
 	IP   string `header:"X-Real-IP"`
 }
 
-var cammieCessages uint64 = 0
-var cammieBlockedNames = []string{"Paul-Henri Spaak"} // Blocked names
-var cammieBlockedIps = []string{}                     // Blocked IPs
-var cammieMaxMessageLength = 200                      // Maximum message length
+var cammieMessages uint64 = 0
+var cammieBlockedNames = config.GetConfig().Cammie.BlockedNames         // Blocked names
+var cammieBlockedIps = config.GetConfig().Cammie.BlockedIps             // Blocked IPs
+var cammieMaxMessageLength = config.GetConfig().Cammie.MaxMessageLength // Maximum message length
 
 func cammieGetMessage(app *screen.ScreenApp, c *gin.Context) {
-	c.JSON(200, gin.H{"messages": cammieCessages})
+	c.JSON(200, gin.H{"messages": cammieMessages})
 }
 
 func cammiePostMessage(app *screen.ScreenApp, c *gin.Context) {
@@ -71,7 +72,7 @@ func cammiePostMessage(app *screen.ScreenApp, c *gin.Context) {
 	}
 
 	// Increment messages
-	cammieCessages++
+	cammieMessages++
 
 	app.Cammie.Update(newMessage)
 
