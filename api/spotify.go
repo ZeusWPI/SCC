@@ -96,22 +96,16 @@ func spotifySetAccessToken() error {
 
 func spotifyGetTrackTitle(trackID string) (string, error) {
 	url := fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
+	headers := []header{
+		jsonHeader,
+		{
+			"Authorization",
+			"Bearer " + spotifyAccessToken,
+		},
 	}
-	req.Header.Set("Authorization", "Bearer "+spotifyAccessToken)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
 	trackResponse := &spotifyTrackResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(trackResponse); err != nil {
+
+	if err := makeGetRequest(url, headers, trackResponse); err != nil {
 		return "", err
 	}
 

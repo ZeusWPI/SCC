@@ -31,7 +31,10 @@ func Start(screenApp *screen.ScreenApp) {
 	r.POST("/spotify", handlerWrapper(screenApp, spotifyGetMessage))
 
 	// Start Tap
-	go runTapRequests(screenApp)
+	go tapRunRequests(screenApp)
+
+	// Start Zess
+	go zessRunRequests(screenApp)
 
 	// Start API
 	r.Run()
