@@ -20,15 +20,20 @@ type spotifyConfig struct {
 }
 
 type tapConfig struct {
-	URL             string   `yaml:"url"`
-	TimestampLayout string   `yaml:"timestamp_layout"`
-	Beers           []string `yaml:"beer"`
+	URL   string   `yaml:"url"`
+	Beers []string `yaml:"beer"`
+}
+
+type zessConfig struct {
+	URL       string `yaml:"url"`
+	DayAmount int    `yaml:"day_amount"`
 }
 
 type Config struct {
 	Cammie  cammieConfig  `yaml:"cammie"`
 	Spotify spotifyConfig `yaml:"spotify"`
 	Tap     tapConfig     `yaml:"tap"`
+	Zess    zessConfig    `yaml:"zess"`
 }
 
 var (
@@ -47,5 +52,6 @@ func GetConfig() *Config {
 			log.Fatalf("Failed to unmarshal config: %v", err)
 		}
 	})
+
 	return configInstance
 }

@@ -3,6 +3,7 @@ package screen
 import (
 	"scc/config"
 	"strings"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/navidys/tvxwidgets"
@@ -10,10 +11,10 @@ import (
 )
 
 type TapOrder struct {
-	OrderID         int    `json:"order_id"`
-	OrderCreatedAt  string `json:"order_created_at"`
-	ProductName     string `json:"product_name"`
-	ProductCategory string `json:"product_category"`
+	OrderID         int       `json:"order_id"`
+	OrderCreatedAt  time.Time `json:"order_created_at"`
+	ProductName     string    `json:"product_name"`
+	ProductCategory string    `json:"product_category"`
 }
 
 type Tap struct {
@@ -26,6 +27,7 @@ var (
 	soft = 0
 	mate = 0
 	beer = 0
+	food = 0
 )
 
 func NewTap(screenApp *ScreenApp) *Tap {
@@ -40,9 +42,10 @@ func NewTap(screenApp *ScreenApp) *Tap {
 	tap.bar.AddBar("Soft", 0, tcell.ColorBlue)
 	tap.bar.AddBar("Mate", 0, tcell.ColorOrange)
 	tap.bar.AddBar("Beer", 0, tcell.ColorRed)
+	tap.bar.AddBar("Food", 0, tcell.ColorGreen)
 	tap.bar.SetAxesLabelColor(tcell.ColorWhite)
 
-	tap.view.AddItem(tap.bar, 0, 1, true)
+	tap.view.AddItem(tap.bar, 0, 1, false)
 
 	return &tap
 }
@@ -51,17 +54,26 @@ func (tap *Tap) Run() {
 }
 
 func (tap *Tap) Update(order *TapOrder) {
+	var label string
+	var value *int
+
 	switch {
+	case order.ProductCategory == "food":
+		label, value = "Food", &food
+	case order.ProductCategory != "beverages":
+		return
 	case strings.Contains(order.ProductName, "Mate"):
-		mate++
-		tap.bar.SetBarValue("Mate", mate)
+		label, value = "Mate", &mate
 	case isBeer(order.ProductName):
-		beer++
-		tap.bar.SetBarValue("Beer", beer)
+		label, value = "Beer", &beer
 	default:
-		soft++
-		tap.bar.SetBarValue("Soft", soft)
+		label, value = "Soft", &soft
 	}
+
+	*value++
+	tap.ScreenApp.execute(func() {
+		tap.bar.SetBarValue(label, *value)
+	})
 }
 
 func isBeer(productName string) bool {

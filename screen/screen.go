@@ -14,7 +14,7 @@ type ScreenApp struct {
 	Spotify *Spotify
 	Cammie  *Cammie
 	Tap     *Tap
-	Graph2  *Graph2
+	Zess    *Zess
 }
 
 // Execute a function with a lock
@@ -33,7 +33,7 @@ func NewScreenApp() *ScreenApp {
 	screen.Spotify = NewSpotify(&screen)
 	screen.Cammie = NewCammie(&screen)
 	screen.Tap = NewTap(&screen)
-	screen.Graph2 = NewGraph2(&screen)
+	screen.Zess = NewZess(&screen)
 
 	// Build the screen layout
 	screen.app.SetRoot(tview.NewFlex().SetDirection(tview.FlexRow).
@@ -42,8 +42,8 @@ func NewScreenApp() *ScreenApp {
 			AddItem(screen.Cammie.view, 0, 5, false).
 			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 				AddItem(screen.Tap.view, 0, 1, false).
-				AddItem(screen.Graph2.view, 0, 1, false), 0, 4, false), 0, 13, false), true).
-		EnableMouse(true)
+				AddItem(screen.Zess.view, 0, 1, false), 0, 4, false), 0, 13, false), true).
+		EnableMouse(false)
 
 	return &screen
 }
@@ -55,7 +55,7 @@ func Start(screen *ScreenApp) {
 	go screen.Spotify.Run()
 	go screen.Cammie.Run()
 	go screen.Tap.Run()
-	go screen.Graph2.Run()
+	go screen.Zess.Run()
 
 	// Start the screen application
 	if err := screen.app.Run(); err != nil {
