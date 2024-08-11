@@ -1,0 +1,27 @@
+cammie:
+  blocked_names:
+    - "Name 1"
+    - "Name 2"
+  blocked_ips:
+    - "10.0.0.10"
+  max_message_length: 200
+spotify:
+  client_id: "abcd"
+  client_secret: "dcba"
+tap:
+  url: "https://tap.zeus.gent/recent"
+  beer:
+    - "Schelfaut"
+    - "Duvel"
+    - "Fourchette"
+    - "Jupiler"
+    - "Karmeliet"
+    - "Kriek"
+    - "Chouffe"
+    - "Maes"
+    - "Somersby"
+    - "Sportzot"
+    - "Stella"
+zess:
+  url: "https://zess.zeus.gent/recent_scans"
+  day_amount: 40
