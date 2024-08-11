@@ -24,4 +24,7 @@ tmp.go
 
 config.yaml
 
+# Binary
 scc
+# Log file
+scc.log
