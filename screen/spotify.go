@@ -29,9 +29,9 @@ func NewSpotify(screenApp *ScreenApp) *Spotify {
 
 	spotify.view.SetTitle(" Spotify ")
 	spotify.view.SetBorder(true)
-	spotify.view.SetTextColor(tcell.ColorLimeGreen)
-	spotify.view.SetBorderColor(tcell.ColorLimeGreen)
-	spotify.view.SetTitleColor(tcell.ColorLimeGreen)
+	spotify.view.SetTextColor(tcell.ColorGreen)
+	spotify.view.SetBorderColor(tcell.ColorGreen)
+	spotify.view.SetTitleColor(tcell.ColorGreen)
 
 	return &spotify
 }
