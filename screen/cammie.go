@@ -2,6 +2,7 @@ package screen
 
 import (
 	"fmt"
+	"scc/utils"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -13,18 +14,12 @@ var maxMessages = 20
 
 // Available colors
 var colors = [...]tcell.Color{
+	tcell.ColorWhite,
 	tcell.ColorViolet,
 	tcell.ColorRed,
-	tcell.ColorIndigo,
-	tcell.ColorYellow,
-	tcell.ColorBlue,
-	tcell.ColorGreen,
 	tcell.ColorOrange,
-	tcell.ColorLime,
+	tcell.ColorGreen,
 	tcell.ColorAqua,
-	tcell.ColorDarkSalmon,
-	tcell.ColorLightBlue,
-	tcell.ColorNavajoWhite,
 }
 var lastColorIndex = 0
 
@@ -64,8 +59,15 @@ func (cammie *Cammie) Run() {
 // Updates the cammie chat
 // Gets called when a new message is received from the website
 func (cammie *Cammie) Update(message string) {
-	color := colors[lastColorIndex].String()
-	lastColorIndex = (lastColorIndex + 1) % len(colors)
+	var colorIndex int
+	for {
+		colorIndex = utils.RandRange(0, len(colors))
+		if colorIndex != lastColorIndex {
+			break
+		}
+	}
+
+	color := colors[colorIndex].String()
 
 	cammie.screenApp.execute(func() {
 		fmt.Fprintf(cammie.view, "\n[%s]%s", color, message)

@@ -60,7 +60,7 @@ func (spotify *Spotify) Run() {
 				spotify.view.SetText(spotify.buffer)
 			})
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 

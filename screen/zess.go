@@ -39,8 +39,8 @@ func NewZess(screenApp *ScreenApp) *Zess {
 
 	zess.chart.SetBorder(false)
 	zess.chart.SetLineColor([]tcell.Color{tcell.ColorOrange})
-	zess.chart.SetAxesLabelColor(tcell.ColorYellow)
-	zess.chart.SetAxesColor(tcell.ColorYellow)
+	zess.chart.SetAxesLabelColor(tcell.ColorWhite)
+	zess.chart.SetAxesColor(tcell.ColorWhite)
 	zess.chart.SetMarker(tvxwidgets.PlotMarkerBraille)
 	zess.chart.SetDrawYAxisLabelFloat(false)
 	zess.chart.SetData(scans)
