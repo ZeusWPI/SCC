@@ -14,6 +14,11 @@ type cammieConfig struct {
 	MaxMessageLength int      `yaml:"max_message_length"`
 }
 
+type buzzerConfig struct {
+	Pin  int    `yaml:"pin"`
+	Song string `yaml:"song"`
+}
+
 type spotifyConfig struct {
 	ClientID     string `yaml:"client_id"`
 	ClientSecret string `yaml:"client_secret"`
@@ -31,6 +36,7 @@ type zessConfig struct {
 
 type Config struct {
 	Cammie  cammieConfig  `yaml:"cammie"`
+	Buzzer  buzzerConfig  `yaml:"buzzer"`
 	Spotify spotifyConfig `yaml:"spotify"`
 	Tap     tapConfig     `yaml:"tap"`
 	Zess    zessConfig    `yaml:"zess"`

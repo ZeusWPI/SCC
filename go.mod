@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/a-h/beeper v0.0.0-20190929170045-fc4b1a97b0b2
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -30,6 +31,7 @@ require (
 	github.com/navidys/tvxwidgets v0.7.0
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect

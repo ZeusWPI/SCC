@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"scc/buzzer"
 	"scc/config"
 	"scc/screen"
 	"slices"
@@ -77,6 +78,7 @@ func cammiePostMessage(app *screen.ScreenApp, c *gin.Context) {
 	cammieMessages++
 
 	app.Cammie.Update(newMessage)
+	go buzzer.PlayBuzzer()
 
 	c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 }
