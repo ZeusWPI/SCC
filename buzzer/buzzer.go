@@ -12,7 +12,7 @@ var buzzerOptions = map[string]func(rpio.Pin){
 	"default": playMusic,
 }
 
-func playBuzzer() {
+func PlayBuzzer() {
 	err := rpio.Open()
 	if err != nil {
 		log.Printf("Error: Unable to open pin: %s", err)
