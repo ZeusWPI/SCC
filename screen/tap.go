@@ -39,10 +39,11 @@ func NewTap(screenApp *ScreenApp) *Tap {
 
 	tap.view.SetBorder(true).SetTitle(" Tap ")
 
-	tap.bar.AddBar("Soft", 0, tcell.ColorBlue)
+	tap.bar.AddBar("Soft", 0, tcell.ColorAqua)
 	tap.bar.AddBar("Mate", 0, tcell.ColorOrange)
 	tap.bar.AddBar("Beer", 0, tcell.ColorRed)
 	tap.bar.AddBar("Food", 0, tcell.ColorGreen)
+	tap.bar.SetAxesColor(tcell.ColorWhite)
 	tap.bar.SetAxesLabelColor(tcell.ColorWhite)
 
 	tap.view.AddItem(tap.bar, 0, 1, false)

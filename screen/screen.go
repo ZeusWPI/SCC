@@ -40,7 +40,7 @@ func NewScreenApp() *ScreenApp {
 		AddItem(screen.Spotify.view, 3, 2, false).
 		AddItem(tview.NewFlex().
 			AddItem(screen.Cammie.view, 0, 5, false).
-			AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 				AddItem(screen.Tap.view, 0, 1, false).
 				AddItem(screen.Zess.view, 0, 1, false), 0, 4, false), 0, 13, false), true).
 		EnableMouse(false)
