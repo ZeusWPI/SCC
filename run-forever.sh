@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while ./css
+while ./scc
 do
-  echo 'css has quit! restarting in 1 second'
+  echo 'scc has quit! restarting in 1 second'
 done
