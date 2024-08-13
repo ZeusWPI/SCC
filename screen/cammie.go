@@ -2,12 +2,26 @@ package screen
 
 import (
 	"fmt"
-	"scc/utils"
+	"hash/fnv"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
+
+type CammieMessage struct {
+	Sender  string
+	Message string
+}
+
+// Component that displays messages received from the website aka cammie chat
+type Cammie struct {
+	screenApp *ScreenApp
+	view      *tview.TextView
+
+	text   string
+	buffer string
+}
 
 // Initial value, gets adjusted once it's known how much space is available
 var maxMessages = 20
@@ -25,16 +39,6 @@ var colors = [...]tcell.Color{
 	tcell.ColorGoldenrod,
 	tcell.ColorYellow,
 	tcell.ColorSalmon,
-}
-var lastColorIndex = 0
-
-// Component that displays messages received from the website aka cammie chat
-type Cammie struct {
-	screenApp *ScreenApp
-	view      *tview.TextView
-
-	text   string
-	buffer string
 }
 
 // Create a new cammie struct
@@ -63,20 +67,21 @@ func (cammie *Cammie) Run() {
 
 // Updates the cammie chat
 // Gets called when a new message is received from the website
-func (cammie *Cammie) Update(message string) {
-	var colorIndex int
-	for {
-		colorIndex = utils.RandRange(0, len(colors))
-		if colorIndex != lastColorIndex {
-			break
-		}
-	}
+func (cammie *Cammie) Update(message *CammieMessage) {
+	colorIndex := hashColor(message.Sender)
 
 	color := colors[colorIndex].String()
 
 	cammie.screenApp.execute(func() {
-		fmt.Fprintf(cammie.view, "\n[%s]%s", color, message)
+		fmt.Fprintf(cammie.view, "\n[%s]%s %s[-:-:-:-]", color, message.Sender, message.Message)
 
 		cammie.view.ScrollToEnd()
 	})
+}
+
+func hashColor(s string) int {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	hashNumber := h.Sum32()
+	return int(hashNumber) % len(colors)
 }

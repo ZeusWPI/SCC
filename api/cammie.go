@@ -37,6 +37,7 @@ func cammiePostMessage(app *screen.ScreenApp, c *gin.Context) {
 	// Get structs
 	header := &cammieHeader{}
 	message := &cammieMessage{}
+	cammieMessage := &screen.CammieMessage{}
 
 	// Check Header
 	if err := c.ShouldBindHeader(header); err != nil {
@@ -57,27 +58,26 @@ func cammiePostMessage(app *screen.ScreenApp, c *gin.Context) {
 	}
 
 	// Check if sender is blocked and construct message
-	var newMessage string
 	if header.Name != "" {
 		if slices.Contains(cammieBlockedNames, header.Name) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
-		newMessage = fmt.Sprintf("[%s[] %s", header.Name, message.Message)
+		cammieMessage.Sender = fmt.Sprintf("[%s[]", header.Name)
 	} else if header.IP != "" {
 		if slices.Contains(cammieBlockedIps, header.IP) {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received"})
 			return
 		}
-		newMessage = fmt.Sprintf("<%s> %s", header.IP, message.Message)
-	} else {
-		newMessage = message.Message
+		cammieMessage.Sender = fmt.Sprintf("<%s>", header.IP)
 	}
+
+	cammieMessage.Message = message.Message
 
 	// Increment messages
 	cammieMessages++
 
-	app.Cammie.Update(newMessage)
+	app.Cammie.Update(cammieMessage)
 	go buzzer.PlayBuzzer()
 
 	c.JSON(http.StatusOK, gin.H{"message": "Message received"})
