@@ -20,6 +20,11 @@ var colors = [...]tcell.Color{
 	tcell.ColorOrange,
 	tcell.ColorGreen,
 	tcell.ColorAqua,
+	tcell.ColorCrimson,
+	tcell.ColorFuchsia,
+	tcell.ColorGoldenrod,
+	tcell.ColorYellow,
+	tcell.ColorSalmon,
 }
 var lastColorIndex = 0
 
