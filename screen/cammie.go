@@ -75,7 +75,7 @@ func (cammie *Cammie) Update(message string) {
 	color := colors[colorIndex].String()
 
 	cammie.screenApp.execute(func() {
-		fmt.Fprintf(cammie.view, "\n[%s]%s", color, message)
+		fmt.Fprintf(cammie.view, "\n[%s]%s[-:-:-:-]", color, message)
 
 		cammie.view.ScrollToEnd()
 	})
