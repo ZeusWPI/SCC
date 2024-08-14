@@ -2,6 +2,7 @@ package screen
 
 import (
 	"scc/config"
+	"sort"
 	"strings"
 	"time"
 
@@ -16,19 +17,29 @@ type TapOrder struct {
 	ProductName     string    `json:"product_name"`
 	ProductCategory string    `json:"product_category"`
 }
-
 type Tap struct {
 	ScreenApp *ScreenApp
 	view      *tview.Flex
 	bar       *tvxwidgets.BarChart
 }
+type tapItem struct {
+	value int
+	color tcell.Color
+}
 
-var (
-	soft = 0
-	mate = 0
-	beer = 0
-	food = 0
+const (
+	soft = "Soft"
+	mate = "Mate"
+	beer = "Beer"
+	food = "Food"
 )
+
+var tapItems = map[string]tapItem{
+	soft: {0, tcell.ColorAqua},
+	mate: {0, tcell.ColorOrange},
+	beer: {0, tcell.ColorRed},
+	food: {0, tcell.ColorGreen},
+}
 
 func NewTap(screenApp *ScreenApp) *Tap {
 	tap := Tap{
@@ -39,10 +50,6 @@ func NewTap(screenApp *ScreenApp) *Tap {
 
 	tap.view.SetBorder(true).SetTitle(" Tap ")
 
-	tap.bar.AddBar("Soft", 0, tcell.ColorAqua)
-	tap.bar.AddBar("Mate", 0, tcell.ColorOrange)
-	tap.bar.AddBar("Beer", 0, tcell.ColorRed)
-	tap.bar.AddBar("Food", 0, tcell.ColorGreen)
 	tap.bar.SetAxesColor(tcell.ColorWhite)
 	tap.bar.SetAxesLabelColor(tcell.ColorWhite)
 
@@ -55,25 +62,49 @@ func (tap *Tap) Run() {
 }
 
 func (tap *Tap) Update(order *TapOrder) {
-	var label string
-	var value *int
-
+	var key string
 	switch {
 	case order.ProductCategory == "food":
-		label, value = "Food", &food
+		key = food
 	case order.ProductCategory != "beverages":
 		return
 	case strings.Contains(order.ProductName, "Mate"):
-		label, value = "Mate", &mate
+		key = mate
 	case isBeer(order.ProductName):
-		label, value = "Beer", &beer
+		key = beer
 	default:
-		label, value = "Soft", &soft
+		key = soft
 	}
 
-	*value++
+	entry := tapItems[key]
+	entry.value++
+	tapItems[key] = entry
+
+	// item.amount++
 	tap.ScreenApp.execute(func() {
-		tap.bar.SetBarValue(label, *value)
+		// Remove labels
+		for label := range tapItems {
+			tap.bar.RemoveBar(label)
+		}
+
+		// Create slice of keys
+		keys := make([]string, 0, len(tapItems))
+		for key := range tapItems {
+			keys = append(keys, key)
+		}
+
+		// Sort slice
+		sort.Slice(keys, func(i, j int) bool {
+			return tapItems[keys[i]].value > tapItems[keys[j]].value
+		})
+
+		// Add labels back
+		for _, key := range keys {
+			tap.bar.AddBar(key, tapItems[key].value, tapItems[key].color)
+		}
+
+		// Required so that the bars change relative height
+		tap.bar.SetMaxValue(tapItems[keys[0]].value)
 	})
 }
 
