@@ -2,47 +2,40 @@ package buzzer
 
 import (
 	"log"
+	"os/exec"
 	"scc/config"
-
-	"github.com/a-h/beeper"
-	"github.com/stianeikeland/go-rpio"
 )
 
-var buzzerOptions = map[string]func(rpio.Pin){
+var buzzerOptions = map[string]func(){
 	"default": playMusic,
 }
 
 func PlayBuzzer() {
-	err := rpio.Open()
-	if err != nil {
-		log.Printf("Error: Unable to open pin: %s", err)
-		return
-	}
-	defer rpio.Close()
-
-	pin := rpio.Pin(config.GetConfig().Buzzer.Pin)
-
 	buzzerSong := config.GetConfig().Buzzer.Song
-	val, ok := buzzerOptions[buzzerSong]
+	fun, ok := buzzerOptions[buzzerSong]
 	if !ok {
 		log.Printf("Error: Selected buzzer song: %s does not exist\n", buzzerSong)
 		return
 	}
-
-	val(pin)
+	fun()
 }
 
-func playMusic(pin rpio.Pin) {
-	bpm := 300
-	music := beeper.NewMusic(pin, bpm)
-
-	music.Note("A5", beeper.Quaver)
-	music.Note("B5", beeper.Quaver)
-	music.Note("D5", beeper.Quaver)
-	music.Note("B5", beeper.Quaver)
-	music.Note("E5", beeper.Crotchet)
-	music.Note("E5", beeper.Crotchet)
-	music.Note("D5", beeper.Quaver)
-	music.Note("C#5", beeper.Quaver)
-	music.Note("B4", beeper.Quaver)
+func playMusic() {
+	// See 'man beep'
+	cmd := exec.Command(
+		"beep",
+		"-n", "-f880", "-l100", "-d0",
+		"-n", "-f988", "-l100", "-d0",
+		"-n", "-f588", "-l100", "-d0",
+		"-n", "-f989", "-l100", "-d0",
+		"-n", "-f660", "-l200", "-d0",
+		"-n", "-f660", "-l200", "-d0",
+		"-n", "-f588", "-l100", "-d0",
+		"-n", "-f555", "-l100", "-d0",
+		"-n", "-f495", "-l100", "-d0",
+	)
+	err := cmd.Run()
+	if err != nil {
+		log.Printf("Error running command 'beep': %s\n", err)
+	}
 }

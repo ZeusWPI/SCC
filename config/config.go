@@ -15,7 +15,6 @@ type cammieConfig struct {
 }
 
 type buzzerConfig struct {
-	Pin  int    `yaml:"pin"`
 	Song string `yaml:"song"`
 }
 

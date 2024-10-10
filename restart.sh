@@ -1,10 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-git fetch
-git pull
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 go mod tidy
-echo "Building..."
-go build .
+go build
 
 pkill scc
