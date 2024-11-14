@@ -1,6 +1,6 @@
 version: "2"
 sql:
-  - engine: "postgresql"
+  - engine: "sqlite"
     queries:
       - "db/queries/*.sql"
     schema: "db/migrations"
@@ -8,4 +8,3 @@ sql:
       go:
         package: "sqlc"
         out: "internal/pkg/db/sqlc"
-        sql_package: "pgx/v5"
