@@ -1,3 +1,4 @@
+// Package cmd package contains all the commands to start the application
 package cmd
 
 import (
@@ -13,6 +14,9 @@ func Execute() {
 		panic(err)
 	}
 
-	zapLogger := logger.New()
+	zapLogger, err := logger.New()
+	if err != nil {
+		panic(err)
+	}
 	zap.ReplaceGlobals(zapLogger)
 }

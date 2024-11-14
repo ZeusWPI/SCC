@@ -9,9 +9,12 @@ import (
 )
 
 // New returns a new logger instance
-func New() *zap.Logger {
+func New() (*zap.Logger, error) {
 	// Create logs directory
-	os.Mkdir("logs", os.ModePerm)
+	err := os.Mkdir("logs", os.ModePerm)
+	if err != nil && !os.IsExist(err) {
+		return nil, err
+	}
 
 	// Create logger
 	var zapConfig zap.Config
@@ -25,7 +28,6 @@ func New() *zap.Logger {
 	zapConfig.ErrorOutputPaths = []string{"logs/scc.log"}
 
 	logger := zap.Must(zapConfig.Build())
-	defer logger.Sync()
 
-	return logger
+	return logger, nil
 }
