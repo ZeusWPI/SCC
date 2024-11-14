@@ -34,7 +34,7 @@ func (r *Router) createRoutes() {
 func (r *Router) getAll(c *fiber.Ctx) error {
 	messages, err := r.db.Queries.GetAllMessages(c.Context())
 	if err != nil {
-		zap.S().Error("DB: Get all messages", err)
+		zap.S().Error("DB: Get all messages\n", err)
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -45,20 +45,20 @@ func (r *Router) create(c *fiber.Ctx) error {
 	message := new(dto.Message)
 
 	if err := c.BodyParser(message); err != nil {
-		zap.S().Error("Body parser", err)
+		zap.S().Error("API: Message body parser\n", err)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	if err := dto.Validate.Struct(message); err != nil {
-		zap.S().Error("Validation", err)
+		zap.S().Error("API: Message  validation\n", err)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	messageDB, err := r.db.Queries.CreateMessage(c.Context(), message.CreateParams())
 	if err != nil {
-		zap.S().Error("DB: Create message", err)
+		zap.S().Error("DB: Create message\n", err)
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(dto.MessageDTO(messageDB))
+	return c.Status(fiber.StatusCreated).JSON(dto.MessageDTO(messageDB))
 }

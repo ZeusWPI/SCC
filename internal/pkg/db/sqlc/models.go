@@ -15,3 +15,12 @@ type Message struct {
 	Message   string
 	CreatedAt time.Time
 }
+
+type Spotify struct {
+	ID         int64
+	Title      string
+	Artists    string
+	SpotifyID  string
+	DurationMs int64
+	CreatedAt  time.Time
+}
