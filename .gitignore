@@ -32,3 +32,6 @@ scc
 
 .data/
 /public/
+
+# Log files
+logs/

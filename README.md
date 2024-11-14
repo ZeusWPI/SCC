@@ -11,10 +11,13 @@ Check [.tool-versions](.tool-versions) for the current used version of golang
 - Install sqlc `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`
 - Install air `go install github.com/air-verse/air@latest`
 
-## Build
+Create a `.env` (Look at [.env.example](.env.example])).
+
+Start developing with `make watch`.
+
+Logs will be logged to the `./logs` directory (will be made at the start of the first run).
+
+## Build & Run
 
 - `make`
-
-## Run
-
 - `make run`
