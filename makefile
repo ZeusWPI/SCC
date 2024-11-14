@@ -18,10 +18,10 @@ create-migration:
 
 goose:
 	@read -p "Action: " action; \
-	goose -dir ./db/migrations postgres "user=postgres password=postgres dbname=adoca host=localhost sslmode=disable" $$action
+	goose -dir ./db/migrations sqlite3 ./sqlite.db $$action
 
 migrate:
-	@goose -dir ./db/migrations postgres "user=postgres password=postgres dbname=adoca host=localhost sslmode=disable" up
+	@goose -dir ./db/migrations sqlite3 ./sqlite.db up
 
 watch:
 	@if command -v air > /dev/null; then \

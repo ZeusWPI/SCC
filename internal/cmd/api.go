@@ -30,7 +30,7 @@ func apiCmd(db *db.DB) {
 	api.New(apiGroup, db)
 
 	host := config.GetDefaultString("server.host", "127.0.0.1")
-	port := config.GetDefaultInt("server.port", 8080)
+	port := config.GetDefaultInt("server.port", 3000)
 
 	zap.S().Fatal("API: Fatal server error", app.Listen(fmt.Sprintf("%s:%d", host, port)))
 }

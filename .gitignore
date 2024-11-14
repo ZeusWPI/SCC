@@ -35,3 +35,6 @@ scc
 
 # Log files
 logs/
+
+# DB
+*.db
