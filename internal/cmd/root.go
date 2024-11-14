@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/internal/pkg/spotify"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/pkg/logger"
 	"go.uber.org/zap"
@@ -23,8 +24,13 @@ func Execute() {
 
 	db, err := db.New()
 	if err != nil {
-		zap.S().Fatal("DB: Fatal error", err)
+		zap.S().Fatal("DB: Fatal error\n", err)
 	}
 
-	apiCmd(db)
+	spotify, err := spotify.New(db)
+	if err != nil {
+		zap.S().Error("Spotify: Initiating error, integration will not work.\n", err)
+	}
+
+	apiCmd(db, spotify)
 }
