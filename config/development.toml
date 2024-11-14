@@ -1,3 +1,7 @@
+[server]
+host = "localhost"
+port = 3000
+
 [buzzer]
 song = [
     "-n", "-f880", "-l100", "-d0",

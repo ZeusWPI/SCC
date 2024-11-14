@@ -6,7 +6,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
-	"github.com/zeusWPI/scc/pkg/config"
 )
 
 // DB represents a database connection
@@ -17,9 +16,7 @@ type DB struct {
 
 // New creates a new database connection
 func New() (*DB, error) {
-	dbPath := config.GetDefaultString("db.path", "./sqlite.db")
-
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", "./sqlite.db")
 	if err != nil {
 		return nil, err
 	}
