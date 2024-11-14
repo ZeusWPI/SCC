@@ -24,3 +24,12 @@ type Spotify struct {
 	DurationMs int64
 	CreatedAt  time.Time
 }
+
+type Tap struct {
+	ID             int64
+	OrderID        int64
+	OrderCreatedAt time.Time
+	Name           string
+	Category       string
+	CreatedAt      time.Time
+}

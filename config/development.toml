@@ -6,6 +6,22 @@ port = 3000
 client_id = "your_client_id"
 client_secret = "your_client_secret"
 
+[tap]
+interval_s = 60
+beers = [
+	"Schelfaut",
+	"Duvel",
+	"Fourchette",
+	"Jupiler",
+	"Karmeliet",
+	"Kriek",
+	"Chouffe",
+	"Maes",
+	"Somersby",
+	"Sportzot",
+	"Stella",
+]
+
 [buzzer]
 song = [
     "-n", "-f880", "-l100", "-d0",
