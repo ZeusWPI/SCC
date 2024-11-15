@@ -13,7 +13,9 @@ Check [.tool-versions](.tool-versions) for the current used version of golang
 
 Create a `.env` (Look at [.env.example](.env.example])).
 
-Start developing with `make watch`.
+Start developing with `make build` and `make run`.
+For live reloading `inotify` is required `sudo apt install inotify-tools`.
+`make watch` will start the hot reloading.
 
 Logs will be logged to the `./logs` directory (will be made at the start of the first run).
 
