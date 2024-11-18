@@ -2,6 +2,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/zeusWPI/scc/pkg/config"
@@ -9,7 +10,7 @@ import (
 )
 
 // New returns a new logger instance
-func New() (*zap.Logger, error) {
+func New(logFile string) (*zap.Logger, error) {
 	// Create logs directory
 	err := os.Mkdir("logs", os.ModePerm)
 	if err != nil && !os.IsExist(err) {
@@ -24,8 +25,8 @@ func New() (*zap.Logger, error) {
 	} else {
 		zapConfig = zap.NewProductionConfig()
 	}
-	zapConfig.OutputPaths = []string{"logs/scc.log"}
-	zapConfig.ErrorOutputPaths = []string{"logs/scc.log"}
+	zapConfig.OutputPaths = []string{fmt.Sprintf("logs/%s.log", logFile)}
+	zapConfig.ErrorOutputPaths = []string{fmt.Sprintf("logs/%s.log", logFile)}
 
 	logger := zap.Must(zapConfig.Build())
 

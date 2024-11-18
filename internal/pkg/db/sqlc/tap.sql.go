@@ -92,15 +92,15 @@ func (q *Queries) GetAllTaps(ctx context.Context) ([]Tap, error) {
 	return items, nil
 }
 
-const getLastOrder = `-- name: GetLastOrder :one
+const getLastOrderByOrderID = `-- name: GetLastOrderByOrderID :one
 SELECT id, order_id, order_created_at, name, category, created_at
 FROM tap
-ORDER BY id DESC
+ORDER BY order_id DESC
 LIMIT 1
 `
 
-func (q *Queries) GetLastOrder(ctx context.Context) (Tap, error) {
-	row := q.db.QueryRowContext(ctx, getLastOrder)
+func (q *Queries) GetLastOrderByOrderID(ctx context.Context) (Tap, error) {
+	row := q.db.QueryRowContext(ctx, getLastOrderByOrderID)
 	var i Tap
 	err := row.Scan(
 		&i.ID,
@@ -133,6 +133,41 @@ func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error)
 	var items []GetOrderCountRow
 	for rows.Next() {
 		var i GetOrderCountRow
+		if err := rows.Scan(&i.Category, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOrderCountByCategorySinceOrderID = `-- name: GetOrderCountByCategorySinceOrderID :many
+SELECT category, COUNT(*)
+FROM tap
+WHERE order_id >= ?
+GROUP BY category
+`
+
+type GetOrderCountByCategorySinceOrderIDRow struct {
+	Category string
+	Count    int64
+}
+
+func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, orderID int64) ([]GetOrderCountByCategorySinceOrderIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOrderCountByCategorySinceOrderID, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOrderCountByCategorySinceOrderIDRow
+	for rows.Next() {
+		var i GetOrderCountByCategorySinceOrderIDRow
 		if err := rows.Scan(&i.Category, &i.Count); err != nil {
 			return nil, err
 		}
