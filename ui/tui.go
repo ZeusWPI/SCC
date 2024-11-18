@@ -3,39 +3,33 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/ui/views"
 	"go.uber.org/zap"
 )
 
 // TUI represent a terminal instance
 type TUI struct {
-	db  *db.DB
-	tap tea.Model
+	screen tea.Model
 }
 
-// New creates a new tty instance
-func New(db *db.DB) *TUI {
-	return &TUI{
-		db:  db,
-		tap: views.NewTapModel(db),
-	}
+// New creates a new tui instance
+func New(screen tea.Model) *TUI {
+	return &TUI{screen: screen}
 }
 
-// Init initializes the tty
+// Init initializes the tui
 func (t *TUI) Init() tea.Cmd {
-	return tea.Batch(tea.EnterAltScreen, t.tap.Init())
+	return tea.Batch(tea.EnterAltScreen, t.screen.Init())
 }
 
-// Update updates the tty
+// Update updates the tui
 func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
-	tapModel, tapCmd := t.tap.Update(msg)
-	if tapCmd != nil {
-		cmds = append(cmds, tapCmd)
+	model, cmd := t.screen.Update(msg)
+	if cmd != nil {
+		cmds = append(cmds, cmd)
 	}
-	t.tap = tapModel
+	t.screen = model
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -50,7 +44,7 @@ func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return t, tea.Batch(cmds...)
 }
 
-// View returns the tty view
+// View returns the ttuity view
 func (t *TUI) View() string {
-	return t.tap.View()
+	return t.screen.View()
 }

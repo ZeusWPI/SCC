@@ -36,13 +36,19 @@ SELECT *
 FROM tap
 WHERE category = ?;
 
--- name: GetLastOrder :one
+-- name: GetLastOrderByOrderID :one
 SELECT *
 FROM tap
-ORDER BY id DESC
+ORDER BY order_id DESC
 LIMIT 1;
 
 -- name: GetOrderCount :many
 SELECT category, COUNT(*)
 FROM tap
+GROUP BY category;
+
+-- name: GetOrderCountByCategorySinceOrderID :many
+SELECT category, COUNT(*)
+FROM tap
+WHERE order_id >= ?
 GROUP BY category;

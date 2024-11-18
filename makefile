@@ -5,6 +5,13 @@ build: clean backend tui
 run: backend tui
 	@./backend & ./tui
 
+run-backend: backend
+	@./backend
+
+run-tui: tui
+	@read -p "Enter screen name: " screen; \
+	./tui $$screen
+
 backend:
 	@[ -f backend ] || (echo "Building backend..." && go build -o backend cmd/backend/backend.go)
 

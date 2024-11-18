@@ -44,7 +44,7 @@ func New(db *db.DB) *Tap {
 // Update gets all new orders from tap
 func (t *Tap) Update() error {
 	// Get latest order
-	lastOrder, err := t.db.Queries.GetLastOrder(context.Background())
+	lastOrder, err := t.db.Queries.GetLastOrderByOrderID(context.Background())
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return err
