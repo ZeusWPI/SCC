@@ -113,6 +113,40 @@ func (q *Queries) GetLastOrder(ctx context.Context) (Tap, error) {
 	return i, err
 }
 
+const getOrderCount = `-- name: GetOrderCount :many
+SELECT category, COUNT(*)
+FROM tap
+GROUP BY category
+`
+
+type GetOrderCountRow struct {
+	Category string
+	Count    int64
+}
+
+func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOrderCount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOrderCountRow
+	for rows.Next() {
+		var i GetOrderCountRow
+		if err := rows.Scan(&i.Category, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTapByCategory = `-- name: GetTapByCategory :many
 SELECT id, order_id, order_created_at, name, category, created_at
 FROM tap

@@ -1,13 +1,18 @@
 all: build
 
-build: clean
-	@go build -o scc cmd/tty/scc.go
+build: clean backend tui
 
-run:
-	@./scc
+run: backend tui
+	@./backend & ./tui
+
+backend:
+	@[ -f backend ] || (echo "Building backend..." && go build -o backend cmd/backend/backend.go)
+
+tui:
+	@[ -f tui ] || (echo "Building tui..." && go build -o tui cmd/tui/tui.go)
 
 clean:
-	@rm -f scc
+	@rm -f backend tui
 
 sqlc:
 	sqlc generate

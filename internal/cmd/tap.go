@@ -3,17 +3,20 @@ package cmd
 import (
 	"time"
 
+	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/tap"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
-func tapCmd(tap *tap.Tap) chan bool {
+// Tap starts the tap
+func Tap(db *db.DB) (*tap.Tap, chan bool) {
+	tap := tap.New(db)
 	done := make(chan bool)
 
 	go tapPeriodicUpdate(tap, done)
 
-	return done
+	return tap, done
 }
 
 func tapPeriodicUpdate(tap *tap.Tap, done chan bool) {

@@ -41,3 +41,8 @@ SELECT *
 FROM tap
 ORDER BY id DESC
 LIMIT 1;
+
+-- name: GetOrderCount :many
+SELECT category, COUNT(*)
+FROM tap
+GROUP BY category;
