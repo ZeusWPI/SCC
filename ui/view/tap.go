@@ -52,22 +52,27 @@ func (t *TapModel) Init() tea.Cmd {
 
 // Update updates the tap model
 func (t *TapModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	t.lastOrderID = msg.(TapMessage).lastOrderID
+	switch msg := msg.(type) {
+	case TapMessage:
+		t.lastOrderID = msg.lastOrderID
 
-	for _, msg := range msg.(TapMessage).items {
-		switch msg.category {
-		case "Mate":
-			t.mate += msg.amount
-		case "Soft":
-			t.soft += msg.amount
-		case "Beer":
-			t.beer += msg.amount
-		case "Food":
-			t.food += msg.amount
+		for _, msg := range msg.items {
+			switch msg.category {
+			case "Mate":
+				t.mate += msg.amount
+			case "Soft":
+				t.soft += msg.amount
+			case "Beer":
+				t.beer += msg.amount
+			case "Food":
+				t.food += msg.amount
+			}
 		}
+
+		return t, updateOrders(t.db, t.lastOrderID)
 	}
 
-	return t, updateOrders(t.db, t.lastOrderID)
+	return t, nil
 }
 
 // View returns the tap view
@@ -85,7 +90,7 @@ func (t *TapModel) View() string {
 	barSoft := barchart.BarData{
 		Label: "Soft",
 		Values: []barchart.BarValue{{
-			Name:  "Item1",
+			Name:  "Soft",
 			Value: t.soft,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Soft"]),
 		}},
@@ -93,7 +98,7 @@ func (t *TapModel) View() string {
 	barBeer := barchart.BarData{
 		Label: "Beer",
 		Values: []barchart.BarValue{{
-			Name:  "Item1",
+			Name:  "Beer",
 			Value: t.beer,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Beer"]),
 		}},
@@ -101,7 +106,7 @@ func (t *TapModel) View() string {
 	barFood := barchart.BarData{
 		Label: "Food",
 		Values: []barchart.BarValue{{
-			Name:  "Item1",
+			Name:  "Food",
 			Value: t.food,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Food"]),
 		}},
@@ -114,21 +119,21 @@ func (t *TapModel) View() string {
 }
 
 func updateOrders(db *db.DB, lastOrderID int64) tea.Cmd {
-	return tea.Tick(time.Second, func(_ time.Time) tea.Msg {
+	return tea.Tick(60*time.Second, func(_ time.Time) tea.Msg {
 		order, err := db.Queries.GetLastOrderByOrderID(context.Background())
 		if err != nil {
 			zap.S().Error("DB: Failed to get last order", err)
-			return nil
+			return TapMessage{lastOrderID: lastOrderID, items: nil}
 		}
 
 		if order.OrderID <= lastOrderID {
-			return nil
+			return TapMessage{lastOrderID: lastOrderID, items: nil}
 		}
 
 		orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
 		if err != nil {
 			zap.S().Error("DB: Failed to get tap orders", err)
-			return nil
+			return TapMessage{lastOrderID: lastOrderID, items: nil}
 		}
 
 		mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0
