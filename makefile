@@ -1,40 +1,64 @@
+# Variables
+BACKEND_BIN := backend
+TUI_BIN := tui
+BACKEND_SRC := cmd/backend/backend.go
+TUI_SRC := cmd/tui/tui.go
+DB_DIR := ./db/migrations
+DB_FILE := ./sqlite.db
+
+# Phony targets
+.PHONY: all build clean run run-backend run-tui sqlc create-migration goose migrate watch
+
+# Default target: build everything
 all: build
 
-build: clean backend tui
+# Build targets
+build: clean build-backend build-tui
 
-run: backend tui
-	@./backend & ./tui
+build-backend:
+	@echo "Building $(BACKEND_BIN)..."
+	@rm -f $(BACKEND_BIN)
+	@go build -o $(BACKEND_BIN) $(BACKEND_SRC)
 
-run-backend: backend
-	@./backend
+build-tui:
+	@echo "Building $(TUI_BIN)..."
+	@rm -f $(TUI_BIN)
+	@go build -o $(TUI_BIN) $(TUI_SRC)
 
-run-tui: tui
+# Run targets
+run: run-backend run-tui
+
+run-backend:
+	@[ -f $(BACKEND_BIN) ] || $(MAKE) build-backend
+	@./$(BACKEND_BIN)
+
+run-tui:
+	@[ -f $(TUI_BIN) ] || $(MAKE) build-tui
 	@read -p "Enter screen name: " screen; \
-	./tui $$screen
+	./$(TUI_BIN) $$screen
 
-backend:
-	@[ -f backend ] || (echo "Building backend..." && go build -o backend cmd/backend/backend.go)
+# Clean targets
+clean: clean-backend clean-tui
 
-tui:
-	@[ -f tui ] || (echo "Building tui..." && go build -o tui cmd/tui/tui.go)
+clean-backend:
+	@echo "Cleaning $(BACKEND_BIN)..."
+	@rm -f $(BACKEND_BIN)
 
-clean:
-	@rm -f backend tui
+clean-tui:
+	@echo "Cleaning $(TUI_BIN)..."
+	@rm -f $(TUI_BIN)
 
+# SQL and migration targets
 sqlc:
 	sqlc generate
 
 create-migration:
 	@read -p "Enter migration name: " name; \
-	goose -dir ./db/migrations create $$name sql
+	goose -dir $(DB_DIR) create $$name sql
 
 goose:
 	@read -p "Action: " action; \
-	goose -dir ./db/migrations sqlite3 ./sqlite.db $$action
+	goose -dir $(DB_DIR) sqlite3 $(DB_FILE) $$action
 
 migrate:
-	@goose -dir ./db/migrations sqlite3 ./sqlite.db up
-
-watch:
-	@echo "Starting the watch script..."
-	./watch.sh
+	@goose -dir $(DB_DIR) sqlite3 $(DB_FILE) up
