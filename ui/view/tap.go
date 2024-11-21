@@ -22,8 +22,8 @@ type TapModel struct {
 	food        float64
 }
 
-// TapMessage represents a tap message
-type TapMessage struct {
+// TapMsg represents a tap message
+type TapMsg struct {
 	lastOrderID int64
 	items       []tapItem
 }
@@ -53,7 +53,7 @@ func (t *TapModel) Init() tea.Cmd {
 // Update updates the tap model
 func (t *TapModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case TapMessage:
+	case TapMsg:
 		t.lastOrderID = msg.lastOrderID
 
 		for _, msg := range msg.items {
@@ -123,17 +123,17 @@ func updateOrders(db *db.DB, lastOrderID int64) tea.Cmd {
 		order, err := db.Queries.GetLastOrderByOrderID(context.Background())
 		if err != nil {
 			zap.S().Error("DB: Failed to get last order", err)
-			return TapMessage{lastOrderID: lastOrderID, items: nil}
+			return TapMsg{lastOrderID: lastOrderID, items: nil}
 		}
 
 		if order.OrderID <= lastOrderID {
-			return TapMessage{lastOrderID: lastOrderID, items: nil}
+			return TapMsg{lastOrderID: lastOrderID, items: nil}
 		}
 
 		orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
 		if err != nil {
 			zap.S().Error("DB: Failed to get tap orders", err)
-			return TapMessage{lastOrderID: lastOrderID, items: nil}
+			return TapMsg{lastOrderID: lastOrderID, items: nil}
 		}
 
 		mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0
@@ -164,6 +164,6 @@ func updateOrders(db *db.DB, lastOrderID int64) tea.Cmd {
 			messages = append(messages, tapItem{"Food", food})
 		}
 
-		return TapMessage{lastOrderID: order.OrderID, items: messages}
+		return TapMsg{lastOrderID: order.OrderID, items: messages}
 	})
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Backend linting"
+echo "Linting"
 golangci-lint run
 if [ $? -ne 0 ]; then
     echo "golangci-lint failed. Please fix the errors before committing."

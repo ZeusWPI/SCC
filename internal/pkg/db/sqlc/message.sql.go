@@ -83,6 +83,29 @@ func (q *Queries) GetAllMessages(ctx context.Context) ([]Message, error) {
 	return items, nil
 }
 
+const getLastMessage = `-- name: GetLastMessage :one
+
+
+SELECT id, name, ip, message, created_at
+FROM message
+ORDER BY id DESC
+LIMIT 1
+`
+
+// Other
+func (q *Queries) GetLastMessage(ctx context.Context) (Message, error) {
+	row := q.db.QueryRowContext(ctx, getLastMessage)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Ip,
+		&i.Message,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getMessageByID = `-- name: GetMessageByID :one
 SELECT id, name, ip, message, created_at
 FROM message
@@ -100,6 +123,42 @@ func (q *Queries) GetMessageByID(ctx context.Context, id int64) (Message, error)
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getMessageSinceID = `-- name: GetMessageSinceID :many
+SELECT id, name, ip, message, created_at
+FROM message
+WHERE id > ?
+ORDER BY created_at ASC
+`
+
+func (q *Queries) GetMessageSinceID(ctx context.Context, id int64) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, getMessageSinceID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Message
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Ip,
+			&i.Message,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateMessage = `-- name: UpdateMessage :one
