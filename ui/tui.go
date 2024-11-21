@@ -18,7 +18,7 @@ func New(screen tea.Model) *TUI {
 
 // Init initializes the tui
 func (t *TUI) Init() tea.Cmd {
-	return tea.Batch(tea.EnterAltScreen, t.screen.Init())
+	return tea.Batch(t.screen.Init())
 }
 
 // Update updates the tui

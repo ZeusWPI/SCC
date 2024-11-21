@@ -24,7 +24,9 @@ RETURNING *;
 DELETE FROM tap
 WHERE id = ?;
 
+
 -- Other
+
 
 -- name: GetTapByOrderID :one
 SELECT *

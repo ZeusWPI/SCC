@@ -240,6 +240,7 @@ func (q *Queries) GetTapByID(ctx context.Context, id int64) (Tap, error) {
 
 const getTapByOrderID = `-- name: GetTapByOrderID :one
 
+
 SELECT id, order_id, order_created_at, name, category, created_at
 FROM tap
 WHERE order_id = ?

@@ -32,7 +32,7 @@ func TUI(db *db.DB) (*tea.Program, error) {
 
 	tui := tui.New(val(db))
 
-	program := tea.NewProgram(tui)
+	program := tea.NewProgram(tui, tea.WithAltScreen())
 
 	return program, nil
 }

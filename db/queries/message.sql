@@ -23,3 +23,19 @@ RETURNING *;
 -- name: DeleteMessage :execrows
 DELETE FROM message
 WHERE id = ?;
+
+
+-- Other
+
+
+-- name: GetLastMessage :one
+SELECT *
+FROM message
+ORDER BY id DESC
+LIMIT 1;
+
+-- name: GetMessageSinceID :many
+SELECT *
+FROM message
+WHERE id > ?
+ORDER BY created_at ASC;
