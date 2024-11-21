@@ -56,9 +56,9 @@ create-migration:
 	@read -p "Enter migration name: " name; \
 	goose -dir $(DB_DIR) create $$name sql
 
+migrate:
+	@goose -dir $(DB_DIR) sqlite3 $(DB_FILE) up
+
 goose:
 	@read -p "Action: " action; \
 	goose -dir $(DB_DIR) sqlite3 $(DB_FILE) $$action
-
-migrate:
-	@goose -dir $(DB_DIR) sqlite3 $(DB_FILE) up
