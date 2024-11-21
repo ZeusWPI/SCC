@@ -31,7 +31,7 @@ func (s *Spotify) setTrack(track *dto.Spotify) error {
 	res := new(trackResponse)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
-		return errors.Join(errs...)
+		return errors.Join(append([]error{errors.New("Spotify: Track request failed")}, errs...)...)
 	}
 	if status != fiber.StatusOK {
 		return errors.New("error getting track")

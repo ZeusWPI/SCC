@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Tap starts the tap
+// Tap starts the tap instance
 func Tap(db *db.DB) (*tap.Tap, chan bool) {
 	tap := tap.New(db)
 	done := make(chan bool)

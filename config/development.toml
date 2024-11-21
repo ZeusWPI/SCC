@@ -7,6 +7,7 @@ client_id = "your_client_id"
 client_secret = "your_client_secret"
 
 [tap]
+api = "https://tap.zeus.gent"
 interval_s = 60
 beers = [
 	"Schelfaut",
@@ -21,6 +22,11 @@ beers = [
 	"Sportzot",
 	"Stella",
 ]
+
+[zess]
+api = "http://localhost:4000/api"
+interval_season_s = 300
+interval_scan_s = 60
 
 [buzzer]
 song = [

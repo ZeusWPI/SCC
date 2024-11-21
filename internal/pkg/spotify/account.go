@@ -34,7 +34,7 @@ func (s *Spotify) refreshToken() error {
 	res := new(accountResponse)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
-		return errors.Join(errs...)
+		return errors.Join(append([]error{errors.New("Spotify: Token refresh request failed")}, errs...)...)
 	}
 	if status != fiber.StatusOK {
 		return errors.New("error getting access token")

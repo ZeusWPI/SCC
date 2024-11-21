@@ -8,8 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const apiURL = "https://tap.zeus.gent/recent"
-
 type orderResponseItem struct {
 	OrderID         int64     `json:"order_id"`
 	OrderCreatedAt  time.Time `json:"order_created_at"`
@@ -24,12 +22,12 @@ type orderResponse struct {
 func (t *Tap) getOrders() ([]orderResponseItem, error) {
 	zap.S().Info("Tap: Getting orders")
 
-	req := fiber.Get(apiURL)
+	req := fiber.Get(t.api + "/recent")
 
 	res := new(orderResponse)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
+		return nil, errors.Join(append([]error{errors.New("Tap: Order API request failed")}, errs...)...)
 	}
 	if status != fiber.StatusOK {
 		return nil, errors.New("error getting orders")

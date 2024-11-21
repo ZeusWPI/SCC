@@ -16,6 +16,18 @@ type Message struct {
 	CreatedAt time.Time
 }
 
+type Scan struct {
+	ID       int64
+	ScanTime time.Time
+}
+
+type Season struct {
+	ID    int64
+	Name  string
+	Start time.Time
+	End   time.Time
+}
+
 type Spotify struct {
 	ID         int64
 	Title      string
