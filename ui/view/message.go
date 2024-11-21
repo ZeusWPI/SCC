@@ -97,12 +97,12 @@ func hashColor(s string) string {
 
 func formatMessage(msg sqlc.Message) string {
 	dateStyle := lipgloss.NewStyle().Faint(true)
-	date := dateStyle.Render(fmt.Sprintf("%s | ", msg.CreatedAt.Format("02/01")))
+	date := dateStyle.Render(fmt.Sprintf("%s ", msg.CreatedAt.Format("02/01")))
 
 	color := hashColor(msg.Name)
 	colorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
 
-	sender := fmt.Sprintf("%s %s %s ", colorStyle.Render("["), colorStyle.Bold(true).Render(msg.Name), colorStyle.Render("]"))
+	sender := fmt.Sprintf("%s %s ", colorStyle.Bold(true).Render(msg.Name), colorStyle.Render("|"))
 	message := colorStyle.Render(msg.Message)
 
 	return fmt.Sprintf("%s%s%s", date, sender, message)

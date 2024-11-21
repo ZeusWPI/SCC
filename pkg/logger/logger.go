@@ -10,7 +10,7 @@ import (
 )
 
 // New returns a new logger instance
-func New(logFile string) (*zap.Logger, error) {
+func New(logFile string, console bool) (*zap.Logger, error) {
 	// Create logs directory
 	err := os.Mkdir("logs", os.ModePerm)
 	if err != nil && !os.IsExist(err) {
@@ -25,8 +25,19 @@ func New(logFile string) (*zap.Logger, error) {
 	} else {
 		zapConfig = zap.NewProductionConfig()
 	}
-	zapConfig.OutputPaths = []string{fmt.Sprintf("logs/%s.log", logFile)}
-	zapConfig.ErrorOutputPaths = []string{fmt.Sprintf("logs/%s.log", logFile)}
+
+	outputPaths := []string{fmt.Sprintf("logs/%s.log", logFile)}
+	if console {
+		outputPaths = append(outputPaths, "stdout")
+	}
+
+	errorOutputPaths := []string{fmt.Sprintf("logs/%s.log", logFile)}
+	if console {
+		errorOutputPaths = append(errorOutputPaths, "stderr")
+	}
+
+	zapConfig.OutputPaths = outputPaths
+	zapConfig.ErrorOutputPaths = errorOutputPaths
 
 	logger := zap.Must(zapConfig.Build())
 

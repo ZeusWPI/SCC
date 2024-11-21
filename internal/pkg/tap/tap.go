@@ -17,6 +17,7 @@ import (
 // Tap represents a tap instance
 type Tap struct {
 	db    *db.DB
+	api   string
 	beers []string
 }
 
@@ -36,9 +37,10 @@ var defaultBeers = []string{
 
 // New creates a new tap instance
 func New(db *db.DB) *Tap {
+	api := config.GetDefaultString("tap.api", "https://tap.zeus.gent")
 	beers := config.GetDefaultStringSlice("tap.beers", defaultBeers)
 
-	return &Tap{db: db, beers: beers}
+	return &Tap{db: db, api: api, beers: beers}
 }
 
 // Update gets all new orders from tap
