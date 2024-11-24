@@ -40,7 +40,7 @@ var tapCategoryColor = map[string]lipgloss.Color{
 }
 
 // NewTapModel creates a new tap model
-func NewTapModel(db *db.DB) *TapModel {
+func NewTapModel(db *db.DB) View {
 	return &TapModel{db: db, lastOrderID: -1}
 }
 
@@ -124,7 +124,7 @@ func (t *TapModel) GetUpdateDatas() []UpdateData {
 			Name:     "tap orders",
 			View:     t,
 			Update:   updateOrders,
-			Interval: config.GetDefaultInt("view.interval.tap_s", 60),
+			Interval: config.GetDefaultInt("tui.tap.interval_s", 60),
 		},
 	}
 }

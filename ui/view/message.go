@@ -34,7 +34,7 @@ var messageColor = []string{
 }
 
 // NewMessageModel creates a new message model view
-func NewMessageModel(db *db.DB) *MessageModel {
+func NewMessageModel(db *db.DB) View {
 	return &MessageModel{db: db, lastMessageID: -1, messages: []string{}}
 }
 
@@ -72,7 +72,7 @@ func (m *MessageModel) GetUpdateDatas() []UpdateData {
 			Name:     "cammie messages",
 			View:     m,
 			Update:   updateMessages,
-			Interval: config.GetDefaultInt("tui.interval.message_s", 1),
+			Interval: config.GetDefaultInt("tui.message.interval_s", 1),
 		},
 	}
 }

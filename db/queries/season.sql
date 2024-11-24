@@ -23,3 +23,12 @@ RETURNING *;
 -- name: DeleteSeason :execrows
 DELETE FROM season
 WHERE id = ?;
+
+
+-- Other
+
+
+-- name: GetSeasonCurrent :one
+SELECT *
+FROM season
+WHERE current = true;
