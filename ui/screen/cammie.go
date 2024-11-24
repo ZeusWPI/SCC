@@ -2,8 +2,6 @@
 package screen
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/ui/view"
@@ -11,33 +9,30 @@ import (
 
 // Cammie represents the cammie screen
 type Cammie struct {
-	db   *db.DB
-	zess *view.ZessModel
-	tap  *view.TapModel
+	db *db.DB
 }
 
 // NewCammie creates a new cammie screen
-func NewCammie(db *db.DB) tea.Model {
-	return &Cammie{db: db, zess: view.NewZessModel(db), tap: view.NewTapModel(db)}
+func NewCammie(db *db.DB) Screen {
+	return &Cammie{db: db}
 }
 
 // Init initializes the cammie screen
 func (c *Cammie) Init() tea.Cmd {
-	return tea.Batch(c.zess.Init(), c.tap.Init())
+	return nil
 }
 
 // Update updates the cammie screen
-func (c *Cammie) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	cammie, cmd := c.zess.Update(msg)
-	c.zess = cammie.(*view.ZessModel)
-
-	tap, cmd2 := c.tap.Update(msg)
-	c.tap = tap.(*view.TapModel)
-
-	return c, tea.Batch(cmd, cmd2)
+func (c *Cammie) Update(_ tea.Msg) (Screen, tea.Cmd) {
+	return c, nil
 }
 
 // View returns the cammie screen view
 func (c *Cammie) View() string {
-	return fmt.Sprintf("%s\n%s", c.tap.View(), c.zess.View())
+	return ""
+}
+
+// GetUpdateViews returns all the update functions for the cammie screen
+func (c *Cammie) GetUpdateViews() []view.UpdateData {
+	return []view.UpdateData{}
 }

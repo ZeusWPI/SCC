@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"hash/fnv"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
+	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -39,59 +39,72 @@ func NewMessageModel(db *db.DB) *MessageModel {
 }
 
 // Init initializes the message model view
-func (c *MessageModel) Init() tea.Cmd {
-	return updateMessages(c.db, c.lastMessageID)
+func (m *MessageModel) Init() tea.Cmd {
+	return nil
 }
 
 // Update updates the message model view
-func (c *MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *MessageModel) Update(msg tea.Msg) (View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case MessageMsg:
-		c.lastMessageID = msg.lastMessageID
-		c.messages = append(c.messages, msg.messages...)
+		m.lastMessageID = msg.lastMessageID
+		m.messages = append(m.messages, msg.messages...)
 
-		return c, updateMessages(c.db, c.lastMessageID)
+		return m, nil
 	}
 
-	return c, nil
+	return m, nil
 }
 
 // View returns the view for the message model
-func (c *MessageModel) View() string {
+func (m *MessageModel) View() string {
 	// TODO: Limit the amount of messages shown
 	// TODO: Wrap messages
 	zap.S().Info("Viewing messages")
-	l := list.New(c.messages).Enumerator(func(_ list.Items, _ int) string { return "" })
+	l := list.New(m.messages).Enumerator(func(_ list.Items, _ int) string { return "" })
 	return l.String()
 }
 
-func updateMessages(db *db.DB, lastMessageID int64) tea.Cmd {
-	return tea.Tick(1*time.Second, func(_ time.Time) tea.Msg {
-		message, err := db.Queries.GetLastMessage(context.Background())
-		if err != nil {
-			if err != sql.ErrNoRows {
-				zap.S().Error("DB: Failed to get last message", err)
-			}
-			return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}
-		}
+// GetUpdateDatas returns all the update functions for the message model
+func (m *MessageModel) GetUpdateDatas() []UpdateData {
+	return []UpdateData{
+		{
+			Name:     "cammie messages",
+			View:     m,
+			Update:   updateMessages,
+			Interval: config.GetDefaultInt("tui.interval.message_s", 1),
+		},
+	}
+}
 
-		if message.ID <= lastMessageID {
-			return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}
-		}
+func updateMessages(db *db.DB, view View) (tea.Msg, error) {
+	m := view.(*MessageModel)
+	lastMessageID := m.lastMessageID
 
-		messages, err := db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
-		if err != nil {
-			zap.S().Error("DB: Failed to get messages", err)
-			return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}
+	message, err := db.Queries.GetLastMessage(context.Background())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = nil
 		}
+		return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}, err
+	}
 
-		formattedMessages := make([]string, 0, len(messages))
-		for _, message := range messages {
-			formattedMessages = append(formattedMessages, formatMessage(message))
-		}
+	if message.ID <= lastMessageID {
+		return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}, nil
+	}
 
-		return MessageMsg{lastMessageID: message.ID, messages: formattedMessages}
-	})
+	messages, err := db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
+	if err != nil {
+		zap.S().Error("DB: Failed to get messages", err)
+		return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}, err
+	}
+
+	formattedMessages := make([]string, 0, len(messages))
+	for _, message := range messages {
+		formattedMessages = append(formattedMessages, formatMessage(message))
+	}
+
+	return MessageMsg{lastMessageID: message.ID, messages: formattedMessages}, nil
 }
 
 func hashColor(s string) string {

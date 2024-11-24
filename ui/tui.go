@@ -3,34 +3,36 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/zeusWPI/scc/ui/screen"
 	"go.uber.org/zap"
 )
 
 // TUI represent a terminal instance
 type TUI struct {
-	screen tea.Model
+	screen screen.Screen
 }
 
 // New creates a new tui instance
-func New(screen tea.Model) *TUI {
+func New(screen screen.Screen) *TUI {
 	return &TUI{screen: screen}
 }
 
 // Init initializes the tui
 func (t *TUI) Init() tea.Cmd {
-	return tea.Batch(t.screen.Init())
+	return t.screen.Init()
 }
 
 // Update updates the tui
 func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
-	model, cmd := t.screen.Update(msg)
+	screen, cmd := t.screen.Update(msg)
+	t.screen = screen
 	if cmd != nil {
 		cmds = append(cmds, cmd)
 	}
-	t.screen = model
 
+	// Handle global key events
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -44,7 +46,7 @@ func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return t, tea.Batch(cmds...)
 }
 
-// View returns the ttuity view
+// View returns the tui view
 func (t *TUI) View() string {
 	return t.screen.View()
 }
