@@ -85,7 +85,7 @@ func (z *Zess) UpdateSeasons() error {
 
 // UpdateScans updates the scans
 func (z *Zess) UpdateScans() error {
-	lastScan, err := z.db.Queries.GetLatestScan(context.Background())
+	lastScan, err := z.db.Queries.GetLastScan(context.Background())
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return err

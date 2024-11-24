@@ -66,7 +66,37 @@ func (q *Queries) GetAllScans(ctx context.Context) ([]Scan, error) {
 	return items, nil
 }
 
-const getLatestScan = `-- name: GetLatestScan :one
+const getAllScansSinceID = `-- name: GetAllScansSinceID :many
+SELECT id, scan_time
+FROM scan
+WHERE id > ?
+ORDER BY scan_time ASC
+`
+
+func (q *Queries) GetAllScansSinceID(ctx context.Context, id int64) ([]Scan, error) {
+	rows, err := q.db.QueryContext(ctx, getAllScansSinceID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Scan
+	for rows.Next() {
+		var i Scan
+		if err := rows.Scan(&i.ID, &i.ScanTime); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getLastScan = `-- name: GetLastScan :one
 
 
 SELECT id, scan_time
@@ -76,8 +106,8 @@ LIMIT 1
 `
 
 // Other
-func (q *Queries) GetLatestScan(ctx context.Context) (Scan, error) {
-	row := q.db.QueryRowContext(ctx, getLatestScan)
+func (q *Queries) GetLastScan(ctx context.Context) (Scan, error) {
+	row := q.db.QueryRowContext(ctx, getLastScan)
 	var i Scan
 	err := row.Scan(&i.ID, &i.ScanTime)
 	return i, err
@@ -94,6 +124,20 @@ func (q *Queries) GetScanByID(ctx context.Context, id int64) (Scan, error) {
 	var i Scan
 	err := row.Scan(&i.ID, &i.ScanTime)
 	return i, err
+}
+
+const getScansInCurrentSeason = `-- name: GetScansInCurrentSeason :one
+SELECT COUNT(*) AS amount
+FROM scan
+WHERE scan_time >= (SELECT start_date FROM season WHERE current = true) AND
+        scan_time <= (SELECT end_date FROM season WHERE current = true)
+`
+
+func (q *Queries) GetScansInCurrentSeason(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getScansInCurrentSeason)
+	var amount int64
+	err := row.Scan(&amount)
+	return amount, err
 }
 
 const updateScan = `-- name: UpdateScan :one

@@ -28,8 +28,20 @@ WHERE id = ?;
 -- Other
 
 
--- name: GetLatestScan :one
+-- name: GetLastScan :one
 SELECT *
 FROM scan
 ORDER BY id DESC
 LIMIT 1;
+
+-- name: GetAllScansSinceID :many
+SELECT *
+FROM scan
+WHERE id > ?
+ORDER BY scan_time ASC;
+
+-- name: GetScansInCurrentSeason :one
+SELECT COUNT(*) AS amount
+FROM scan
+WHERE scan_time >= (SELECT start_date FROM season WHERE current = true) AND
+        scan_time <= (SELECT end_date FROM season WHERE current = true);

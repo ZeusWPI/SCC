@@ -22,10 +22,11 @@ type Scan struct {
 }
 
 type Season struct {
-	ID    int64
-	Name  string
-	Start time.Time
-	End   time.Time
+	ID      int64
+	Name    string
+	Start   time.Time
+	End     time.Time
+	Current bool
 }
 
 type Spotify struct {
