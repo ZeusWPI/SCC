@@ -40,3 +40,16 @@ song = [
 	"-n", "-f555", "-l100", "-d0",
 	"-n", "-f495", "-l100", "-d0",
 ]
+
+[tui]
+
+[tui.zess]
+weeks = 10
+interval_scan_s = 60
+interval_season_s = 3600
+
+[tui.message]
+interval_s = 1
+
+[tui.tap]
+interval_s = 60

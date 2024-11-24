@@ -109,6 +109,28 @@ func (q *Queries) GetSeasonByID(ctx context.Context, id int64) (Season, error) {
 	return i, err
 }
 
+const getSeasonCurrent = `-- name: GetSeasonCurrent :one
+
+
+SELECT id, name, start, "end", "current"
+FROM season
+WHERE current = true
+`
+
+// Other
+func (q *Queries) GetSeasonCurrent(ctx context.Context) (Season, error) {
+	row := q.db.QueryRowContext(ctx, getSeasonCurrent)
+	var i Season
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Start,
+		&i.End,
+		&i.Current,
+	)
+	return i, err
+}
+
 const updateSeason = `-- name: UpdateSeason :one
 UPDATE season
 SET name = ?, start = ?, end = ?, current = ?
