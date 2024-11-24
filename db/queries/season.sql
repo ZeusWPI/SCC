@@ -10,13 +10,13 @@ FROM season
 WHERE id = ?;
 
 -- name: CreateSeason :one
-INSERT INTO season (name, start, end)
-VALUES (?, ?, ?)
+INSERT INTO season (name, start, end, current)
+VALUES (?, ?, ?, ?)
 RETURNING *;
 
 -- name: UpdateSeason :one
 UPDATE season
-SET name = ?, start = ?, end = ?
+SET name = ?, start = ?, end = ?, current = ?
 WHERE id = ?
 RETURNING *;
 

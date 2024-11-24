@@ -2,6 +2,7 @@ package view
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"hash/fnv"
 	"time"
@@ -57,6 +58,9 @@ func (c *MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View returns the view for the message model
 func (c *MessageModel) View() string {
+	// TODO: Limit the amount of messages shown
+	// TODO: Wrap messages
+	zap.S().Info("Viewing messages")
 	l := list.New(c.messages).Enumerator(func(_ list.Items, _ int) string { return "" })
 	return l.String()
 }
@@ -65,7 +69,9 @@ func updateMessages(db *db.DB, lastMessageID int64) tea.Cmd {
 	return tea.Tick(1*time.Second, func(_ time.Time) tea.Msg {
 		message, err := db.Queries.GetLastMessage(context.Background())
 		if err != nil {
-			zap.S().Error("DB: Failed to get last message", err)
+			if err != sql.ErrNoRows {
+				zap.S().Error("DB: Failed to get last message", err)
+			}
 			return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}
 		}
 

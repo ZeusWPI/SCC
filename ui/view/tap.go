@@ -3,6 +3,7 @@ package view
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/NimbleMarkets/ntcharts/barchart"
@@ -82,7 +83,7 @@ func (t *TapModel) View() string {
 	barMate := barchart.BarData{
 		Label: "Mate",
 		Values: []barchart.BarValue{{
-			Name:  "Item1",
+			Name:  "Mate",
 			Value: t.mate,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Mate"]),
 		}},
@@ -122,18 +123,20 @@ func updateOrders(db *db.DB, lastOrderID int64) tea.Cmd {
 	return tea.Tick(60*time.Second, func(_ time.Time) tea.Msg {
 		order, err := db.Queries.GetLastOrderByOrderID(context.Background())
 		if err != nil {
-			zap.S().Error("DB: Failed to get last order", err)
-			return TapMsg{lastOrderID: lastOrderID, items: nil}
+			if err != sql.ErrNoRows {
+				zap.S().Error("DB: Failed to get last order", err)
+			}
+			return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}
 		}
 
 		if order.OrderID <= lastOrderID {
-			return TapMsg{lastOrderID: lastOrderID, items: nil}
+			return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}
 		}
 
 		orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
 		if err != nil {
 			zap.S().Error("DB: Failed to get tap orders", err)
-			return TapMsg{lastOrderID: lastOrderID, items: nil}
+			return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}
 		}
 
 		mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0

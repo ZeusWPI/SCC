@@ -11,25 +11,32 @@ import (
 )
 
 const createSeason = `-- name: CreateSeason :one
-INSERT INTO season (name, start, end)
-VALUES (?, ?, ?)
-RETURNING id, name, start, "end"
+INSERT INTO season (name, start, end, current)
+VALUES (?, ?, ?, ?)
+RETURNING id, name, start, "end", "current"
 `
 
 type CreateSeasonParams struct {
-	Name  string
-	Start time.Time
-	End   time.Time
+	Name    string
+	Start   time.Time
+	End     time.Time
+	Current bool
 }
 
 func (q *Queries) CreateSeason(ctx context.Context, arg CreateSeasonParams) (Season, error) {
-	row := q.db.QueryRowContext(ctx, createSeason, arg.Name, arg.Start, arg.End)
+	row := q.db.QueryRowContext(ctx, createSeason,
+		arg.Name,
+		arg.Start,
+		arg.End,
+		arg.Current,
+	)
 	var i Season
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Start,
 		&i.End,
+		&i.Current,
 	)
 	return i, err
 }
@@ -49,7 +56,7 @@ func (q *Queries) DeleteSeason(ctx context.Context, id int64) (int64, error) {
 
 const getAllSeasons = `-- name: GetAllSeasons :many
 
-SELECT id, name, start, "end"
+SELECT id, name, start, "end", "current"
 FROM season
 `
 
@@ -68,6 +75,7 @@ func (q *Queries) GetAllSeasons(ctx context.Context) ([]Season, error) {
 			&i.Name,
 			&i.Start,
 			&i.End,
+			&i.Current,
 		); err != nil {
 			return nil, err
 		}
@@ -83,7 +91,7 @@ func (q *Queries) GetAllSeasons(ctx context.Context) ([]Season, error) {
 }
 
 const getSeasonByID = `-- name: GetSeasonByID :one
-SELECT id, name, start, "end"
+SELECT id, name, start, "end", "current"
 FROM season
 WHERE id = ?
 `
@@ -96,22 +104,24 @@ func (q *Queries) GetSeasonByID(ctx context.Context, id int64) (Season, error) {
 		&i.Name,
 		&i.Start,
 		&i.End,
+		&i.Current,
 	)
 	return i, err
 }
 
 const updateSeason = `-- name: UpdateSeason :one
 UPDATE season
-SET name = ?, start = ?, end = ?
+SET name = ?, start = ?, end = ?, current = ?
 WHERE id = ?
-RETURNING id, name, start, "end"
+RETURNING id, name, start, "end", "current"
 `
 
 type UpdateSeasonParams struct {
-	Name  string
-	Start time.Time
-	End   time.Time
-	ID    int64
+	Name    string
+	Start   time.Time
+	End     time.Time
+	Current bool
+	ID      int64
 }
 
 func (q *Queries) UpdateSeason(ctx context.Context, arg UpdateSeasonParams) (Season, error) {
@@ -119,6 +129,7 @@ func (q *Queries) UpdateSeason(ctx context.Context, arg UpdateSeasonParams) (Sea
 		arg.Name,
 		arg.Start,
 		arg.End,
+		arg.Current,
 		arg.ID,
 	)
 	var i Season
@@ -127,6 +138,7 @@ func (q *Queries) UpdateSeason(ctx context.Context, arg UpdateSeasonParams) (Sea
 		&i.Name,
 		&i.Start,
 		&i.End,
+		&i.Current,
 	)
 	return i, err
 }
