@@ -1,16 +1,14 @@
-// Package view contains all the different views for the tui
 package view
 
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/NimbleMarkets/ntcharts/barchart"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zeusWPI/scc/internal/pkg/db"
-	"go.uber.org/zap"
+	"github.com/zeusWPI/scc/pkg/config"
 )
 
 // TapModel represents the tap model
@@ -48,11 +46,11 @@ func NewTapModel(db *db.DB) *TapModel {
 
 // Init initializes the tap model
 func (t *TapModel) Init() tea.Cmd {
-	return updateOrders(t.db, t.lastOrderID)
+	return nil
 }
 
 // Update updates the tap model
-func (t *TapModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (t *TapModel) Update(msg tea.Msg) (View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case TapMsg:
 		t.lastOrderID = msg.lastOrderID
@@ -70,7 +68,7 @@ func (t *TapModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		return t, updateOrders(t.db, t.lastOrderID)
+		return t, nil
 	}
 
 	return t, nil
@@ -119,54 +117,66 @@ func (t *TapModel) View() string {
 	return chart.View()
 }
 
-func updateOrders(db *db.DB, lastOrderID int64) tea.Cmd {
-	return tea.Tick(60*time.Second, func(_ time.Time) tea.Msg {
-		order, err := db.Queries.GetLastOrderByOrderID(context.Background())
-		if err != nil {
-			if err != sql.ErrNoRows {
-				zap.S().Error("DB: Failed to get last order", err)
-			}
-			return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}
-		}
+// GetUpdateDatas returns all the update functions for the tap model
+func (t *TapModel) GetUpdateDatas() []UpdateData {
+	return []UpdateData{
+		{
+			Name:     "tap orders",
+			View:     t,
+			Update:   updateOrders,
+			Interval: config.GetDefaultInt("view.interval.tap_s", 60),
+		},
+	}
+}
 
-		if order.OrderID <= lastOrderID {
-			return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}
-		}
+func updateOrders(db *db.DB, view View) (tea.Msg, error) {
+	t := view.(*TapModel)
+	lastOrderID := t.lastOrderID
 
-		orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
-		if err != nil {
-			zap.S().Error("DB: Failed to get tap orders", err)
-			return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}
+	order, err := db.Queries.GetLastOrderByOrderID(context.Background())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = nil
 		}
+		return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}, err
+	}
 
-		mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0
-		for _, order := range orders {
-			switch order.Category {
-			case "Mate":
-				mate += float64(order.Count)
-			case "Soft":
-				soft += float64(order.Count)
-			case "Beer":
-				beer += float64(order.Count)
-			case "Food":
-				food += float64(order.Count)
-			}
-		}
+	if order.OrderID <= lastOrderID {
+		return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}, nil
+	}
 
-		messages := make([]tapItem, 0, 4)
-		if mate > 0 {
-			messages = append(messages, tapItem{"Mate", mate})
-		}
-		if soft > 0 {
-			messages = append(messages, tapItem{"Soft", soft})
-		}
-		if beer > 0 {
-			messages = append(messages, tapItem{"Beer", beer})
-		}
-		if food > 0 {
-			messages = append(messages, tapItem{"Food", food})
-		}
+	orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
+	if err != nil {
+		return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}, err
+	}
 
-		return TapMsg{lastOrderID: order.OrderID, items: messages}
-	})
+	mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0
+	for _, order := range orders {
+		switch order.Category {
+		case "Mate":
+			mate += float64(order.Count)
+		case "Soft":
+			soft += float64(order.Count)
+		case "Beer":
+			beer += float64(order.Count)
+		case "Food":
+			food += float64(order.Count)
+		}
+	}
+
+	messages := make([]tapItem, 0, 4)
+	if mate > 0 {
+		messages = append(messages, tapItem{"Mate", mate})
+	}
+	if soft > 0 {
+		messages = append(messages, tapItem{"Soft", soft})
+	}
+	if beer > 0 {
+		messages = append(messages, tapItem{"Beer", beer})
+	}
+	if food > 0 {
+		messages = append(messages, tapItem{"Food", food})
+	}
+
+	return TapMsg{lastOrderID: order.OrderID, items: messages}, err
 }

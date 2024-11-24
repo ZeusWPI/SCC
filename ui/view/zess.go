@@ -44,11 +44,11 @@ func NewZessModel(db *db.DB) *ZessModel {
 
 // Init created a new zess model
 func (z *ZessModel) Init() tea.Cmd {
-	return tea.Batch(updateScans(z.db, z.lastScanID), updateSeason(z.db))
+	return nil
 }
 
 // Update updates the zess model
-func (z *ZessModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (z *ZessModel) Update(msg tea.Msg) (View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case ZessScanMsg:
 		z.lastScanID = msg.lastScanID
@@ -67,14 +67,14 @@ func (z *ZessModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		return z, updateScans(z.db, z.lastScanID)
+		return z, nil
 
 	case ZessSeasonMsg:
 		if msg.valid {
 			z.totalScans = msg.amount
 		}
 
-		return z, updateSeason(z.db)
+		return z, nil
 	}
 
 	return z, nil
@@ -96,58 +96,75 @@ func (z *ZessModel) View() string {
 	return chart.View()
 }
 
-func updateScans(db *db.DB, lastScanID int64) tea.Cmd {
-	return tea.Tick(60*time.Second, func(_ time.Time) tea.Msg {
-		scan, err := db.Queries.GetLastScan(context.Background())
-		if err != nil {
-			if err != sql.ErrNoRows {
-				zap.S().Error("DB: Failed to get last scan", err)
-			}
-			return ZessScanMsg{lastScanID: lastScanID, scans: []zessDayScan{}}
-		}
-
-		if scan.ID <= lastScanID {
-			return ZessScanMsg{lastScanID: lastScanID, scans: []zessDayScan{}}
-		}
-
-		scans, err := db.Queries.GetAllScansSinceID(context.Background(), lastScanID)
-		if err != nil {
-			if err != sql.ErrNoRows {
-				zap.S().Error("DB: Failed to get scan count by day", err)
-			}
-			return ZessScanMsg{lastScanID: lastScanID, scans: []zessDayScan{}}
-		}
-
-		zessMsg := ZessScanMsg{lastScanID: scan.ID, scans: []zessDayScan{}}
-		for _, scan := range scans {
-			date := scan.ScanTime.Truncate(24 * time.Hour)
-
-			if len(zessMsg.scans) > 0 && zessMsg.scans[len(zessMsg.scans)-1].date.Equal(date) {
-				// Already entry for that day
-				zessMsg.scans[len(zessMsg.scans)-1].amount++
-			} else {
-				// New day entry
-				zessMsg.scans = append(zessMsg.scans, zessDayScan{
-					date:   date,
-					amount: 1,
-				})
-			}
-		}
-
-		return zessMsg
-	})
+// GetUpdateDatas returns all the update functions for the zess model
+func (z *ZessModel) GetUpdateDatas() []UpdateData {
+	return []UpdateData{
+		{
+			Name:     "zess scans",
+			View:     z,
+			Update:   updateScans,
+			Interval: 1,
+		},
+		{
+			Name:     "zess season",
+			View:     z,
+			Update:   updateSeason,
+			Interval: 1,
+		},
+	}
 }
 
-func updateSeason(db *db.DB) tea.Cmd {
-	return tea.Tick(3600*time.Second, func(_ time.Time) tea.Msg {
-		amount, err := db.Queries.GetScansInCurrentSeason(context.Background())
-		if err != nil {
-			if err != sql.ErrNoRows {
-				zap.S().Error("DB: Failed to get scans in current season", err)
-			}
-			return ZessSeasonMsg{valid: false, amount: 0}
-		}
+func updateScans(db *db.DB, view View) (tea.Msg, error) {
+	z := view.(*ZessModel)
+	lastScanID := z.lastScanID
 
-		return ZessSeasonMsg{valid: true, amount: amount}
-	})
+	scan, err := db.Queries.GetLastScan(context.Background())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = nil
+		}
+		return ZessScanMsg{lastScanID: lastScanID, scans: []zessDayScan{}}, err
+	}
+
+	if scan.ID <= lastScanID {
+		return ZessScanMsg{lastScanID: lastScanID, scans: []zessDayScan{}}, nil
+	}
+
+	scans, err := db.Queries.GetAllScansSinceID(context.Background(), lastScanID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			zap.S().Error("DB: Failed to get scan count by day", err)
+		}
+		return ZessScanMsg{lastScanID: lastScanID, scans: []zessDayScan{}}, err
+	}
+
+	zessMsg := ZessScanMsg{lastScanID: scan.ID, scans: []zessDayScan{}}
+	for _, scan := range scans {
+		date := scan.ScanTime.Truncate(24 * time.Hour)
+
+		if len(zessMsg.scans) > 0 && zessMsg.scans[len(zessMsg.scans)-1].date.Equal(date) {
+			// Already entry for that day
+			zessMsg.scans[len(zessMsg.scans)-1].amount++
+		} else {
+			// New day entry
+			zessMsg.scans = append(zessMsg.scans, zessDayScan{
+				date:   date,
+				amount: 1,
+			})
+		}
+	}
+
+	return zessMsg, nil
+}
+
+func updateSeason(db *db.DB, _ View) (tea.Msg, error) {
+	amount, err := db.Queries.GetScansInCurrentSeason(context.Background())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = nil
+		}
+		return ZessSeasonMsg{valid: false, amount: 0}, err
+	}
+
+	return ZessSeasonMsg{valid: true, amount: amount}, nil
 }
