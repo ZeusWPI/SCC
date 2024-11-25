@@ -22,3 +22,8 @@ UPDATE gamification
 SET score = ?
 WHERE id = ?
 RETURNING *;
+
+-- name: GetAllGamificationByScore :many
+SELECT *
+FROM gamification
+ORDER BY score DESC;

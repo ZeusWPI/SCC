@@ -20,6 +20,11 @@ func GamificationDTO(gam sqlc.Gamification) *Gamification {
 	}
 }
 
+// Equal compares 2 Gamification objects for equality
+func (g *Gamification) Equal(g2 Gamification) bool {
+	return g.Name == g2.Name && g.Score == g2.Score && g.Avatar == g2.Avatar
+}
+
 // CreateParams converts a Gamification DTO to a sqlc CreateGamificationParams object
 func (g *Gamification) CreateParams() sqlc.CreateGamificationParams {
 	return sqlc.CreateGamificationParams{
