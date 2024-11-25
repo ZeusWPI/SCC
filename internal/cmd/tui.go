@@ -17,6 +17,7 @@ import (
 
 var screens = map[string]func(*db.DB) screen.Screen{
 	"cammie": screen.NewCammie,
+	"test":   screen.NewTest,
 }
 
 // TUI starts the terminal user interface

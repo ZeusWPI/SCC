@@ -27,7 +27,7 @@ func (t *Tap) getOrders() ([]orderResponseItem, error) {
 	res := new(orderResponse)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
-		return nil, errors.Join(append([]error{errors.New("Tap: Order API request failed")}, errs...)...)
+		return nil, errors.Join(append(errs, errors.New("Tap: Order API request failed"))...)
 	}
 	if status != fiber.StatusOK {
 		return nil, errors.New("error getting orders")

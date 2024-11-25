@@ -28,6 +28,10 @@ api = "http://localhost:4000/api"
 interval_season_s = 300
 interval_scan_s = 60
 
+[gamification]
+api = "https://gamification.zeus.gent"
+interval_s = 3600
+
 [buzzer]
 song = [
     "-n", "-f880", "-l100", "-d0",

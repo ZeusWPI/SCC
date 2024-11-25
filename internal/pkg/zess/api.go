@@ -2,6 +2,7 @@ package zess
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
@@ -40,10 +41,10 @@ func (z *Zess) getScans() (*[]*dto.Scan, error) {
 	res := new([]*dto.Scan)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
-		return nil, errors.Join(append([]error{errors.New("Zess: Scan API request failed")}, errs...)...)
+		return nil, errors.Join(append(errs, errors.New("Zess: Scan API request failed"))...)
 	}
 	if status != fiber.StatusOK {
-		return nil, errors.New("error getting scans")
+		return nil, fmt.Errorf("Zess: Scan API returned bad status code %d", status)
 	}
 
 	errs = make([]error, 0)
