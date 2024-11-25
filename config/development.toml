@@ -57,3 +57,6 @@ interval_s = 1
 
 [tui.tap]
 interval_s = 60
+
+[tui.gamification]
+interval_s = 3600

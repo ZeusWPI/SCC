@@ -81,6 +81,40 @@ func (q *Queries) GetAllGamification(ctx context.Context) ([]Gamification, error
 	return items, nil
 }
 
+const getAllGamificationByScore = `-- name: GetAllGamificationByScore :many
+SELECT id, name, score, avatar
+FROM gamification
+ORDER BY score DESC
+`
+
+func (q *Queries) GetAllGamificationByScore(ctx context.Context) ([]Gamification, error) {
+	rows, err := q.db.QueryContext(ctx, getAllGamificationByScore)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Gamification
+	for rows.Next() {
+		var i Gamification
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Score,
+			&i.Avatar,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateGamificationScore = `-- name: UpdateGamificationScore :one
 
 

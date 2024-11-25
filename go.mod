@@ -3,7 +3,11 @@ module github.com/zeusWPI/scc
 go 1.23.1
 
 require (
+	github.com/charmbracelet/bubbletea v0.25.0
+	github.com/charmbracelet/lipgloss v1.0.0
+	github.com/disintegration/imaging v1.6.2
 	github.com/joho/godotenv v1.5.1
+	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/spf13/viper v1.19.0
 )
 
@@ -11,8 +15,6 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/bubbles v0.18.0 // indirect
-	github.com/charmbracelet/bubbletea v0.25.0 // indirect
-	github.com/charmbracelet/lipgloss v1.0.0 // indirect
 	github.com/charmbracelet/x/ansi v0.4.2 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
@@ -22,7 +24,6 @@ require (
 	github.com/klauspost/compress v1.17.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lrstanley/bubblezone v0.0.0-20240125042004-b7bafc493195 // indirect
-	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
@@ -36,6 +37,7 @@ require (
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/image v0.11.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.24.0 // indirect

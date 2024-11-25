@@ -60,13 +60,23 @@ func tuiPeriodicUpdates(db *db.DB, p *tea.Program, updateData view.UpdateData, d
 	ticker := time.NewTicker(time.Duration(updateData.Interval) * time.Second)
 	defer ticker.Stop()
 
+	// Immediatly update once
+	msg, err := updateData.Update(db, updateData.View)
+	if err != nil {
+		zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
+	}
+
+	if msg != nil {
+		p.Send(msg)
+	}
+
 	for {
 		select {
 		case <-done:
 			zap.S().Info("TUI: Stopping periodic update for ", updateData.Name)
 			return
 		case <-ticker.C:
-			// Update tap
+			// Update
 			msg, err := updateData.Update(db, updateData.View)
 			if err != nil {
 				zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
