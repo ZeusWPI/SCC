@@ -1,4 +1,5 @@
-package view
+// Package gamification provides the functions to draw an overview of gamification on a TUI
+package gamification
 
 import (
 	"context"
@@ -17,6 +18,7 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/config"
+	"github.com/zeusWPI/scc/ui/view"
 )
 
 var width = 20
@@ -34,8 +36,8 @@ var (
 	scoreStyle = base.Width(width).Align(lipgloss.Center)
 )
 
-// GamificationModel represents the view model for gamification
-type GamificationModel struct {
+// Model represents the view model for gamification
+type Model struct {
 	db          *db.DB
 	leaderboard []gamificationItem
 }
@@ -45,25 +47,25 @@ type gamificationItem struct {
 	item  dto.Gamification
 }
 
-// GamificationMsg contains the data to update the gamification model
-type GamificationMsg struct {
+// Msg contains the data to update the gamification model
+type Msg struct {
 	leaderboard []gamificationItem
 }
 
-// NewGamificationModel initializes a new gamification model
-func NewGamificationModel(db *db.DB) View {
-	return &GamificationModel{db: db, leaderboard: []gamificationItem{}}
+// NewModel initializes a new gamification model
+func NewModel(db *db.DB) view.View {
+	return &Model{db: db, leaderboard: []gamificationItem{}}
 }
 
 // Init starts the gamification view
-func (g *GamificationModel) Init() tea.Cmd {
+func (g *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the gamification view
-func (g *GamificationModel) Update(msg tea.Msg) (View, tea.Cmd) {
+func (g *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
-	case GamificationMsg:
+	case Msg:
 		g.leaderboard = msg.leaderboard
 	}
 
@@ -71,7 +73,7 @@ func (g *GamificationModel) Update(msg tea.Msg) (View, tea.Cmd) {
 }
 
 // View draws the gamification view
-func (g *GamificationModel) View() string {
+func (g *Model) View() string {
 	columns := make([]string, 0, len(g.leaderboard))
 
 	for i, item := range g.leaderboard {
@@ -90,8 +92,8 @@ func (g *GamificationModel) View() string {
 }
 
 // GetUpdateDatas get all update functions for the gamification view
-func (g *GamificationModel) GetUpdateDatas() []UpdateData {
-	return []UpdateData{
+func (g *Model) GetUpdateDatas() []view.UpdateData {
+	return []view.UpdateData{
 		{
 			Name:     "gamification leaderboard",
 			View:     g,
@@ -101,8 +103,8 @@ func (g *GamificationModel) GetUpdateDatas() []UpdateData {
 	}
 }
 
-func updateLeaderboard(db *db.DB, view View) (tea.Msg, error) {
-	g := view.(*GamificationModel)
+func updateLeaderboard(db *db.DB, view view.View) (tea.Msg, error) {
+	g := view.(*Model)
 
 	gams, err := db.Queries.GetAllGamificationByScore(context.Background())
 	if err != nil {
@@ -128,7 +130,7 @@ func updateLeaderboard(db *db.DB, view View) (tea.Msg, error) {
 		return nil, nil
 	}
 
-	msg := GamificationMsg{leaderboard: []gamificationItem{}}
+	msg := Msg{leaderboard: []gamificationItem{}}
 	for _, gam := range gams {
 		if gam.Avatar == "" {
 			// No avatar downloaded
