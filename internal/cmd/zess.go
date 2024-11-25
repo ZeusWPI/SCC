@@ -28,6 +28,13 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 
+	// Run immediatly once
+	zap.S().Info("Zess: Updating seasons")
+	err := zess.UpdateSeasons()
+	if err != nil {
+		zap.S().Error("Zess: Error updating seasons\n", err)
+	}
+
 	for {
 		select {
 		case <-done:
@@ -50,6 +57,13 @@ func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool) {
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
+
+	// Run immediatly once
+	zap.S().Info("Zess: Updating scans")
+	err := zess.UpdateScans()
+	if err != nil {
+		zap.S().Error("Zess: Error updating scans\n", err)
+	}
 
 	for {
 		select {

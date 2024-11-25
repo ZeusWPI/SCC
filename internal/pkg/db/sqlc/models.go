@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+type Gamification struct {
+	ID     int64
+	Name   string
+	Score  int64
+	Avatar string
+}
+
 type Message struct {
 	ID        int64
 	Name      string
