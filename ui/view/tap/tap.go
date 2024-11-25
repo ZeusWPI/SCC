@@ -1,4 +1,5 @@
-package view
+// Package tap provides the functions to draw an overview of the recent tap orders on a TUI
+package tap
 
 import (
 	"context"
@@ -9,10 +10,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
+	"github.com/zeusWPI/scc/ui/view"
 )
 
-// TapModel represents the tap model
-type TapModel struct {
+// Model represents the tap model
+type Model struct {
 	db          *db.DB
 	lastOrderID int64
 	mate        float64
@@ -21,8 +23,8 @@ type TapModel struct {
 	food        float64
 }
 
-// TapMsg represents a tap message
-type TapMsg struct {
+// Msg represents a tap message
+type Msg struct {
 	lastOrderID int64
 	items       []tapItem
 }
@@ -39,20 +41,20 @@ var tapCategoryColor = map[string]lipgloss.Color{
 	"Food": lipgloss.Color("40"),
 }
 
-// NewTapModel creates a new tap model
-func NewTapModel(db *db.DB) View {
-	return &TapModel{db: db, lastOrderID: -1}
+// NewModel creates a new tap model
+func NewModel(db *db.DB) view.View {
+	return &Model{db: db, lastOrderID: -1}
 }
 
 // Init initializes the tap model
-func (t *TapModel) Init() tea.Cmd {
+func (t *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the tap model
-func (t *TapModel) Update(msg tea.Msg) (View, tea.Cmd) {
+func (t *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
-	case TapMsg:
+	case Msg:
 		t.lastOrderID = msg.lastOrderID
 
 		for _, msg := range msg.items {
@@ -75,7 +77,7 @@ func (t *TapModel) Update(msg tea.Msg) (View, tea.Cmd) {
 }
 
 // View returns the tap view
-func (t *TapModel) View() string {
+func (t *Model) View() string {
 	chart := barchart.New(20, 20)
 
 	barMate := barchart.BarData{
@@ -118,8 +120,8 @@ func (t *TapModel) View() string {
 }
 
 // GetUpdateDatas returns all the update functions for the tap model
-func (t *TapModel) GetUpdateDatas() []UpdateData {
-	return []UpdateData{
+func (t *Model) GetUpdateDatas() []view.UpdateData {
+	return []view.UpdateData{
 		{
 			Name:     "tap orders",
 			View:     t,
@@ -129,8 +131,8 @@ func (t *TapModel) GetUpdateDatas() []UpdateData {
 	}
 }
 
-func updateOrders(db *db.DB, view View) (tea.Msg, error) {
-	t := view.(*TapModel)
+func updateOrders(db *db.DB, view view.View) (tea.Msg, error) {
+	t := view.(*Model)
 	lastOrderID := t.lastOrderID
 
 	order, err := db.Queries.GetLastOrderByOrderID(context.Background())
@@ -138,16 +140,16 @@ func updateOrders(db *db.DB, view View) (tea.Msg, error) {
 		if err == sql.ErrNoRows {
 			err = nil
 		}
-		return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}, err
+		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, err
 	}
 
 	if order.OrderID <= lastOrderID {
-		return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}, nil
+		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, nil
 	}
 
 	orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
 	if err != nil {
-		return TapMsg{lastOrderID: lastOrderID, items: []tapItem{}}, err
+		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, err
 	}
 
 	mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0
@@ -178,5 +180,5 @@ func updateOrders(db *db.DB, view View) (tea.Msg, error) {
 		messages = append(messages, tapItem{"Food", food})
 	}
 
-	return TapMsg{lastOrderID: order.OrderID, items: messages}, err
+	return Msg{lastOrderID: order.OrderID, items: messages}, err
 }

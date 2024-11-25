@@ -1,4 +1,5 @@
-package view
+// Package zess provides the functions to draw an overview of the zess scans on a TUI
+package zess
 
 import (
 	"context"
@@ -10,55 +11,56 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
+	"github.com/zeusWPI/scc/ui/view"
 	"go.uber.org/zap"
 )
 
-// zessTime represents a time object by keeping the year and week number
-type zessTime struct {
+// time represents a time object by keeping the year and week number
+type time struct {
 	year int
 	week int
 }
 
-type zessWeekScan struct {
-	time   zessTime
+type weekScan struct {
+	time   time
 	amount int64
 	label  string
 }
 
-// ZessModel represents the model for the zess view
-type ZessModel struct {
+// Model represents the Model for the zess view
+type Model struct {
 	db            *db.DB
 	lastScanID    int64
-	scans         []zessWeekScan // Queue of scans per week
+	scans         []weekScan // Queue of scans per week
 	maxWeekScans  int64
-	currentSeason zessTime // Start week of the season
+	currentSeason time // Start week of the season
 	seasonScans   int64
 }
 
-// ZessMsg is the base message to indicate that something changed in the zess view
-type ZessMsg struct{}
+// Msg is the base message to indicate that something changed in the zess view
+type Msg struct{}
 
-// zessScanMsg is used to indicate that the zess view should be updated with new scans
-type zessScanMsg struct {
-	ZessMsg
+// scanMsg is used to indicate that the zess view should be updated with new scans
+type scanMsg struct {
+	Msg
 	lastScanID int64
-	scans      []zessWeekScan
+	scans      []weekScan
 }
 
-// zessSeasonMsg is used to indicate that the current season changed.
-type zessSeasonMsg struct {
-	ZessMsg
-	start zessTime
+// seasonMsg is used to indicate that the current season changed.
+type seasonMsg struct {
+	Msg
+	start time
 }
 
-// NewZessModel creates a new zess model view
-func NewZessModel(db *db.DB) View {
-	z := &ZessModel{
+// NewModel creates a new zess model view
+func NewModel(db *db.DB) view.View {
+	z := &Model{
 		db:            db,
 		lastScanID:    -1,
-		scans:         make([]zessWeekScan, 0),
+		scans:         make([]weekScan, 0),
 		maxWeekScans:  -1,
-		currentSeason: zessTime{year: -1, week: -1},
+		currentSeason: time{year: -1, week: -1},
 		seasonScans:   0,
 	}
 
@@ -82,15 +84,15 @@ func NewZessModel(db *db.DB) View {
 }
 
 // Init created a new zess model
-func (z *ZessModel) Init() tea.Cmd {
+func (z *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the zess model
-func (z *ZessModel) Update(msg tea.Msg) (View, tea.Cmd) {
+func (z *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	// New scan(s)
-	case zessScanMsg:
+	case scanMsg:
 		z.lastScanID = msg.lastScanID
 		// Add new scans
 		for _, newScan := range msg.scans {
@@ -126,12 +128,12 @@ func (z *ZessModel) Update(msg tea.Msg) (View, tea.Cmd) {
 
 	// New season!
 	// Update variables accordinly
-	case zessSeasonMsg:
+	case seasonMsg:
 		z.currentSeason = msg.start
 		z.seasonScans = 0
 		z.maxWeekScans = 0
 
-		validScans := make([]zessWeekScan, 0, len(z.scans))
+		validScans := make([]weekScan, 0, len(z.scans))
 
 		for _, scan := range z.scans {
 			// Add scans if they happend after (or in the same week of) the season start
@@ -153,7 +155,7 @@ func (z *ZessModel) Update(msg tea.Msg) (View, tea.Cmd) {
 }
 
 // View returns the view for the zess model
-func (z *ZessModel) View() string {
+func (z *Model) View() string {
 	chart := barchart.New(20, 20)
 
 	for _, scan := range z.scans {
@@ -183,8 +185,8 @@ func (z *ZessModel) View() string {
 }
 
 // GetUpdateDatas returns all the update functions for the zess model
-func (z *ZessModel) GetUpdateDatas() []UpdateData {
-	return []UpdateData{
+func (z *Model) GetUpdateDatas() []view.UpdateData {
+	return []view.UpdateData{
 		{
 			Name:     "zess scans",
 			View:     z,
@@ -201,8 +203,8 @@ func (z *ZessModel) GetUpdateDatas() []UpdateData {
 }
 
 // Check for any new scans
-func updateScans(db *db.DB, view View) (tea.Msg, error) {
-	z := view.(*ZessModel)
+func updateScans(db *db.DB, view view.View) (tea.Msg, error) {
+	z := view.(*Model)
 	lastScanID := z.lastScanID
 
 	// Get new scans
@@ -220,12 +222,12 @@ func updateScans(db *db.DB, view View) (tea.Msg, error) {
 		return nil, nil
 	}
 
-	zessScanMsg := zessScanMsg{lastScanID: lastScanID, scans: make([]zessWeekScan, 0)}
+	zessScanMsg := scanMsg{lastScanID: lastScanID, scans: make([]weekScan, 0)}
 
 	// Add new scans to scan msg
 	for _, newScan := range scans {
 		yearNumber, weekNumber := newScan.ScanTime.ISOWeek()
-		newTime := zessTime{year: yearNumber, week: weekNumber}
+		newTime := time{year: yearNumber, week: weekNumber}
 
 		found := false
 		for i, scan := range zessScanMsg.scans {
@@ -237,7 +239,7 @@ func updateScans(db *db.DB, view View) (tea.Msg, error) {
 		}
 
 		if !found {
-			zessScanMsg.scans = append(zessScanMsg.scans, zessWeekScan{time: newTime, amount: 1, label: newScan.ScanTime.Format("02/01")})
+			zessScanMsg.scans = append(zessScanMsg.scans, weekScan{time: newTime, amount: 1, label: newScan.ScanTime.Format("02/01")})
 		}
 
 		// Update scan ID
@@ -251,8 +253,8 @@ func updateScans(db *db.DB, view View) (tea.Msg, error) {
 }
 
 // Check if a new season started
-func updateSeason(db *db.DB, view View) (tea.Msg, error) {
-	z := view.(*ZessModel)
+func updateSeason(db *db.DB, view view.View) (tea.Msg, error) {
+	z := view.(*Model)
 
 	season, err := db.Queries.GetSeasonCurrent(context.Background())
 	if err != nil {
@@ -265,19 +267,19 @@ func updateSeason(db *db.DB, view View) (tea.Msg, error) {
 
 	// Check if we have a new season
 	yearNumber, weekNumber := season.Start.ISOWeek()
-	seasonStart := zessTime{year: yearNumber, week: weekNumber}
+	seasonStart := time{year: yearNumber, week: weekNumber}
 	if z.currentSeason.equal(seasonStart) {
 		// Same season
 		return nil, nil
 	}
 
-	return zessSeasonMsg{start: seasonStart}, nil
+	return seasonMsg{start: seasonStart}, nil
 }
 
-func (z *zessTime) equal(z2 zessTime) bool {
+func (z *time) equal(z2 time) bool {
 	return z.week == z2.week && z.year == z2.year
 }
-func (z *zessTime) after(z2 zessTime) bool {
+func (z *time) after(z2 time) bool {
 	if z.year > z2.year {
 		return true
 	} else if z.year < z2.year {

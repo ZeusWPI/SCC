@@ -5,6 +5,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/ui/view/zess"
 )
 
 // Cammie represents the cammie screen
@@ -15,7 +16,7 @@ type Cammie struct {
 
 // NewCammie creates a new cammie screen
 func NewCammie(db *db.DB) Screen {
-	return &Cammie{db: db, zess: view.NewZessModel(db)}
+	return &Cammie{db: db, zess: zess.NewModel(db)}
 }
 
 // Init initializes the cammie screen
@@ -27,7 +28,7 @@ func (c *Cammie) Init() tea.Cmd {
 func (c *Cammie) Update(msg tea.Msg) (Screen, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
-	case view.ZessMsg:
+	case zess.Msg:
 		zess, cmd := c.zess.Update(msg)
 		c.zess = zess
 

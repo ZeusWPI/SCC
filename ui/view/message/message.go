@@ -1,4 +1,5 @@
-package view
+// Package message provides the functions to draw all the cammie messages on a TUI
+package message
 
 import (
 	"context"
@@ -12,18 +13,19 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 	"github.com/zeusWPI/scc/pkg/config"
+	"github.com/zeusWPI/scc/ui/view"
 	"go.uber.org/zap"
 )
 
-// MessageModel represents the model for the message view
-type MessageModel struct {
+// Model represents the model for the message view
+type Model struct {
 	db            *db.DB
 	lastMessageID int64
 	messages      []string
 }
 
-// MessageMsg represents the message to update the message view
-type MessageMsg struct {
+// Msg represents the message to update the message view
+type Msg struct {
 	lastMessageID int64
 	messages      []string
 }
@@ -33,20 +35,20 @@ var messageColor = []string{
 	"#ff0000", "#00ff00", "#ffff00", "#0000ff", "#ff00ff", "#00ffff", "#ffffff",
 }
 
-// NewMessageModel creates a new message model view
-func NewMessageModel(db *db.DB) View {
-	return &MessageModel{db: db, lastMessageID: -1, messages: []string{}}
+// NewModel creates a new message model view
+func NewModel(db *db.DB) view.View {
+	return &Model{db: db, lastMessageID: -1, messages: []string{}}
 }
 
 // Init initializes the message model view
-func (m *MessageModel) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the message model view
-func (m *MessageModel) Update(msg tea.Msg) (View, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
-	case MessageMsg:
+	case Msg:
 		m.lastMessageID = msg.lastMessageID
 		m.messages = append(m.messages, msg.messages...)
 
@@ -57,7 +59,7 @@ func (m *MessageModel) Update(msg tea.Msg) (View, tea.Cmd) {
 }
 
 // View returns the view for the message model
-func (m *MessageModel) View() string {
+func (m *Model) View() string {
 	// TODO: Limit the amount of messages shown
 	// TODO: Wrap messages
 	zap.S().Info("Viewing messages")
@@ -66,8 +68,8 @@ func (m *MessageModel) View() string {
 }
 
 // GetUpdateDatas returns all the update functions for the message model
-func (m *MessageModel) GetUpdateDatas() []UpdateData {
-	return []UpdateData{
+func (m *Model) GetUpdateDatas() []view.UpdateData {
+	return []view.UpdateData{
 		{
 			Name:     "cammie messages",
 			View:     m,
@@ -77,8 +79,8 @@ func (m *MessageModel) GetUpdateDatas() []UpdateData {
 	}
 }
 
-func updateMessages(db *db.DB, view View) (tea.Msg, error) {
-	m := view.(*MessageModel)
+func updateMessages(db *db.DB, view view.View) (tea.Msg, error) {
+	m := view.(*Model)
 	lastMessageID := m.lastMessageID
 
 	message, err := db.Queries.GetLastMessage(context.Background())
@@ -86,17 +88,17 @@ func updateMessages(db *db.DB, view View) (tea.Msg, error) {
 		if err == sql.ErrNoRows {
 			err = nil
 		}
-		return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}, err
+		return Msg{lastMessageID: lastMessageID, messages: []string{}}, err
 	}
 
 	if message.ID <= lastMessageID {
-		return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}, nil
+		return Msg{lastMessageID: lastMessageID, messages: []string{}}, nil
 	}
 
 	messages, err := db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
 	if err != nil {
 		zap.S().Error("DB: Failed to get messages", err)
-		return MessageMsg{lastMessageID: lastMessageID, messages: []string{}}, err
+		return Msg{lastMessageID: lastMessageID, messages: []string{}}, err
 	}
 
 	formattedMessages := make([]string, 0, len(messages))
@@ -104,7 +106,7 @@ func updateMessages(db *db.DB, view View) (tea.Msg, error) {
 		formattedMessages = append(formattedMessages, formatMessage(message))
 	}
 
-	return MessageMsg{lastMessageID: message.ID, messages: formattedMessages}, nil
+	return Msg{lastMessageID: message.ID, messages: formattedMessages}, nil
 }
 
 func hashColor(s string) string {
