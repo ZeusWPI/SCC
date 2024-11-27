@@ -8,13 +8,13 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/zeusWPI/scc/internal/api"
 	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/internal/pkg/spotify"
+	"github.com/zeusWPI/scc/internal/pkg/song"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
 // API starts the API server
-func API(db *db.DB, spotify *spotify.Spotify) {
+func API(db *db.DB, song *song.Song) {
 	app := fiber.New(fiber.Config{
 		BodyLimit: 1024 * 1024 * 1024,
 	})
@@ -29,7 +29,7 @@ func API(db *db.DB, spotify *spotify.Spotify) {
 	)
 
 	apiGroup := app.Group("/api")
-	api.New(apiGroup, db, spotify)
+	api.New(apiGroup, db, song)
 
 	host := config.GetDefaultString("server.host", "127.0.0.1")
 	port := config.GetDefaultInt("server.port", 3000)
