@@ -1,7 +1,6 @@
 package song
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -19,17 +18,11 @@ type accountResponse struct {
 func (s *Song) refreshToken() error {
 	zap.S().Info("Song: Refreshing spotify access token")
 
-	body, err := json.Marshal(fiber.Map{
-		"grant_type":    "client_credentials",
-		"client_id":     s.ClientID,
-		"client_secret": s.ClientSecret,
-	})
-	if err != nil {
-		return err
-	}
+	form := &fiber.Args{}
+	form.Add("grant_type", "client_credentials")
 
 	api := config.GetDefaultString("song.spotify_account", "https://accounts.spotify.com/api/token")
-	req := fiber.Post(api).Body(body).ContentType("application/json")
+	req := fiber.Post(api).Form(form).BasicAuth(s.ClientID, s.ClientSecret)
 
 	res := new(accountResponse)
 	status, _, errs := req.Struct(res)

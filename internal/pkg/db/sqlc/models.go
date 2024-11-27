@@ -47,9 +47,33 @@ type Season struct {
 type Song struct {
 	ID         int64
 	Title      string
-	Artists    string
 	SpotifyID  string
 	DurationMs int64
+}
+
+type SongArtist struct {
+	ID         int64
+	Name       string
+	SpotifyID  string
+	Followers  int64
+	Popularity int64
+}
+
+type SongArtistGenre struct {
+	ID       int64
+	ArtistID int64
+	GenreID  int64
+}
+
+type SongArtistSong struct {
+	ID       int64
+	ArtistID int64
+	SongID   int64
+}
+
+type SongGenre struct {
+	ID    int64
+	Genre string
 }
 
 type SongHistory struct {

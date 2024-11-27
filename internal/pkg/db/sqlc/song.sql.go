@@ -7,36 +7,123 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createSong = `-- name: CreateSong :one
-INSERT INTO song (title, artists, spotify_id, duration_ms)
-VALUES (?, ?, ?, ?)
-RETURNING id, title, artists, spotify_id, duration_ms
+INSERT INTO song (title, spotify_id, duration_ms)
+VALUES (?, ?, ?)
+RETURNING id, title, spotify_id, duration_ms
 `
 
 type CreateSongParams struct {
 	Title      string
-	Artists    string
 	SpotifyID  string
 	DurationMs int64
 }
 
 func (q *Queries) CreateSong(ctx context.Context, arg CreateSongParams) (Song, error) {
-	row := q.db.QueryRowContext(ctx, createSong,
-		arg.Title,
-		arg.Artists,
-		arg.SpotifyID,
-		arg.DurationMs,
-	)
+	row := q.db.QueryRowContext(ctx, createSong, arg.Title, arg.SpotifyID, arg.DurationMs)
 	var i Song
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
-		&i.Artists,
 		&i.SpotifyID,
 		&i.DurationMs,
 	)
+	return i, err
+}
+
+const createSongArtist = `-- name: CreateSongArtist :one
+INSERT INTO song_artist (name, spotify_id, followers, popularity)
+VALUES (?, ?, ?, ?)
+RETURNING id, name, spotify_id, followers, popularity
+`
+
+type CreateSongArtistParams struct {
+	Name       string
+	SpotifyID  string
+	Followers  int64
+	Popularity int64
+}
+
+func (q *Queries) CreateSongArtist(ctx context.Context, arg CreateSongArtistParams) (SongArtist, error) {
+	row := q.db.QueryRowContext(ctx, createSongArtist,
+		arg.Name,
+		arg.SpotifyID,
+		arg.Followers,
+		arg.Popularity,
+	)
+	var i SongArtist
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SpotifyID,
+		&i.Followers,
+		&i.Popularity,
+	)
+	return i, err
+}
+
+const createSongArtistGenre = `-- name: CreateSongArtistGenre :one
+INSERT INTO song_artist_genre (artist_id, genre_id)
+VALUES (?, ?)
+RETURNING id, artist_id, genre_id
+`
+
+type CreateSongArtistGenreParams struct {
+	ArtistID int64
+	GenreID  int64
+}
+
+func (q *Queries) CreateSongArtistGenre(ctx context.Context, arg CreateSongArtistGenreParams) (SongArtistGenre, error) {
+	row := q.db.QueryRowContext(ctx, createSongArtistGenre, arg.ArtistID, arg.GenreID)
+	var i SongArtistGenre
+	err := row.Scan(&i.ID, &i.ArtistID, &i.GenreID)
+	return i, err
+}
+
+const createSongArtistSong = `-- name: CreateSongArtistSong :one
+INSERT INTO song_artist_song (artist_id, song_id)
+VALUES (?, ?)
+RETURNING id, artist_id, song_id
+`
+
+type CreateSongArtistSongParams struct {
+	ArtistID int64
+	SongID   int64
+}
+
+func (q *Queries) CreateSongArtistSong(ctx context.Context, arg CreateSongArtistSongParams) (SongArtistSong, error) {
+	row := q.db.QueryRowContext(ctx, createSongArtistSong, arg.ArtistID, arg.SongID)
+	var i SongArtistSong
+	err := row.Scan(&i.ID, &i.ArtistID, &i.SongID)
+	return i, err
+}
+
+const createSongGenre = `-- name: CreateSongGenre :one
+INSERT INTO song_genre (genre)
+VALUES (?)
+RETURNING id, genre
+`
+
+func (q *Queries) CreateSongGenre(ctx context.Context, genre string) (SongGenre, error) {
+	row := q.db.QueryRowContext(ctx, createSongGenre, genre)
+	var i SongGenre
+	err := row.Scan(&i.ID, &i.Genre)
+	return i, err
+}
+
+const createSongHistory = `-- name: CreateSongHistory :one
+INSERT INTO song_history (song_id)
+VALUES (?)
+RETURNING id, song_id, created_at
+`
+
+func (q *Queries) CreateSongHistory(ctx context.Context, songID int64) (SongHistory, error) {
+	row := q.db.QueryRowContext(ctx, createSongHistory, songID)
+	var i SongHistory
+	err := row.Scan(&i.ID, &i.SongID, &i.CreatedAt)
 	return i, err
 }
 
@@ -55,7 +142,7 @@ func (q *Queries) DeleteSong(ctx context.Context, id int64) (int64, error) {
 
 const getAllSongs = `-- name: GetAllSongs :many
 
-SELECT id, title, artists, spotify_id, duration_ms
+SELECT id, title, spotify_id, duration_ms
 FROM song
 `
 
@@ -72,7 +159,6 @@ func (q *Queries) GetAllSongs(ctx context.Context) ([]Song, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
-			&i.Artists,
 			&i.SpotifyID,
 			&i.DurationMs,
 		); err != nil {
@@ -89,8 +175,109 @@ func (q *Queries) GetAllSongs(ctx context.Context) ([]Song, error) {
 	return items, nil
 }
 
+const getLastSongFull = `-- name: GetLastSongFull :many
+SELECT s.title AS song_title, s.spotify_id, s.duration_ms, a.name AS artist_name, g.genre AS genre
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+LEFT JOIN song_artist_song sa ON s.id = sa.song_id
+LEFT JOIN song_artist a ON sa.artist_id = a.id
+LEFT JOIN song_artist_genre ag ON ag.artist_id = a.id
+LEFT JOIN song_genre g ON ag.genre_id = g.id
+WHERE sh.created_at = (SELECT MAX(created_at) FROM song_history)
+ORDER BY a.name, g.genre
+`
+
+type GetLastSongFullRow struct {
+	SongTitle  string
+	SpotifyID  string
+	DurationMs int64
+	ArtistName sql.NullString
+	Genre      sql.NullString
+}
+
+func (q *Queries) GetLastSongFull(ctx context.Context) ([]GetLastSongFullRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLastSongFull)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLastSongFullRow
+	for rows.Next() {
+		var i GetLastSongFullRow
+		if err := rows.Scan(
+			&i.SongTitle,
+			&i.SpotifyID,
+			&i.DurationMs,
+			&i.ArtistName,
+			&i.Genre,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getLastSongHistory = `-- name: GetLastSongHistory :one
+SELECT id, song_id, created_at
+FROM song_history
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLastSongHistory(ctx context.Context) (SongHistory, error) {
+	row := q.db.QueryRowContext(ctx, getLastSongHistory)
+	var i SongHistory
+	err := row.Scan(&i.ID, &i.SongID, &i.CreatedAt)
+	return i, err
+}
+
+const getSongArtistByName = `-- name: GetSongArtistByName :one
+SELECT id, name, spotify_id, followers, popularity
+FROM song_artist
+WHERE name = ?
+`
+
+func (q *Queries) GetSongArtistByName(ctx context.Context, name string) (SongArtist, error) {
+	row := q.db.QueryRowContext(ctx, getSongArtistByName, name)
+	var i SongArtist
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SpotifyID,
+		&i.Followers,
+		&i.Popularity,
+	)
+	return i, err
+}
+
+const getSongArtistBySpotifyID = `-- name: GetSongArtistBySpotifyID :one
+SELECT id, name, spotify_id, followers, popularity
+FROM song_artist
+WHERE spotify_id = ?
+`
+
+func (q *Queries) GetSongArtistBySpotifyID(ctx context.Context, spotifyID string) (SongArtist, error) {
+	row := q.db.QueryRowContext(ctx, getSongArtistBySpotifyID, spotifyID)
+	var i SongArtist
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SpotifyID,
+		&i.Followers,
+		&i.Popularity,
+	)
+	return i, err
+}
+
 const getSongByID = `-- name: GetSongByID :one
-SELECT id, title, artists, spotify_id, duration_ms
+SELECT id, title, spotify_id, duration_ms
 FROM song
 WHERE id = ?
 `
@@ -101,7 +288,6 @@ func (q *Queries) GetSongByID(ctx context.Context, id int64) (Song, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
-		&i.Artists,
 		&i.SpotifyID,
 		&i.DurationMs,
 	)
@@ -110,7 +296,7 @@ func (q *Queries) GetSongByID(ctx context.Context, id int64) (Song, error) {
 
 const getSongBySpotifyID = `-- name: GetSongBySpotifyID :one
 
-SELECT id, title, artists, spotify_id, duration_ms
+SELECT id, title, spotify_id, duration_ms
 FROM song
 WHERE spotify_id = ?
 `
@@ -122,23 +308,34 @@ func (q *Queries) GetSongBySpotifyID(ctx context.Context, spotifyID string) (Son
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
-		&i.Artists,
 		&i.SpotifyID,
 		&i.DurationMs,
 	)
 	return i, err
 }
 
+const getSongGenreByName = `-- name: GetSongGenreByName :one
+SELECT id, genre
+FROM song_genre
+WHERE genre = ?
+`
+
+func (q *Queries) GetSongGenreByName(ctx context.Context, genre string) (SongGenre, error) {
+	row := q.db.QueryRowContext(ctx, getSongGenreByName, genre)
+	var i SongGenre
+	err := row.Scan(&i.ID, &i.Genre)
+	return i, err
+}
+
 const updateSong = `-- name: UpdateSong :one
 UPDATE song
-SET title = ?, artists = ?, spotify_id = ?, duration_ms = ?
+SET title = ?, spotify_id = ?, duration_ms = ?
 WHERE id = ?
-RETURNING id, title, artists, spotify_id, duration_ms
+RETURNING id, title, spotify_id, duration_ms
 `
 
 type UpdateSongParams struct {
 	Title      string
-	Artists    string
 	SpotifyID  string
 	DurationMs int64
 	ID         int64
@@ -147,7 +344,6 @@ type UpdateSongParams struct {
 func (q *Queries) UpdateSong(ctx context.Context, arg UpdateSongParams) (Song, error) {
 	row := q.db.QueryRowContext(ctx, updateSong,
 		arg.Title,
-		arg.Artists,
 		arg.SpotifyID,
 		arg.DurationMs,
 		arg.ID,
@@ -156,7 +352,6 @@ func (q *Queries) UpdateSong(ctx context.Context, arg UpdateSongParams) (Song, e
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
-		&i.Artists,
 		&i.SpotifyID,
 		&i.DurationMs,
 	)

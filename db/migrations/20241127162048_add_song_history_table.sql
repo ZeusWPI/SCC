@@ -5,7 +5,7 @@ DROP COLUMN created_at;
 
 ALTER TABLE spotify RENAME TO song;
 
-CREATE TABLE song_history (
+CREATE TABLE IF NOT EXISTS song_history (
     id INTEGER PRIMARY KEY,
     song_id INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
