@@ -14,9 +14,12 @@ Displays the cammie chat along with some other statistics.
 
 ### Configuration
 
-1. Create a `.env` file specifying the environment. Available options are:
-   -  `development`
-   -  `production`
+1. Create a `.env` file specifying
+  - `APP_ENV`. Available options are:
+     -  `development`
+     -  `production`
+  - `SONG_SPOTIFY_CLIENT_ID`
+  - `SONG_SPOTIFY_CLIENT_SECRET`
 2. Configure the appropriate settings in the corresponding configuration file located in the [config directory](./config)
 
 ## DB
@@ -26,7 +29,7 @@ SQLC is used to generate statically typed queries and goose is responsible for t
 
 ### Usefull commands
 
-- `make migrate`: Run database migrations to update your database schema.
+- `make migrate`: Run database migrations to update your database schema (watch out, migrations might result in minor data loss).
 - `make create-migration`: Create a new migration in the [db/migrations](./db/migrations/) directory.
 - `make sqlc`: Generate statically typed queries based on the .sql files in the [db/queries](./db/queries/) directory. Add new queries to this directory as needed.
 

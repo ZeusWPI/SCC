@@ -73,21 +73,89 @@ func (s *Song) Track(track *dto.Song) error {
 		}
 	}
 
-	// Set track info
-	err = s.getTrack(track)
-	if err != nil {
+	// Get track info
+	if err = s.getTrack(track); err != nil {
 		return err
 	}
 
 	// Store track in DB
-	trackDB, err = s.db.Queries.CreateSong(context.Background(), track.CreateParams())
+	trackDB, err = s.db.Queries.CreateSong(context.Background(), *track.CreateSongParams())
 	if err != nil {
 		return err
 	}
+	track.ID = trackDB.ID
+
+	// Handle artists
+	var errs []error
+	for i, artist := range track.Artists {
+		a, err := s.db.Queries.GetSongArtistBySpotifyID(context.Background(), artist.SpotifyID)
+		if err != nil && err != sql.ErrNoRows {
+			errs = append(errs, err)
+			continue
+		}
+
+		if (a != sqlc.SongArtist{}) {
+			// Artist already exists
+			// Add it as an artist for this track
+			if _, err := s.db.Queries.CreateSongArtistSong(context.Background(), *track.CreateSongArtistSongParams(i)); err != nil {
+				errs = append(errs, err)
+			}
+			continue
+		}
+
+		// Get artist data
+		if err := s.getArtist(&track.Artists[i]); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		// Insert artist in DB
+		a, err = s.db.Queries.CreateSongArtist(context.Background(), *track.CreateSongArtistParams(i))
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		track.Artists[i].ID = a.ID
+
+		// Add artist as an artist for this song
+		if _, err := s.db.Queries.CreateSongArtistSong(context.Background(), *track.CreateSongArtistSongParams(i)); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		// Check if the artists genres are in db
+		for j, genre := range track.Artists[i].Genres {
+			g, err := s.db.Queries.GetSongGenreByName(context.Background(), genre.Genre)
+			if err != nil && err != sql.ErrNoRows {
+				errs = append(errs, err)
+				continue
+			}
+
+			if (g != sqlc.SongGenre{}) {
+				// Genre already exists
+				continue
+			}
+
+			// Insert genre in DB
+			g, err = s.db.Queries.CreateSongGenre(context.Background(), track.CreateSongGenreParams(i, j))
+			if err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			track.Artists[i].Genres[j].ID = g.ID
+
+			// Add genre as a genre for this artist
+			if _, err := s.db.Queries.CreateSongArtistGenre(context.Background(), *track.CreateSongArtistGenreParamas(i, j)); err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}
 
 	// Add to song history
-	_, err = s.db.Queries.CreateSongHistory(context.Background(), trackDB.ID)
+	if _, err = s.db.Queries.CreateSongHistory(context.Background(), trackDB.ID); err != nil {
+		errs = append(errs, err)
+	}
 
-	return err
+	return errors.Join(errs...)
 
 }
