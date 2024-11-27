@@ -1,4 +1,4 @@
-package spotify
+package song
 
 import (
 	"encoding/json"
@@ -6,10 +6,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
-
-const accountURL = "https://accounts.spotify.com/api/token"
 
 type accountResponse struct {
 	AccessToken string `json:"access_token"`
@@ -17,8 +16,8 @@ type accountResponse struct {
 	ExpiresIn   int64  `json:"expires_in"`
 }
 
-func (s *Spotify) refreshToken() error {
-	zap.S().Info("Spotify: Refreshing access token")
+func (s *Song) refreshToken() error {
+	zap.S().Info("Song: Refreshing spotify access token")
 
 	body, err := json.Marshal(fiber.Map{
 		"grant_type":    "client_credentials",
@@ -29,15 +28,16 @@ func (s *Spotify) refreshToken() error {
 		return err
 	}
 
-	req := fiber.Post(accountURL).Body(body).ContentType("application/json")
+	api := config.GetDefaultString("song.spotify_account", "https://accounts.spotify.com/api/token")
+	req := fiber.Post(api).Body(body).ContentType("application/json")
 
 	res := new(accountResponse)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
-		return errors.Join(append([]error{errors.New("Spotify: Token refresh request failed")}, errs...)...)
+		return errors.Join(append([]error{errors.New("Song: Spotify token refresh request failed")}, errs...)...)
 	}
 	if status != fiber.StatusOK {
-		return errors.New("error getting access token")
+		return errors.New("Song: Error getting access token")
 	}
 
 	s.AccessToken = res.AccessToken

@@ -44,13 +44,18 @@ type Season struct {
 	Current bool
 }
 
-type Spotify struct {
+type Song struct {
 	ID         int64
 	Title      string
 	Artists    string
 	SpotifyID  string
 	DurationMs int64
-	CreatedAt  time.Time
+}
+
+type SongHistory struct {
+	ID        int64
+	SongID    int64
+	CreatedAt time.Time
 }
 
 type Tap struct {

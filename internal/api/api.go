@@ -4,13 +4,13 @@ package api
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/api/message"
-	apiSpotify "github.com/zeusWPI/scc/internal/api/spotify"
+	apiSong "github.com/zeusWPI/scc/internal/api/song"
 	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/internal/pkg/spotify"
+	"github.com/zeusWPI/scc/internal/pkg/song"
 )
 
 // New creates a new API instance
-func New(router fiber.Router, db *db.DB, spotify *spotify.Spotify) {
+func New(router fiber.Router, db *db.DB, song *song.Song) {
 	message.New(router, db)
-	apiSpotify.New(router, db, spotify)
+	apiSong.New(router, db, song)
 }

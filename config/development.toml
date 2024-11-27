@@ -2,9 +2,11 @@
 host = "localhost"
 port = 3000
 
-[spotify]
-client_id = "your_client_id"
-client_secret = "your_client_secret"
+[song]
+spotify_client_id = "your_client_id"
+spotify_client_secret = "your_client_secret"
+spotify_api = "https://api.spotify.com/v1"
+spotify_account = "https://accounts.spotify.com/api/token"
 
 [tap]
 api = "https://tap.zeus.gent"
