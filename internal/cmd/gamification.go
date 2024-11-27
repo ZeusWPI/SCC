@@ -28,8 +28,7 @@ func gamificationPeriodicUpdate(gam *gamification.Gamification, done chan bool) 
 
 	// Run immediatly once
 	zap.S().Info("Gamification: Updating leaderboard")
-	err := gam.Update()
-	if err != nil {
+	if err := gam.Update(); err != nil {
 		zap.S().Error("gamification: Error updating leaderboard\n", err)
 	}
 
@@ -41,8 +40,7 @@ func gamificationPeriodicUpdate(gam *gamification.Gamification, done chan bool) 
 		case <-ticker.C:
 			// Update leaderboard
 			zap.S().Info("Gamification: Updating leaderboard")
-			err := gam.Update()
-			if err != nil {
+			if err := gam.Update(); err != nil {
 				zap.S().Error("gamification: Error updating leaderboard\n", err)
 			}
 		}

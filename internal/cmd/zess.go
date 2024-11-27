@@ -30,8 +30,7 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
 
 	// Run immediatly once
 	zap.S().Info("Zess: Updating seasons")
-	err := zess.UpdateSeasons()
-	if err != nil {
+	if err := zess.UpdateSeasons(); err != nil {
 		zap.S().Error("Zess: Error updating seasons\n", err)
 	}
 
@@ -43,8 +42,7 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
 		case <-ticker.C:
 			// Update seasons
 			zap.S().Info("Zess: Updating seasons")
-			err := zess.UpdateSeasons()
-			if err != nil {
+			if err := zess.UpdateSeasons(); err != nil {
 				zap.S().Error("Zess: Error updating seasons\n", err)
 			}
 		}
@@ -60,8 +58,7 @@ func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool) {
 
 	// Run immediatly once
 	zap.S().Info("Zess: Updating scans")
-	err := zess.UpdateScans()
-	if err != nil {
+	if err := zess.UpdateScans(); err != nil {
 		zap.S().Error("Zess: Error updating scans\n", err)
 	}
 
@@ -73,8 +70,7 @@ func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool) {
 		case <-ticker.C:
 			// Update scans
 			zap.S().Info("Zess: Updating scans")
-			err := zess.UpdateScans()
-			if err != nil {
+			if err := zess.UpdateScans(); err != nil {
 				zap.S().Error("Zess: Error updating scans\n", err)
 			}
 		}
