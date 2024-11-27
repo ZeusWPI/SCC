@@ -39,3 +39,6 @@ logs/
 
 # DB
 *.db
+
+# UI Test file
+ui/screen/test.go

@@ -28,8 +28,7 @@ func tapPeriodicUpdate(tap *tap.Tap, done chan bool) {
 
 	// Run immediatly once
 	zap.S().Info("Tap: Updating tap")
-	err := tap.Update()
-	if err != nil {
+	if err := tap.Update(); err != nil {
 		zap.S().Error("Tap: Error updating tap\n", err)
 	}
 
@@ -41,8 +40,7 @@ func tapPeriodicUpdate(tap *tap.Tap, done chan bool) {
 		case <-ticker.C:
 			// Update tap
 			zap.S().Info("Tap: Updating tap")
-			err := tap.Update()
-			if err != nil {
+			if err := tap.Update(); err != nil {
 				zap.S().Error("Tap: Error updating tap\n", err)
 			}
 		}

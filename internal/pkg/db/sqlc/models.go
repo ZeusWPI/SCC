@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+type Event struct {
+	ID           int64
+	Name         string
+	Date         time.Time
+	AcademicYear string
+	Location     string
+}
+
 type Gamification struct {
 	ID     int64
 	Name   string
