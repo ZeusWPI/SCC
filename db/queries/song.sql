@@ -1,17 +1,8 @@
 -- CRUD
 
--- name: GetAllSongs :many
-SELECT *
-FROM song;
-
--- name: GetSongByID :one
-SELECT *
-FROM song
-WHERE id = ?;
-
 -- name: CreateSong :one
-INSERT INTO song (title, spotify_id, duration_ms)
-VALUES (?, ?, ?)
+INSERT INTO song (title, album, spotify_id, duration_ms, lyrics_type, lyrics)
+VALUES (?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: CreateSongHistory :one
@@ -38,16 +29,6 @@ RETURNING *;
 INSERT INTO song_artist_genre (artist_id, genre_id)
 VALUES (?, ?)
 RETURNING *;
-
--- name: UpdateSong :one
-UPDATE song
-SET title = ?, spotify_id = ?, duration_ms = ?
-WHERE id = ?
-RETURNING *;
-
--- name: DeleteSong :execrows
-DELETE FROM song
-WHERE id = ?;
 
 
 -- Other
@@ -79,7 +60,7 @@ FROM song_artist
 WHERE name = ?;
 
 -- name: GetLastSongFull :many
-SELECT s.title AS song_title, s.spotify_id, s.duration_ms, a.name AS artist_name, g.genre AS genre
+SELECT s.title AS song_title, s.spotify_id, s.album, s.duration_ms, s.lyrics_type, s.lyrics, a.name AS artist_name, g.genre AS genre
 FROM song_history sh
 JOIN song s ON sh.song_id = s.id
 LEFT JOIN song_artist_song sa ON s.id = sa.song_id

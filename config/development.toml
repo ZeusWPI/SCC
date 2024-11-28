@@ -5,6 +5,7 @@ port = 3000
 [song]
 spotify_api = "https://api.spotify.com/v1"
 spotify_account = "https://accounts.spotify.com/api/token"
+lrclib_api = "https://lrclib.net/api"
 
 [tap]
 api = "https://tap.zeus.gent"

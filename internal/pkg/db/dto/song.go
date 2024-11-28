@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"database/sql"
+
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 )
 
@@ -8,8 +10,11 @@ import (
 type Song struct {
 	ID         int64        `json:"id"`
 	Title      string       `json:"title"`
+	Album      string       `json:"album"`
 	SpotifyID  string       `json:"spotify_id" validate:"required"`
 	DurationMS int64        `json:"duration_ms"`
+	LyricsType string       `json:"lyrics_type"` // Either 'synced' or 'plain'
+	Lyrics     string       `json:"lyrics"`
 	Artists    []SongArtist `json:"artists"`
 }
 
@@ -31,20 +36,43 @@ type SongGenre struct {
 
 // SongDTO converts a sqlc.Song to a Song
 func SongDTO(song sqlc.Song) *Song {
+	var lyricsType string
+	if song.LyricsType.Valid {
+		lyricsType = song.Lyrics.String
+	}
+	var lyrics string
+	if song.Lyrics.Valid {
+		lyrics = song.Lyrics.String
+	}
+
 	return &Song{
 		ID:         song.ID,
 		Title:      song.Title,
+		Album:      song.Album,
 		SpotifyID:  song.SpotifyID,
 		DurationMS: song.DurationMs,
+		LyricsType: lyricsType,
+		Lyrics:     lyrics,
 	}
 }
 
 // CreateSongParams converts a Song DTO to a sqlc CreateSongParams object
 func (s *Song) CreateSongParams() *sqlc.CreateSongParams {
+	lyricsType := sql.NullString{String: s.LyricsType, Valid: false}
+	if s.LyricsType != "" {
+		lyricsType.Valid = true
+	}
+	lyrics := sql.NullString{String: s.Lyrics, Valid: false}
+	if s.Lyrics != "" {
+		lyrics.Valid = true
+	}
 	return &sqlc.CreateSongParams{
 		Title:      s.Title,
+		Album:      s.Album,
 		SpotifyID:  s.SpotifyID,
 		DurationMs: s.DurationMS,
+		LyricsType: lyricsType,
+		Lyrics:     lyrics,
 	}
 }
 
