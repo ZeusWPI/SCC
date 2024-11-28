@@ -36,6 +36,8 @@ func New(db *db.DB) (*Song, error) {
 
 // Track gets information about the current track and stores it in the database
 func (s *Song) Track(track *dto.Song) error {
+	var errs []error
+
 	if s.ClientID == "" || s.ClientSecret == "" {
 		return errors.New("Song: Spotify client id or secret not set")
 	}
@@ -78,15 +80,20 @@ func (s *Song) Track(track *dto.Song) error {
 		return err
 	}
 
+	// Get lyrics
+	if err = s.getLyrics(track); err != nil {
+		errs = append(errs, err)
+	}
+
 	// Store track in DB
 	trackDB, err = s.db.Queries.CreateSong(context.Background(), *track.CreateSongParams())
 	if err != nil {
-		return err
+		errs = append(errs, err)
+		return errors.Join(errs...)
 	}
 	track.ID = trackDB.ID
 
 	// Handle artists
-	var errs []error
 	for i, artist := range track.Artists {
 		a, err := s.db.Queries.GetSongArtistBySpotifyID(context.Background(), artist.SpotifyID)
 		if err != nil && err != sql.ErrNoRows {

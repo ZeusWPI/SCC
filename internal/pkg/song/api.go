@@ -3,6 +3,7 @@ package song
 import (
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
@@ -17,8 +18,13 @@ type trackArtist struct {
 	Name string `json:"name"`
 }
 
+type trackAlbum struct {
+	Name string `json:"name"`
+}
+
 type trackResponse struct {
 	Name       string        `json:"name"`
+	Album      trackAlbum    `json:"album"`
 	Artists    []trackArtist `json:"artists"`
 	DurationMS int64         `json:"duration_ms"`
 }
@@ -39,6 +45,7 @@ func (s *Song) getTrack(track *dto.Song) error {
 	}
 
 	track.Title = res.Name
+	track.Album = res.Album.Name
 	track.DurationMS = res.DurationMS
 
 	for _, a := range res.Artists {
@@ -81,6 +88,55 @@ func (s *Song) getArtist(artist *dto.SongArtist) error {
 
 	for _, genre := range res.Genres {
 		artist.Genres = append(artist.Genres, dto.SongGenre{Genre: genre})
+	}
+
+	return nil
+}
+
+type lyricsResponse struct {
+	PlainLyrics  string `json:"plainLyrics"`
+	SyncedLyrics string `json:"SyncedLyrics"`
+}
+
+func (s *Song) getLyrics(track *dto.Song) error {
+	// Get most popular artist
+	if len(track.Artists) == 0 {
+		return fmt.Errorf("Song: No artists for track: %v", track)
+	}
+	artist := track.Artists[0]
+	for _, a := range track.Artists {
+		if a.Followers > artist.Followers {
+			artist = a
+		}
+	}
+
+	// Construct url
+	params := url.Values{}
+	params.Set("artist_name", artist.Name)
+	params.Set("track_name", track.Title)
+	params.Set("album_name", track.Album)
+	params.Set("duration", fmt.Sprintf("%d", track.DurationMS/1000))
+
+	req := fiber.Get(fmt.Sprintf("%s/get?%s", config.GetDefaultString("song.lrclib_api", "https://lrclib.net/api"), params.Encode()))
+
+	res := new(lyricsResponse)
+	status, _, errs := req.Struct(res)
+	if len(errs) > 0 {
+		return errors.Join(append([]error{errors.New("Song: Lyrics request failed")}, errs...)...)
+	}
+	if status != fiber.StatusOK {
+		return fmt.Errorf("Song: Lyrics request wrong status code %d", status)
+	}
+	if (res == &lyricsResponse{}) {
+		return errors.New("Song: Lyrics request returned empty struct")
+	}
+
+	if res.SyncedLyrics != "" {
+		track.LyricsType = "synced"
+		track.Lyrics = res.SyncedLyrics
+	} else {
+		track.LyricsType = "plain"
+		track.Lyrics = res.PlainLyrics
 	}
 
 	return nil

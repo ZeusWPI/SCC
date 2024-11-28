@@ -5,6 +5,7 @@
 package sqlc
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -49,6 +50,9 @@ type Song struct {
 	Title      string
 	SpotifyID  string
 	DurationMs int64
+	Album      string
+	LyricsType sql.NullString
+	Lyrics     sql.NullString
 }
 
 type SongArtist struct {
