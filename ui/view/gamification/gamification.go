@@ -58,25 +58,25 @@ func NewModel(db *db.DB) view.View {
 }
 
 // Init starts the gamification view
-func (g *Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the gamification view
-func (g *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case Msg:
-		g.leaderboard = msg.leaderboard
+		m.leaderboard = msg.leaderboard
 	}
 
-	return g, nil
+	return m, nil
 }
 
 // View draws the gamification view
-func (g *Model) View() string {
-	columns := make([]string, 0, len(g.leaderboard))
+func (m *Model) View() string {
+	columns := make([]string, 0, len(m.leaderboard))
 
-	for i, item := range g.leaderboard {
+	for i, item := range m.leaderboard {
 		user := lipgloss.JoinVertical(lipgloss.Left,
 			nameStyles[i%len(nameStyles)].Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
 			scoreStyle.Render(strconv.Itoa(int(item.item.Score))),
@@ -92,21 +92,21 @@ func (g *Model) View() string {
 }
 
 // GetUpdateDatas get all update functions for the gamification view
-func (g *Model) GetUpdateDatas() []view.UpdateData {
+func (m *Model) GetUpdateDatas() []view.UpdateData {
 	return []view.UpdateData{
 		{
 			Name:     "gamification leaderboard",
-			View:     g,
+			View:     m,
 			Update:   updateLeaderboard,
 			Interval: config.GetDefaultInt("tui.gamification.interval_s", 3600),
 		},
 	}
 }
 
-func updateLeaderboard(db *db.DB, view view.View) (tea.Msg, error) {
-	g := view.(*Model)
+func updateLeaderboard(view view.View) (tea.Msg, error) {
+	m := view.(*Model)
 
-	gams, err := db.Queries.GetAllGamificationByScore(context.Background())
+	gams, err := m.db.Queries.GetAllGamificationByScore(context.Background())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = nil
@@ -116,9 +116,9 @@ func updateLeaderboard(db *db.DB, view view.View) (tea.Msg, error) {
 
 	// Check if both leaderboards are equal
 	equal := false
-	if len(g.leaderboard) == len(gams) {
+	if len(m.leaderboard) == len(gams) {
 		equal = true
-		for i, l := range g.leaderboard {
+		for i, l := range m.leaderboard {
 			if !l.item.Equal(*dto.GamificationDTO(gams[i])) {
 				equal = false
 				break

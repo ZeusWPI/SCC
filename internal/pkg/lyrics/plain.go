@@ -27,8 +27,18 @@ func (p *Plain) GetSong() dto.Song {
 }
 
 // Previous provides the previous `amount` of lyrics without affecting the current lyric
-func (p *Plain) Previous(amount int) []Lyric {
+func (p *Plain) Previous(_ int) []Lyric {
 	return []Lyric{}
+}
+
+// Current provides the current lyric if any.
+// If the song is finished the boolean is set to false
+func (p *Plain) Current() (Lyric, bool) {
+	if p.given {
+		return Lyric{}, false
+	}
+
+	return Lyric{}, true
 }
 
 // Next provides the next lyric.
@@ -38,10 +48,12 @@ func (p *Plain) Next() (Lyric, bool) {
 		return Lyric{}, false
 	}
 
+	p.given = true
+
 	return p.lyrics, true
 }
 
 // Upcoming provides the next `amount` lyrics without affecting the current lyric
-func (p *Plain) Upcoming(amount int) []Lyric {
+func (p *Plain) Upcoming(_ int) []Lyric {
 	return []Lyric{}
 }

@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const createSong = `-- name: CreateSong :one
@@ -143,7 +144,7 @@ func (q *Queries) CreateSongHistory(ctx context.Context, songID int64) (SongHist
 }
 
 const getLastSongFull = `-- name: GetLastSongFull :many
-SELECT s.title AS song_title, s.spotify_id, s.album, s.duration_ms, s.lyrics_type, s.lyrics, a.name AS artist_name, g.genre AS genre
+SELECT s.id, s.title AS song_title, s.spotify_id, s.album, s.duration_ms, s.lyrics_type, s.lyrics, sh.created_at, a.id AS artist_id, a.name AS artist_name, a.spotify_id AS artist_spotify_id, a.followers AS artist_followers, a.popularity AS artist_popularity, g.id AS genre_id, g.genre AS genre, sh.created_at
 FROM song_history sh
 JOIN song s ON sh.song_id = s.id
 LEFT JOIN song_artist_song sa ON s.id = sa.song_id
@@ -155,14 +156,22 @@ ORDER BY a.name, g.genre
 `
 
 type GetLastSongFullRow struct {
-	SongTitle  string
-	SpotifyID  string
-	Album      string
-	DurationMs int64
-	LyricsType sql.NullString
-	Lyrics     sql.NullString
-	ArtistName sql.NullString
-	Genre      sql.NullString
+	ID               int64
+	SongTitle        string
+	SpotifyID        string
+	Album            string
+	DurationMs       int64
+	LyricsType       sql.NullString
+	Lyrics           sql.NullString
+	CreatedAt        time.Time
+	ArtistID         sql.NullInt64
+	ArtistName       sql.NullString
+	ArtistSpotifyID  sql.NullString
+	ArtistFollowers  sql.NullInt64
+	ArtistPopularity sql.NullInt64
+	GenreID          sql.NullInt64
+	Genre            sql.NullString
+	CreatedAt_2      time.Time
 }
 
 func (q *Queries) GetLastSongFull(ctx context.Context) ([]GetLastSongFullRow, error) {
@@ -175,14 +184,22 @@ func (q *Queries) GetLastSongFull(ctx context.Context) ([]GetLastSongFullRow, er
 	for rows.Next() {
 		var i GetLastSongFullRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.SongTitle,
 			&i.SpotifyID,
 			&i.Album,
 			&i.DurationMs,
 			&i.LyricsType,
 			&i.Lyrics,
+			&i.CreatedAt,
+			&i.ArtistID,
 			&i.ArtistName,
+			&i.ArtistSpotifyID,
+			&i.ArtistFollowers,
+			&i.ArtistPopularity,
+			&i.GenreID,
 			&i.Genre,
+			&i.CreatedAt_2,
 		); err != nil {
 			return nil, err
 		}
@@ -283,4 +300,154 @@ func (q *Queries) GetSongGenreByName(ctx context.Context, genre string) (SongGen
 	var i SongGenre
 	err := row.Scan(&i.ID, &i.Genre)
 	return i, err
+}
+
+const getSongHistory = `-- name: GetSongHistory :many
+SELECT s.title
+FROM song_history sh
+JOIN song s  ON sh.song_id = s.id
+ORDER BY created_at DESC
+LIMIT 5
+`
+
+func (q *Queries) GetSongHistory(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getSongHistory)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var title string
+		if err := rows.Scan(&title); err != nil {
+			return nil, err
+		}
+		items = append(items, title)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTopArtists = `-- name: GetTopArtists :many
+SELECT sa.id AS artist_id, sa.name AS artist_name, COUNT(sh.id) AS total_plays
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+GROUP BY sa.id, sa.name
+ORDER BY total_plays DESC
+LIMIT 5
+`
+
+type GetTopArtistsRow struct {
+	ArtistID   int64
+	ArtistName string
+	TotalPlays int64
+}
+
+func (q *Queries) GetTopArtists(ctx context.Context) ([]GetTopArtistsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTopArtists)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopArtistsRow
+	for rows.Next() {
+		var i GetTopArtistsRow
+		if err := rows.Scan(&i.ArtistID, &i.ArtistName, &i.TotalPlays); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTopGenres = `-- name: GetTopGenres :many
+SELECT g.genre AS genre_name, COUNT(sh.id) AS total_plays
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+JOIN song_artist_genre sag ON sa.id = sag.artist_id
+JOIN song_genre g ON sag.genre_id = g.id
+GROUP BY g.genre
+ORDER BY total_plays DESC
+LIMIT 5
+`
+
+type GetTopGenresRow struct {
+	GenreName  string
+	TotalPlays int64
+}
+
+func (q *Queries) GetTopGenres(ctx context.Context) ([]GetTopGenresRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTopGenres)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopGenresRow
+	for rows.Next() {
+		var i GetTopGenresRow
+		if err := rows.Scan(&i.GenreName, &i.TotalPlays); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTopSongs = `-- name: GetTopSongs :many
+SELECT s.id AS song_id, s.title, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+GROUP BY s.id, s.title
+ORDER BY play_count DESC
+LIMIT 5
+`
+
+type GetTopSongsRow struct {
+	SongID    int64
+	Title     string
+	PlayCount int64
+}
+
+func (q *Queries) GetTopSongs(ctx context.Context) ([]GetTopSongsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTopSongs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopSongsRow
+	for rows.Next() {
+		var i GetTopSongsRow
+		if err := rows.Scan(&i.SongID, &i.Title, &i.PlayCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

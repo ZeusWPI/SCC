@@ -2,6 +2,7 @@ package dto
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 )
@@ -15,6 +16,7 @@ type Song struct {
 	DurationMS int64        `json:"duration_ms"`
 	LyricsType string       `json:"lyrics_type"` // Either 'synced' or 'plain'
 	Lyrics     string       `json:"lyrics"`
+	CreatedAt  time.Time    `json:"created_at"`
 	Artists    []SongArtist `json:"artists"`
 }
 
@@ -53,6 +55,67 @@ func SongDTO(song sqlc.Song) *Song {
 		DurationMS: song.DurationMs,
 		LyricsType: lyricsType,
 		Lyrics:     lyrics,
+	}
+}
+
+// SongDTOHistory converts a sqlc.GetLastSongFullRow array to a Song
+func SongDTOHistory(songs []sqlc.GetLastSongFullRow) *Song {
+	if len(songs) == 0 {
+		return nil
+	}
+
+	var lyricsType string
+	if songs[0].LyricsType.Valid {
+		lyricsType = songs[0].LyricsType.String
+	}
+	var lyrics string
+	if songs[0].Lyrics.Valid {
+		lyrics = songs[0].Lyrics.String
+	}
+
+	artistsMap := make(map[int64]SongArtist)
+	for _, song := range songs {
+		if !song.ArtistID.Valid {
+			continue
+		}
+
+		// Get artist
+		artist, ok := artistsMap[song.ArtistID.Int64]
+		if !ok {
+			// Artist doesn't exist yet, add him
+			artist = SongArtist{
+				ID:         song.ArtistID.Int64,
+				Name:       song.ArtistName.String,
+				SpotifyID:  song.ArtistSpotifyID.String,
+				Followers:  song.ArtistFollowers.Int64,
+				Popularity: song.ArtistPopularity.Int64,
+				Genres:     make([]SongGenre, 0),
+			}
+			artistsMap[song.ArtistID.Int64] = artist
+		}
+
+		// Add genre
+		artist.Genres = append(artist.Genres, SongGenre{
+			ID:    song.GenreID.Int64,
+			Genre: song.Genre.String,
+		})
+	}
+
+	artists := make([]SongArtist, 0, len(artistsMap))
+	for _, artist := range artistsMap {
+		artists = append(artists, artist)
+	}
+
+	return &Song{
+		ID:         songs[0].ID,
+		Title:      songs[0].SongTitle,
+		Album:      songs[0].Album,
+		SpotifyID:  songs[0].SpotifyID,
+		DurationMS: songs[0].DurationMs,
+		LyricsType: lyricsType,
+		Lyrics:     lyrics,
+		CreatedAt:  songs[0].CreatedAt,
+		Artists:    artists,
 	}
 }
 

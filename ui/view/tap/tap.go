@@ -47,44 +47,44 @@ func NewModel(db *db.DB) view.View {
 }
 
 // Init initializes the tap model
-func (t *Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the tap model
-func (t *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case Msg:
-		t.lastOrderID = msg.lastOrderID
+		m.lastOrderID = msg.lastOrderID
 
 		for _, msg := range msg.items {
 			switch msg.category {
 			case "Mate":
-				t.mate += msg.amount
+				m.mate += msg.amount
 			case "Soft":
-				t.soft += msg.amount
+				m.soft += msg.amount
 			case "Beer":
-				t.beer += msg.amount
+				m.beer += msg.amount
 			case "Food":
-				t.food += msg.amount
+				m.food += msg.amount
 			}
 		}
 
-		return t, nil
+		return m, nil
 	}
 
-	return t, nil
+	return m, nil
 }
 
 // View returns the tap view
-func (t *Model) View() string {
+func (m *Model) View() string {
 	chart := barchart.New(20, 20)
 
 	barMate := barchart.BarData{
 		Label: "Mate",
 		Values: []barchart.BarValue{{
 			Name:  "Mate",
-			Value: t.mate,
+			Value: m.mate,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Mate"]),
 		}},
 	}
@@ -92,7 +92,7 @@ func (t *Model) View() string {
 		Label: "Soft",
 		Values: []barchart.BarValue{{
 			Name:  "Soft",
-			Value: t.soft,
+			Value: m.soft,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Soft"]),
 		}},
 	}
@@ -100,7 +100,7 @@ func (t *Model) View() string {
 		Label: "Beer",
 		Values: []barchart.BarValue{{
 			Name:  "Beer",
-			Value: t.beer,
+			Value: m.beer,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Beer"]),
 		}},
 	}
@@ -108,7 +108,7 @@ func (t *Model) View() string {
 		Label: "Food",
 		Values: []barchart.BarValue{{
 			Name:  "Food",
-			Value: t.food,
+			Value: m.food,
 			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Food"]),
 		}},
 	}
@@ -120,22 +120,22 @@ func (t *Model) View() string {
 }
 
 // GetUpdateDatas returns all the update functions for the tap model
-func (t *Model) GetUpdateDatas() []view.UpdateData {
+func (m *Model) GetUpdateDatas() []view.UpdateData {
 	return []view.UpdateData{
 		{
 			Name:     "tap orders",
-			View:     t,
+			View:     m,
 			Update:   updateOrders,
 			Interval: config.GetDefaultInt("tui.tap.interval_s", 60),
 		},
 	}
 }
 
-func updateOrders(db *db.DB, view view.View) (tea.Msg, error) {
-	t := view.(*Model)
-	lastOrderID := t.lastOrderID
+func updateOrders(view view.View) (tea.Msg, error) {
+	m := view.(*Model)
+	lastOrderID := m.lastOrderID
 
-	order, err := db.Queries.GetLastOrderByOrderID(context.Background())
+	order, err := m.db.Queries.GetLastOrderByOrderID(context.Background())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = nil
@@ -147,7 +147,7 @@ func updateOrders(db *db.DB, view view.View) (tea.Msg, error) {
 		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, nil
 	}
 
-	orders, err := db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
+	orders, err := m.db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
 	if err != nil {
 		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, err
 	}

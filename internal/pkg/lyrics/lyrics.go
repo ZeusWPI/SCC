@@ -11,6 +11,7 @@ import (
 type Lyrics interface {
 	GetSong() dto.Song
 	Previous(int) []Lyric
+	Current() (Lyric, bool)
 	Next() (Lyric, bool)
 	Upcoming(int) []Lyric
 }

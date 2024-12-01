@@ -79,11 +79,11 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 	}
 }
 
-func updateMessages(db *db.DB, view view.View) (tea.Msg, error) {
+func updateMessages(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 	lastMessageID := m.lastMessageID
 
-	message, err := db.Queries.GetLastMessage(context.Background())
+	message, err := m.db.Queries.GetLastMessage(context.Background())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = nil
@@ -95,7 +95,7 @@ func updateMessages(db *db.DB, view view.View) (tea.Msg, error) {
 		return Msg{lastMessageID: lastMessageID, messages: []string{}}, nil
 	}
 
-	messages, err := db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
+	messages, err := m.db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
 	if err != nil {
 		zap.S().Error("DB: Failed to get messages", err)
 		return Msg{lastMessageID: lastMessageID, messages: []string{}}, err

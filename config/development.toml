@@ -65,3 +65,7 @@ interval_s = 60
 
 [tui.gamification]
 interval_s = 3600
+
+[tui.song]
+interval_current_s = 5
+interval_top_s = 3600

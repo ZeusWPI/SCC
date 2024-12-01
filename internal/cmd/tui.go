@@ -17,6 +17,7 @@ import (
 
 var screens = map[string]func(*db.DB) screen.Screen{
 	"cammie": screen.NewCammie,
+	"song":   screen.NewSong,
 	"test":   screen.NewTest,
 }
 
@@ -42,7 +43,7 @@ func TUI(db *db.DB) error {
 	for _, updateData := range screen.GetUpdateViews() {
 		done := make(chan bool)
 		dones = append(dones, done)
-		go tuiPeriodicUpdates(db, p, updateData, done)
+		go tuiPeriodicUpdates(p, updateData, done)
 	}
 
 	_, err := p.Run()
@@ -54,14 +55,14 @@ func TUI(db *db.DB) error {
 	return err
 }
 
-func tuiPeriodicUpdates(db *db.DB, p *tea.Program, updateData view.UpdateData, done chan bool) {
+func tuiPeriodicUpdates(p *tea.Program, updateData view.UpdateData, done chan bool) {
 	zap.S().Info("TUI: Starting periodic update for ", updateData.Name, " with an interval of ", updateData.Interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(updateData.Interval) * time.Second)
 	defer ticker.Stop()
 
 	// Immediatly update once
-	msg, err := updateData.Update(db, updateData.View)
+	msg, err := updateData.Update(updateData.View)
 	if err != nil {
 		zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
 	}
@@ -77,7 +78,7 @@ func tuiPeriodicUpdates(db *db.DB, p *tea.Program, updateData view.UpdateData, d
 			return
 		case <-ticker.C:
 			// Update
-			msg, err := updateData.Update(db, updateData.View)
+			msg, err := updateData.Update(updateData.View)
 			if err != nil {
 				zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
 			}

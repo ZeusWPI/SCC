@@ -55,7 +55,7 @@ type seasonMsg struct {
 
 // NewModel creates a new zess model view
 func NewModel(db *db.DB) view.View {
-	z := &Model{
+	m := &Model{
 		db:            db,
 		lastScanID:    -1,
 		scans:         make([]weekScan, 0),
@@ -66,43 +66,43 @@ func NewModel(db *db.DB) view.View {
 
 	// Populate with data
 	// The order in which this is called is important!
-	msgScans, err := updateScans(db, z)
+	msgScans, err := updateScans(m)
 	if err != nil {
 		zap.S().Error("TUI: Unable to update zess scans\n", err)
-		return z
+		return m
 	}
-	_, _ = z.Update(msgScans)
+	_, _ = m.Update(msgScans)
 
-	msgSeason, err := updateSeason(db, z)
+	msgSeason, err := updateSeason(m)
 	if err != nil {
 		zap.S().Error("TUI: Unable to update zess seasons\n", err)
-		return z
+		return m
 	}
-	_, _ = z.Update(msgSeason)
+	_, _ = m.Update(msgSeason)
 
-	return z
+	return m
 }
 
 // Init created a new zess model
-func (z *Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
 // Update updates the zess model
-func (z *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	// New scan(s)
 	case scanMsg:
-		z.lastScanID = msg.lastScanID
+		m.lastScanID = msg.lastScanID
 		// Add new scans
 		for _, newScan := range msg.scans {
 			found := false
-			for i, modelScan := range z.scans {
+			for i, modelScan := range m.scans {
 				if newScan.time.equal(modelScan.time) {
-					z.scans[i].amount++
+					m.scans[i].amount++
 					// Check for maxWeekScans
-					if z.scans[i].amount > z.maxWeekScans {
-						z.maxWeekScans = modelScan.amount
+					if m.scans[i].amount > m.maxWeekScans {
+						m.maxWeekScans = modelScan.amount
 					}
 
 					found = true
@@ -111,54 +111,54 @@ func (z *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 			}
 
 			if !found {
-				z.scans = append(z.scans, newScan)
+				m.scans = append(m.scans, newScan)
 				// Check for maxWeekScans
-				if newScan.amount > z.maxWeekScans {
-					z.maxWeekScans = newScan.amount
+				if newScan.amount > m.maxWeekScans {
+					m.maxWeekScans = newScan.amount
 				}
 				// Make sure the array doesn't get too big
-				if len(z.scans) > config.GetDefaultInt("tui.zess.weeks", 10) {
-					z.scans = z.scans[:1]
+				if len(m.scans) > config.GetDefaultInt("tui.zess.weeks", 10) {
+					m.scans = m.scans[:1]
 				}
 			}
 
 			// Update seasonScans
-			z.seasonScans += newScan.amount
+			m.seasonScans += newScan.amount
 		}
 
 	// New season!
 	// Update variables accordinly
 	case seasonMsg:
-		z.currentSeason = msg.start
-		z.seasonScans = 0
-		z.maxWeekScans = 0
+		m.currentSeason = msg.start
+		m.seasonScans = 0
+		m.maxWeekScans = 0
 
-		validScans := make([]weekScan, 0, len(z.scans))
+		validScans := make([]weekScan, 0, len(m.scans))
 
-		for _, scan := range z.scans {
+		for _, scan := range m.scans {
 			// Add scans if they happend after (or in the same week of) the season start
-			if scan.time.equal(z.currentSeason) || scan.time.after(z.currentSeason) {
+			if scan.time.equal(m.currentSeason) || scan.time.after(m.currentSeason) {
 				validScans = append(validScans, scan)
 
-				if scan.amount > z.maxWeekScans {
-					z.maxWeekScans = scan.amount
+				if scan.amount > m.maxWeekScans {
+					m.maxWeekScans = scan.amount
 				}
 
-				z.seasonScans += scan.amount
+				m.seasonScans += scan.amount
 			}
 		}
 
-		z.scans = validScans
+		m.scans = validScans
 	}
 
-	return z, nil
+	return m, nil
 }
 
 // View returns the view for the zess model
-func (z *Model) View() string {
+func (m *Model) View() string {
 	chart := barchart.New(20, 20)
 
-	for _, scan := range z.scans {
+	for _, scan := range m.scans {
 		bar := barchart.BarData{
 			Label: scan.label,
 			Values: []barchart.BarValue{{
@@ -174,8 +174,8 @@ func (z *Model) View() string {
 	chart.Draw()
 
 	style := lipgloss.NewStyle().Height(20).Align(lipgloss.Bottom).Render(lipgloss.JoinVertical(lipgloss.Left,
-		fmt.Sprintf("Season scans\n%d", z.seasonScans),
-		fmt.Sprintf("Max scans in a week\n%d", z.maxWeekScans),
+		fmt.Sprintf("Season scans\n%d", m.seasonScans),
+		fmt.Sprintf("Max scans in a week\n%d", m.maxWeekScans),
 	))
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
@@ -185,17 +185,17 @@ func (z *Model) View() string {
 }
 
 // GetUpdateDatas returns all the update functions for the zess model
-func (z *Model) GetUpdateDatas() []view.UpdateData {
+func (m *Model) GetUpdateDatas() []view.UpdateData {
 	return []view.UpdateData{
 		{
 			Name:     "zess scans",
-			View:     z,
+			View:     m,
 			Update:   updateScans,
 			Interval: config.GetDefaultInt("tui.zess.interval_scan_s", 60),
 		},
 		{
 			Name:     "zess season",
-			View:     z,
+			View:     m,
 			Update:   updateSeason,
 			Interval: config.GetDefaultInt("tui.zess.interval_season_s", 3600),
 		},
@@ -203,12 +203,12 @@ func (z *Model) GetUpdateDatas() []view.UpdateData {
 }
 
 // Check for any new scans
-func updateScans(db *db.DB, view view.View) (tea.Msg, error) {
-	z := view.(*Model)
-	lastScanID := z.lastScanID
+func updateScans(view view.View) (tea.Msg, error) {
+	m := view.(*Model)
+	lastScanID := m.lastScanID
 
 	// Get new scans
-	scans, err := db.Queries.GetAllScansSinceID(context.Background(), lastScanID)
+	scans, err := m.db.Queries.GetAllScansSinceID(context.Background(), lastScanID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// No rows shouldn't be considered an error
@@ -253,10 +253,10 @@ func updateScans(db *db.DB, view view.View) (tea.Msg, error) {
 }
 
 // Check if a new season started
-func updateSeason(db *db.DB, view view.View) (tea.Msg, error) {
-	z := view.(*Model)
+func updateSeason(view view.View) (tea.Msg, error) {
+	m := view.(*Model)
 
-	season, err := db.Queries.GetSeasonCurrent(context.Background())
+	season, err := m.db.Queries.GetSeasonCurrent(context.Background())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// No rows shouldn't be considered an error
@@ -268,7 +268,7 @@ func updateSeason(db *db.DB, view view.View) (tea.Msg, error) {
 	// Check if we have a new season
 	yearNumber, weekNumber := season.Start.ISOWeek()
 	seasonStart := time{year: yearNumber, week: weekNumber}
-	if z.currentSeason.equal(seasonStart) {
+	if m.currentSeason.equal(seasonStart) {
 		// Same season
 		return nil, nil
 	}
