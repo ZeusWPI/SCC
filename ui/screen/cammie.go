@@ -1,4 +1,3 @@
-// Package screen provides difference screens for the tui
 package screen
 
 import (

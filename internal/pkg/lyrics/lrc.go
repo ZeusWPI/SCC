@@ -30,20 +30,30 @@ func (l *LRC) Previous(amount int) []Lyric {
 	lyrics := make([]Lyric, 0, amount)
 
 	for i := 1; i <= amount; i++ {
-		if l.i-i < 0 {
+		if l.i-i-1 < 0 {
 			break
 		}
 
-		lyrics = append(lyrics, l.lyrics[l.i-1])
+		lyrics = append([]Lyric{l.lyrics[l.i-i-1]}, lyrics...)
 	}
 
 	return lyrics
 }
 
+// Current provides the current lyric if any.
+// If the song is finished the boolean is set to false
+func (l *LRC) Current() (Lyric, bool) {
+	if l.i >= len(l.lyrics) {
+		return Lyric{}, false
+	}
+
+	return l.lyrics[l.i], true
+}
+
 // Next provides the next lyric if any.
 // If the song is finished the boolean is set to false
 func (l *LRC) Next() (Lyric, bool) {
-	if l.i >= len(l.lyrics) {
+	if l.i+1 >= len(l.lyrics) {
 		return Lyric{}, false
 	}
 
@@ -55,12 +65,12 @@ func (l *LRC) Next() (Lyric, bool) {
 func (l *LRC) Upcoming(amount int) []Lyric {
 	lyrics := make([]Lyric, 0, amount)
 
-	for i := 1; i <= amount; i++ {
-		if i+l.i >= len(l.lyrics) {
+	for i := 0; i < amount; i++ {
+		if l.i+i >= len(l.lyrics) {
 			break
 		}
 
-		lyrics = append(lyrics, l.lyrics[i+l.i])
+		lyrics = append(lyrics, l.lyrics[l.i+i])
 	}
 
 	return lyrics
@@ -69,7 +79,7 @@ func (l *LRC) Upcoming(amount int) []Lyric {
 func parseLRC(text string, totalDuration time.Duration) []Lyric {
 	lines := strings.Split(text, "\n")
 
-	lyrics := make([]Lyric, 0, len(lines))
+	lyrics := make([]Lyric, 0, len(lines)+1)
 	var previousTimestamp time.Duration
 
 	re, err := regexp.Compile(`^\[(\d{2}):(\d{2})\.(\d{2})\] (.+)$`)
@@ -100,12 +110,12 @@ func parseLRC(text string, totalDuration time.Duration) []Lyric {
 		lyrics = append(lyrics, Lyric{Text: t})
 
 		// Set duration of previous lyric
-		lyrics[i-1].Duration = timestamp - previousTimestamp
+		lyrics[i].Duration = timestamp - previousTimestamp
 		previousTimestamp = timestamp
 	}
 
 	// Set duration of last lyric
-	lyrics[len(lines)-1].Duration = totalDuration - previousTimestamp
+	lyrics[len(lyrics)-1].Duration = totalDuration - previousTimestamp
 
 	return lyrics
 }

@@ -13,11 +13,11 @@ ADD COLUMN lyrics TEXT;
 -- +goose Down
 -- +goose StatementBegin
 ALTER TABLE song
-DROP COLUMN isrc_id;
-
-ALTER TABLE song
 DROP COLUMN lyrics;
 
 ALTER TABLE song
-DROP COLUMN common_id;
+DROP COLUMN lyrics_type;
+
+ALTER TABLE song
+DROP COLUMN album;
 -- +goose StatementEnd
