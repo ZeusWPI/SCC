@@ -3,10 +3,12 @@ package event
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gocolly/colly"
+	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 )
 
@@ -68,4 +70,39 @@ func (e *Event) getEvents() ([]dto.Event, error) {
 	c.Wait()
 
 	return events, errors.Join(errs...)
+}
+
+func (e *Event) getPoster(event *dto.Event) error {
+	yearParts := strings.Split(event.AcademicYear, "-")
+	if len(yearParts) != 2 {
+		return fmt.Errorf("Event: Academic year not properly formatted %s", event.AcademicYear)
+	}
+
+	yearStart, err := strconv.Atoi(yearParts[0])
+	if err != nil {
+		return fmt.Errorf("Event: Unable to convert academic year to int %v", yearParts)
+	}
+	yearEnd, err := strconv.Atoi(yearParts[1])
+	if err != nil {
+		return fmt.Errorf("Event: Unable to convert academic year to int %v", yearParts)
+	}
+
+	year := fmt.Sprintf("20%d-20%d", yearStart, yearEnd)
+
+	url := fmt.Sprintf("%s/%s/%s/scc.png", e.apiPoster, year, event.Name)
+
+	req := fiber.Get(url)
+	status, body, errs := req.Bytes()
+	if len(errs) != 0 {
+		// No poster in repository
+		return errors.Join(append(errs, errors.New("Event: Download poster request failed"))...)
+	}
+	if status != fiber.StatusOK {
+		// No poster for event
+		return nil
+	}
+
+	event.Poster = body
+
+	return nil
 }

@@ -4,7 +4,9 @@ package event
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
+	"sync"
 
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
@@ -13,15 +15,17 @@ import (
 
 // Event represents a event instance
 type Event struct {
-	db  *db.DB
-	api string
+	db        *db.DB
+	api       string
+	apiPoster string
 }
 
 // New creates a new event instance
 func New(db *db.DB) *Event {
 	api := config.GetDefaultString("event.api", "https://zeus.gent/events")
+	apiPoster := config.GetDefaultString("event.api_poster", "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master")
 
-	return &Event{db: db, api: api}
+	return &Event{db: db, api: api, apiPoster: apiPoster}
 }
 
 // Update gets all events from the website of this academic year
@@ -61,7 +65,30 @@ func (e *Event) Update() error {
 		return err
 	}
 	var errs []error
+
+	var wg sync.WaitGroup
 	for _, event := range events {
+		wg.Add(1)
+
+		go func(event *dto.Event) {
+			defer wg.Done()
+
+			err := e.getPoster(event)
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}(&event)
+	}
+	fmt.Printf("Waiting\n")
+	wg.Wait()
+	fmt.Printf("Done\n")
+
+	for _, event := range events {
+		err = e.getPoster(&event)
+		if err != nil {
+			errs = append(errs, err)
+			// Don't return / continue. We can still enter it without a poster
+		}
 		_, err = e.db.Queries.CreateEvent(context.Background(), event.CreateParams())
 		if err != nil {
 			errs = append(errs, err)
