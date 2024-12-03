@@ -13,6 +13,9 @@ RETURNING *;
 DELETE FROM gamification
 WHERE id = ?;
 
+-- name: DeleteGamificationAll :execrows
+DELETE FROM gamification;
+
 
 -- Other
 
