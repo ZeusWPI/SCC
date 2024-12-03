@@ -94,7 +94,6 @@ func (e *Event) getPoster(event *dto.Event) error {
 	req := fiber.Get(url)
 	status, body, errs := req.Bytes()
 	if len(errs) != 0 {
-		// No poster in repository
 		return errors.Join(append(errs, errors.New("Event: Download poster request failed"))...)
 	}
 	if status != fiber.StatusOK {

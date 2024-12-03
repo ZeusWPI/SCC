@@ -11,9 +11,9 @@ import (
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO event (name, date, academic_year, location)
-VALUES (?, ?, ?, ?)
-RETURNING id, name, date, academic_year, location
+INSERT INTO event (name, date, academic_year, location, poster)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, name, date, academic_year, location, poster
 `
 
 type CreateEventParams struct {
@@ -21,6 +21,7 @@ type CreateEventParams struct {
 	Date         time.Time
 	AcademicYear string
 	Location     string
+	Poster       []byte
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -29,6 +30,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.Date,
 		arg.AcademicYear,
 		arg.Location,
+		arg.Poster,
 	)
 	var i Event
 	err := row.Scan(
@@ -37,6 +39,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.Date,
 		&i.AcademicYear,
 		&i.Location,
+		&i.Poster,
 	)
 	return i, err
 }
@@ -64,7 +67,7 @@ func (q *Queries) DeleteEventByAcademicYear(ctx context.Context, academicYear st
 const getAllEvents = `-- name: GetAllEvents :many
 
 
-SELECT id, name, date, academic_year, location
+SELECT id, name, date, academic_year, location, poster
 FROM event
 `
 
@@ -84,6 +87,7 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 			&i.Date,
 			&i.AcademicYear,
 			&i.Location,
+			&i.Poster,
 		); err != nil {
 			return nil, err
 		}
@@ -101,7 +105,7 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 const getEventByAcademicYear = `-- name: GetEventByAcademicYear :many
 
 
-SELECT id, name, date, academic_year, location
+SELECT id, name, date, academic_year, location, poster
 FROM event
 WHERE academic_year = ?
 `
@@ -122,6 +126,47 @@ func (q *Queries) GetEventByAcademicYear(ctx context.Context, academicYear strin
 			&i.Date,
 			&i.AcademicYear,
 			&i.Location,
+			&i.Poster,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEventsCurrentAcademicYear = `-- name: GetEventsCurrentAcademicYear :many
+SELECT id, name, date, academic_year, location, poster
+FROM event
+WHERE academic_year = (
+    SELECT MAX(academic_year)
+    FROM event
+)
+ORDER BY date ASC
+`
+
+func (q *Queries) GetEventsCurrentAcademicYear(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, getEventsCurrentAcademicYear)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Date,
+			&i.AcademicYear,
+			&i.Location,
+			&i.Poster,
 		); err != nil {
 			return nil, err
 		}

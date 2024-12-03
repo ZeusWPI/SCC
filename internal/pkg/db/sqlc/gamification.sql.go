@@ -18,7 +18,7 @@ RETURNING id, name, score, avatar
 type CreateGamificationParams struct {
 	Name   string
 	Score  int64
-	Avatar string
+	Avatar []byte
 }
 
 func (q *Queries) CreateGamification(ctx context.Context, arg CreateGamificationParams) (Gamification, error) {
@@ -40,6 +40,18 @@ WHERE id = ?
 
 func (q *Queries) DeleteGamification(ctx context.Context, id int64) (int64, error) {
 	result, err := q.db.ExecContext(ctx, deleteGamification, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteGamificationAll = `-- name: DeleteGamificationAll :execrows
+DELETE FROM gamification
+`
+
+func (q *Queries) DeleteGamificationAll(ctx context.Context) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteGamificationAll)
 	if err != nil {
 		return 0, err
 	}

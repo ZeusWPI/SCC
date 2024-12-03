@@ -2,12 +2,11 @@
 package gamification
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
 	"image"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -19,21 +18,6 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/ui/view"
-)
-
-var width = 20
-
-var (
-	base        = lipgloss.NewStyle()
-	columnStyle = base.MarginLeft(1)
-	nameBase    = base.BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(lipgloss.Color("#383838")).Width(width).Align(lipgloss.Center)
-	nameStyles  = []lipgloss.Style{
-		nameBase.Foreground(lipgloss.Color("#FFD700")),
-		nameBase.Foreground(lipgloss.Color("#FF7F00")),
-		nameBase.Foreground(lipgloss.Color("#CD7F32")),
-		nameBase,
-	}
-	scoreStyle = base.Width(width).Align(lipgloss.Center)
 )
 
 // Model represents the view model for gamification
@@ -62,6 +46,11 @@ func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
+// Name returns the name of the view
+func (m *Model) Name() string {
+	return "Gammification"
+}
+
 // Update updates the gamification view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -76,14 +65,16 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 func (m *Model) View() string {
 	columns := make([]string, 0, len(m.leaderboard))
 
+	positions := []lipgloss.Style{sFirst, sSecond, sThird, sFourth}
+
 	for i, item := range m.leaderboard {
 		user := lipgloss.JoinVertical(lipgloss.Left,
-			nameStyles[i%len(nameStyles)].Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
-			scoreStyle.Render(strconv.Itoa(int(item.item.Score))),
+			positions[i].Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
+			sScore.Render(strconv.Itoa(int(item.item.Score))),
 		)
 
 		column := lipgloss.JoinVertical(lipgloss.Left, gamificationToString(width, item.image), user)
-		columns = append(columns, columnStyle.Render(column))
+		columns = append(columns, sColumn.Render(column))
 	}
 
 	list := lipgloss.JoinHorizontal(lipgloss.Top, columns...)
@@ -132,26 +123,12 @@ func updateLeaderboard(view view.View) (tea.Msg, error) {
 
 	msg := Msg{leaderboard: []gamificationItem{}}
 	for _, gam := range gams {
-		if gam.Avatar == "" {
-			// No avatar downloaded
-			msg.leaderboard = append(msg.leaderboard, gamificationItem{image: nil, item: *dto.GamificationDTO(gam)})
-			continue
-		}
-
-		file, err := os.Open(filepath.Clean(gam.Avatar))
-		if err != nil {
-			return nil, err
-		}
-		defer func() {
-			_ = file.Close()
-		}()
-
-		img, _, err := image.Decode(file)
+		im, _, err := image.Decode(bytes.NewReader(gam.Avatar))
 		if err != nil {
 			return nil, err
 		}
 
-		msg.leaderboard = append(msg.leaderboard, gamificationItem{image: img, item: *dto.GamificationDTO(gam)})
+		msg.leaderboard = append(msg.leaderboard, gamificationItem{image: im, item: *dto.GamificationDTO(gam)})
 	}
 
 	return msg, nil

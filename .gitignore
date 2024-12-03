@@ -32,7 +32,6 @@ backend
 tui
 
 .data/
-/public/
 
 # Log files
 logs/

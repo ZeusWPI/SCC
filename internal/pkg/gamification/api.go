@@ -1,23 +1,27 @@
 package gamification
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"go.uber.org/zap"
 )
 
-func (g *Gamification) getLeaderboard() (*[]*dto.Gamification, error) {
+type gamificationItem struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"github_name"`
+	Score     int64  `json:"score"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+func (g *Gamification) getLeaderboard() ([]dto.Gamification, error) {
 	zap.S().Info("Gamification: Getting leaderboard")
 
 	req := fiber.Get(g.api+"/top4").Set("Accept", "application/json")
 
-	res := new([]*dto.Gamification)
+	res := new([]gamificationItem)
 	status, _, errs := req.Struct(res)
 	if len(errs) > 0 {
 		return nil, errors.Join(append(errs, errors.New("Gamification: Leaderboard API request failed"))...)
@@ -33,29 +37,40 @@ func (g *Gamification) getLeaderboard() (*[]*dto.Gamification, error) {
 		}
 	}
 
-	return res, errors.Join(errs...)
+	if len(errs) != 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	gams := make([]dto.Gamification, 0, 4)
+	for _, item := range *res {
+		gam, err := downloadAvatar(item)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		gams = append(gams, gam)
+	}
+
+	return gams, errors.Join(errs...)
 }
 
-func downloadAvatar(gam dto.Gamification) (string, error) {
-	req := fiber.Get(gam.Avatar)
+func downloadAvatar(gam gamificationItem) (dto.Gamification, error) {
+	req := fiber.Get(gam.AvatarURL)
 	status, body, errs := req.Bytes()
-	if errs != nil {
-		return "", errors.Join(append(errs, errors.New("Gamification: Download avatar request failed"))...)
+	if len(errs) != 0 {
+		return dto.Gamification{}, errors.Join(append(errs, errors.New("Gamification: Download avatar request failed"))...)
 	}
 	if status != fiber.StatusOK {
-		return "", fmt.Errorf("Gamification: Download avatar returned bad status code %d", status)
+		return dto.Gamification{}, fmt.Errorf("Gamification: Download avatar returned bad status code %d", status)
 	}
 
-	location := fmt.Sprintf("public/%s.png", gam.Name)
-	out, err := os.Create(location)
-	if err != nil && err != os.ErrExist {
-		return "", err
+	g := dto.Gamification{
+		ID:     gam.ID,
+		Name:   gam.Name,
+		Score:  gam.Score,
+		Avatar: body,
 	}
-	defer func() {
-		_ = out.Close()
-	}()
 
-	_, err = io.Copy(out, bytes.NewReader(body))
-
-	return location, err
+	return g, nil
 }
