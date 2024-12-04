@@ -148,15 +148,16 @@ func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error)
 }
 
 const getOrderCountByCategorySinceOrderID = `-- name: GetOrderCountByCategorySinceOrderID :many
-SELECT category, COUNT(*)
+SELECT category, COUNT(*), CAST(MAX(order_created_at) AS INTEGER) AS latest_order_created_at
 FROM tap
 WHERE order_id >= ?
 GROUP BY category
 `
 
 type GetOrderCountByCategorySinceOrderIDRow struct {
-	Category string
-	Count    int64
+	Category             string
+	Count                int64
+	LatestOrderCreatedAt int64
 }
 
 func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, orderID int64) ([]GetOrderCountByCategorySinceOrderIDRow, error) {
@@ -168,7 +169,7 @@ func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, order
 	var items []GetOrderCountByCategorySinceOrderIDRow
 	for rows.Next() {
 		var i GetOrderCountByCategorySinceOrderIDRow
-		if err := rows.Scan(&i.Category, &i.Count); err != nil {
+		if err := rows.Scan(&i.Category, &i.Count, &i.LatestOrderCreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

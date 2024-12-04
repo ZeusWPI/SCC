@@ -4,8 +4,9 @@ package tap
 import (
 	"context"
 	"database/sql"
+	"slices"
+	"time"
 
-	"github.com/NimbleMarkets/ntcharts/barchart"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zeusWPI/scc/internal/pkg/db"
@@ -13,14 +14,27 @@ import (
 	"github.com/zeusWPI/scc/ui/view"
 )
 
+type category string
+
+const (
+	mate category = "Mate"
+	soft category = "Soft"
+	beer category = "Beer"
+	food category = "Food"
+)
+
+var categoryToStyle = map[category]lipgloss.Style{
+	mate: sMate,
+	soft: sSoft,
+	beer: sBeer,
+	food: sFood,
+}
+
 // Model represents the tap model
 type Model struct {
 	db          *db.DB
 	lastOrderID int64
-	mate        float64
-	soft        float64
-	beer        float64
-	food        float64
+	items       []tapItem
 }
 
 // Msg represents a tap message
@@ -30,15 +44,9 @@ type Msg struct {
 }
 
 type tapItem struct {
-	category string
-	amount   float64
-}
-
-var tapCategoryColor = map[string]lipgloss.Color{
-	"Mate": lipgloss.Color("208"),
-	"Soft": lipgloss.Color("86"),
-	"Beer": lipgloss.Color("160"),
-	"Food": lipgloss.Color("40"),
+	category category
+	amount   int
+	last     time.Time
 }
 
 // NewModel creates a new tap model
@@ -51,24 +59,37 @@ func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
+// Name returns the name of the view
+func (m *Model) Name() string {
+	return "Tap"
+}
+
 // Update updates the tap model
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case Msg:
 		m.lastOrderID = msg.lastOrderID
 
-		for _, msg := range msg.items {
-			switch msg.category {
-			case "Mate":
-				m.mate += msg.amount
-			case "Soft":
-				m.soft += msg.amount
-			case "Beer":
-				m.beer += msg.amount
-			case "Food":
-				m.food += msg.amount
+		for _, msgItem := range msg.items {
+			found := false
+			for i, item := range m.items {
+				if item.category == msgItem.category {
+					m.items[i].amount += msgItem.amount
+					m.items[i].last = msgItem.last
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				m.items = append(m.items, msgItem)
 			}
 		}
+
+		// Sort to display bars in order
+		slices.SortFunc(m.items, func(i, j tapItem) int {
+			return j.amount - i.amount
+		})
 
 		return m, nil
 	}
@@ -78,45 +99,15 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 // View returns the tap view
 func (m *Model) View() string {
-	chart := barchart.New(20, 20)
+	chart := m.viewChart()
+	stats := m.viewStats()
 
-	barMate := barchart.BarData{
-		Label: "Mate",
-		Values: []barchart.BarValue{{
-			Name:  "Mate",
-			Value: m.mate,
-			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Mate"]),
-		}},
-	}
-	barSoft := barchart.BarData{
-		Label: "Soft",
-		Values: []barchart.BarValue{{
-			Name:  "Soft",
-			Value: m.soft,
-			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Soft"]),
-		}},
-	}
-	barBeer := barchart.BarData{
-		Label: "Beer",
-		Values: []barchart.BarValue{{
-			Name:  "Beer",
-			Value: m.beer,
-			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Beer"]),
-		}},
-	}
-	barFood := barchart.BarData{
-		Label: "Food",
-		Values: []barchart.BarValue{{
-			Name:  "Food",
-			Value: m.food,
-			Style: lipgloss.NewStyle().Foreground(tapCategoryColor["Food"]),
-		}},
-	}
+	// Give them same height
+	stats = sStats.Height(lipgloss.Height(chart)).Render(stats)
 
-	chart.PushAll([]barchart.BarData{barMate, barSoft, barBeer, barFood})
-	chart.Draw()
-
-	return chart.View()
+	// Join them together
+	view := lipgloss.JoinHorizontal(lipgloss.Top, chart, stats)
+	return view
 }
 
 // GetUpdateDatas returns all the update functions for the tap model
@@ -140,45 +131,39 @@ func updateOrders(view view.View) (tea.Msg, error) {
 		if err == sql.ErrNoRows {
 			err = nil
 		}
-		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, err
+		return nil, err
 	}
 
 	if order.OrderID <= lastOrderID {
-		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, nil
+		return nil, nil
 	}
 
 	orders, err := m.db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
 	if err != nil {
-		return Msg{lastOrderID: lastOrderID, items: []tapItem{}}, err
+		return nil, err
 	}
 
-	mate, soft, beer, food := 0.0, 0.0, 0.0, 0.0
+	counts := make(map[category]tapItem)
+
 	for _, order := range orders {
-		switch order.Category {
-		case "Mate":
-			mate += float64(order.Count)
-		case "Soft":
-			soft += float64(order.Count)
-		case "Beer":
-			beer += float64(order.Count)
-		case "Food":
-			food += float64(order.Count)
+		if entry, ok := counts[category(order.Category)]; ok {
+			entry.amount += int(order.Count)
+			counts[category(order.Category)] = entry
+			continue
+		}
+
+		counts[category(order.Category)] = tapItem{
+			category: category(order.Category),
+			amount:   int(order.Count),
+			last:     time.Unix(order.LatestOrderCreatedAt, 0),
 		}
 	}
 
-	messages := make([]tapItem, 0, 4)
-	if mate > 0 {
-		messages = append(messages, tapItem{"Mate", mate})
-	}
-	if soft > 0 {
-		messages = append(messages, tapItem{"Soft", soft})
-	}
-	if beer > 0 {
-		messages = append(messages, tapItem{"Beer", beer})
-	}
-	if food > 0 {
-		messages = append(messages, tapItem{"Food", food})
+	items := make([]tapItem, 0, len(counts))
+
+	for _, v := range counts {
+		items = append(items, v)
 	}
 
-	return Msg{lastOrderID: order.OrderID, items: messages}, err
+	return Msg{lastOrderID: order.OrderID, items: items}, nil
 }
