@@ -4,9 +4,7 @@ package zess
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
-	"github.com/NimbleMarkets/ntcharts/barchart"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zeusWPI/scc/internal/pkg/db"
@@ -15,14 +13,14 @@ import (
 	"go.uber.org/zap"
 )
 
-// time represents a time object by keeping the year and week number
-type time struct {
+// yearWeek represents a yearWeek object by keeping the year and week number
+type yearWeek struct {
 	year int
 	week int
 }
 
 type weekScan struct {
-	time   time
+	time   yearWeek
 	amount int64
 	label  string
 }
@@ -31,9 +29,9 @@ type weekScan struct {
 type Model struct {
 	db            *db.DB
 	lastScanID    int64
-	scans         []weekScan // Queue of scans per week
+	scans         []weekScan // Scans per week
 	maxWeekScans  int64
-	currentSeason time // Start week of the season
+	currentSeason yearWeek // Start week of the season
 	seasonScans   int64
 }
 
@@ -50,7 +48,7 @@ type scanMsg struct {
 // seasonMsg is used to indicate that the current season changed.
 type seasonMsg struct {
 	Msg
-	start time
+	start yearWeek
 }
 
 // NewModel creates a new zess model view
@@ -60,7 +58,7 @@ func NewModel(db *db.DB) view.View {
 		lastScanID:    -1,
 		scans:         make([]weekScan, 0),
 		maxWeekScans:  -1,
-		currentSeason: time{year: -1, week: -1},
+		currentSeason: yearWeek{year: -1, week: -1},
 		seasonScans:   0,
 	}
 
@@ -86,6 +84,11 @@ func NewModel(db *db.DB) view.View {
 // Init created a new zess model
 func (m *Model) Init() tea.Cmd {
 	return nil
+}
+
+// Name returns the name of the view
+func (m *Model) Name() string {
+	return "Zess"
 }
 
 // Update updates the zess model
@@ -156,32 +159,15 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 // View returns the view for the zess model
 func (m *Model) View() string {
-	chart := barchart.New(20, 20)
+	chart := m.viewChart()
+	overview := m.viewStats()
 
-	for _, scan := range m.scans {
-		bar := barchart.BarData{
-			Label: scan.label,
-			Values: []barchart.BarValue{{
-				Name:  scan.label,
-				Value: float64(scan.amount),
-				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("21")),
-			}},
-		}
+	// Give them the same height
+	overview = sStats.Height(lipgloss.Height(chart)).Render(overview)
 
-		chart.Push(bar)
-	}
-
-	chart.Draw()
-
-	style := lipgloss.NewStyle().Height(20).Align(lipgloss.Bottom).Render(lipgloss.JoinVertical(lipgloss.Left,
-		fmt.Sprintf("Season scans\n%d", m.seasonScans),
-		fmt.Sprintf("Max scans in a week\n%d", m.maxWeekScans),
-	))
-
-	return lipgloss.JoinHorizontal(lipgloss.Top,
-		chart.View(),
-		style,
-	)
+	// Join them together
+	view := lipgloss.JoinHorizontal(lipgloss.Top, chart, overview)
+	return view
 }
 
 // GetUpdateDatas returns all the update functions for the zess model
@@ -227,7 +213,7 @@ func updateScans(view view.View) (tea.Msg, error) {
 	// Add new scans to scan msg
 	for _, newScan := range scans {
 		yearNumber, weekNumber := newScan.ScanTime.ISOWeek()
-		newTime := time{year: yearNumber, week: weekNumber}
+		newTime := yearWeek{year: yearNumber, week: weekNumber}
 
 		found := false
 		for i, scan := range zessScanMsg.scans {
@@ -267,7 +253,7 @@ func updateSeason(view view.View) (tea.Msg, error) {
 
 	// Check if we have a new season
 	yearNumber, weekNumber := season.Start.ISOWeek()
-	seasonStart := time{year: yearNumber, week: weekNumber}
+	seasonStart := yearWeek{year: yearNumber, week: weekNumber}
 	if m.currentSeason.equal(seasonStart) {
 		// Same season
 		return nil, nil
@@ -276,10 +262,10 @@ func updateSeason(view view.View) (tea.Msg, error) {
 	return seasonMsg{start: seasonStart}, nil
 }
 
-func (z *time) equal(z2 time) bool {
+func (z *yearWeek) equal(z2 yearWeek) bool {
 	return z.week == z2.week && z.year == z2.year
 }
-func (z *time) after(z2 time) bool {
+func (z *yearWeek) after(z2 yearWeek) bool {
 	if z.year > z2.year {
 		return true
 	} else if z.year < z2.year {
