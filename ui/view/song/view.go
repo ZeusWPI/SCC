@@ -2,12 +2,53 @@ package song
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m *Model) viewPlaying() string {
+	status := m.viewPlayingStatus()
+	lyrics := m.viewPlayingLyrics()
+
+	view := lipgloss.JoinVertical(lipgloss.Left, status, lyrics)
+
+	return view
+}
+
+func (m *Model) viewPlayingStatus() string {
+	// Stopwatch
+	durationS := int(math.Round(float64(m.current.song.DurationMS) / 1000))
+	stopwatch := fmt.Sprintf("\t%s / %02d:%02d", m.current.stopwatch.View(), durationS/60, durationS%60)
+	stopwatch = sStatusStopwatch.Render(stopwatch)
+
+	// Song name
+	var artists strings.Builder
+	for _, artist := range m.current.song.Artists {
+		artists.WriteString(artist.Name + " & ")
+	}
+	artist := artists.String()
+	if len(artist) > 0 {
+		artist = artist[:len(artist)-3]
+	}
+
+	song := sStatusSong.Width(m.width - lipgloss.Width(stopwatch)).Render(fmt.Sprintf("%s | %s", m.current.song.Title, artist))
+
+	// Progress bar
+	// zap.S().Info(m.current.lyrics.Progress())
+	// progress := sStatusProgress.Width(m.width).Render(m.current.progress.ViewAs(m.current.lyrics.Progress()))
+	// zap.S().Info(progress)
+
+	progress := sStatusProgress.Width(m.width).Render(strings.Repeat("▄", int(m.current.lyrics.Progress()*float64(m.width))))
+
+	view := lipgloss.JoinHorizontal(lipgloss.Top, song, stopwatch)
+	view = lipgloss.JoinVertical(lipgloss.Left, view, progress)
+
+	return view
+}
+
+func (m *Model) viewPlayingLyrics() string {
 	var previousB strings.Builder
 	for i, lyric := range m.current.previous {
 		previousB.WriteString(lyric)
@@ -26,7 +67,7 @@ func (m *Model) viewPlaying() string {
 	}
 	upcoming := sLyricUpcoming.Render(upcomingB.String())
 
-	return sBase.MarginLeft(5).Render(lipgloss.JoinVertical(lipgloss.Left, previous, current, upcoming))
+	return base.MarginLeft(5).Render(lipgloss.JoinVertical(lipgloss.Left, previous, current, upcoming))
 }
 
 func (m *Model) viewNotPlaying() string {
@@ -78,5 +119,7 @@ func (m *Model) viewNotPlaying() string {
 		renderedRows = append(renderedRows, lipgloss.JoinHorizontal(lipgloss.Top, row...))
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
+	view := lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
+
+	return view
 }

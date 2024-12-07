@@ -9,6 +9,8 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 )
 
+var re = regexp.MustCompile(`^\[(\d{2}):(\d{2})\.(\d{2})\]`)
+
 // LRC represents synced lyrics
 type LRC struct {
 	song   dto.Song
@@ -76,40 +78,40 @@ func (l *LRC) Upcoming(amount int) []Lyric {
 	return lyrics
 }
 
+// Progress shows the fraction of lyrics that have been used.
+func (l *LRC) Progress() float64 {
+	return float64(l.i) / float64(len(l.lyrics))
+}
+
 func parseLRC(text string, totalDuration time.Duration) []Lyric {
 	lines := strings.Split(text, "\n")
 
 	lyrics := make([]Lyric, 0, len(lines)+1)
 	var previousTimestamp time.Duration
 
-	re, err := regexp.Compile(`^\[(\d{2}):(\d{2})\.(\d{2})\] (.+)$`)
-	if err != nil {
-		return lyrics
-	}
-
 	// Add first lyric (no text)
 	lyrics = append(lyrics, Lyric{Text: ""})
 	previousTimestamp = time.Duration(0)
 
 	for i, line := range lines {
-		match := re.FindStringSubmatch(line)
-		if match == nil {
+		parts := strings.SplitN(line, " ", 2)
+		if len(parts) != 2 {
 			continue
 		}
 
-		// Construct timestamp
-		minutes, _ := strconv.Atoi(match[1])
-		seconds, _ := strconv.Atoi(match[2])
-		hundredths, _ := strconv.Atoi(match[3])
+		// Duration part
+		timeParts := re.FindStringSubmatch(parts[0])
+		minutes, _ := strconv.Atoi(timeParts[1])
+		seconds, _ := strconv.Atoi(timeParts[2])
+		hundredths, _ := strconv.Atoi(timeParts[3])
 		timestamp := time.Duration(minutes)*time.Minute +
 			time.Duration(seconds)*time.Second +
 			time.Duration(hundredths)*10*time.Millisecond
 
-		t := match[4]
+		// Actual lyric
+		lyric := parts[1]
 
-		lyrics = append(lyrics, Lyric{Text: t})
-
-		// Set duration of previous lyric
+		lyrics = append(lyrics, Lyric{Text: lyric})
 		lyrics[i].Duration = timestamp - previousTimestamp
 		previousTimestamp = timestamp
 	}

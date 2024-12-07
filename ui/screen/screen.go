@@ -12,4 +12,5 @@ type Screen interface {
 	Update(tea.Msg) (Screen, tea.Cmd)
 	View() string
 	GetUpdateViews() []view.UpdateData
+	GetSizeMsg() tea.Msg
 }
