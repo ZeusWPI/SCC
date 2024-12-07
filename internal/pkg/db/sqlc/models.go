@@ -15,13 +15,14 @@ type Event struct {
 	Date         time.Time
 	AcademicYear string
 	Location     string
+	Poster       []byte
 }
 
 type Gamification struct {
 	ID     int64
 	Name   string
 	Score  int64
-	Avatar string
+	Avatar []byte
 }
 
 type Message struct {

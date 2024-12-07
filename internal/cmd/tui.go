@@ -11,12 +11,13 @@ import (
 	"github.com/zeusWPI/scc/pkg/util"
 	tui "github.com/zeusWPI/scc/ui"
 	"github.com/zeusWPI/scc/ui/screen"
+	"github.com/zeusWPI/scc/ui/screen/cammie"
 	"github.com/zeusWPI/scc/ui/view"
 	"go.uber.org/zap"
 )
 
 var screens = map[string]func(*db.DB) screen.Screen{
-	"cammie": screen.NewCammie,
+	"cammie": cammie.New,
 	"song":   screen.NewSong,
 	"test":   screen.NewTest,
 }

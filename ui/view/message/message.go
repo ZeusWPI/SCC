@@ -4,40 +4,40 @@ package message
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"hash/fnv"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/list"
 	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/ui/view"
-	"go.uber.org/zap"
 )
 
 // Model represents the model for the message view
 type Model struct {
+	width         int
+	height        int
 	db            *db.DB
 	lastMessageID int64
-	messages      []string
+	messages      []message
+}
+
+type message struct {
+	sender  string
+	message string
+	color   string
+	date    time.Time
 }
 
 // Msg represents the message to update the message view
 type Msg struct {
 	lastMessageID int64
-	messages      []string
-}
-
-var messageColor = []string{
-	"#800000", "#008000", "#808000", "#000080", "#800080", "#008080", "#c0c0c0",
-	"#ff0000", "#00ff00", "#ffff00", "#0000ff", "#ff00ff", "#00ffff", "#ffffff",
+	messages      []message
 }
 
 // NewModel creates a new message model view
 func NewModel(db *db.DB) view.View {
-	return &Model{db: db, lastMessageID: -1, messages: []string{}}
+	return &Model{db: db, lastMessageID: -1, messages: []message{}}
 }
 
 // Init initializes the message model view
@@ -45,9 +45,22 @@ func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
+// Name returns the name of the view
+func (m *Model) Name() string {
+	return "Cammie Messages"
+}
+
 // Update updates the message model view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
+	case view.MsgSize:
+		entry, ok := msg.Sizes[m.Name()]
+		if ok {
+			m.width = entry.Width
+			m.height = entry.Height
+		}
+
+		return m, nil
 	case Msg:
 		m.lastMessageID = msg.lastMessageID
 		m.messages = append(m.messages, msg.messages...)
@@ -60,11 +73,11 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 // View returns the view for the message model
 func (m *Model) View() string {
-	// TODO: Limit the amount of messages shown
-	// TODO: Wrap messages
-	zap.S().Info("Viewing messages")
-	l := list.New(m.messages).Enumerator(func(_ list.Items, _ int) string { return "" })
-	return l.String()
+	if m.width == 0 || m.height == 0 {
+		return "Initializing..."
+	}
+
+	return m.viewAll()
 }
 
 // GetUpdateDatas returns all the update functions for the message model
@@ -83,48 +96,39 @@ func updateMessages(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 	lastMessageID := m.lastMessageID
 
-	message, err := m.db.Queries.GetLastMessage(context.Background())
+	messagesDB, err := m.db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = nil
 		}
-		return Msg{lastMessageID: lastMessageID, messages: []string{}}, err
+		return nil, err
 	}
 
-	if message.ID <= lastMessageID {
-		return Msg{lastMessageID: lastMessageID, messages: []string{}}, nil
+	if len(messagesDB) == 0 {
+		return nil, nil
 	}
 
-	messages, err := m.db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
-	if err != nil {
-		zap.S().Error("DB: Failed to get messages", err)
-		return Msg{lastMessageID: lastMessageID, messages: []string{}}, err
+	messages := make([]message, 0, len(messagesDB))
+	lastID := m.lastMessageID
+	for _, m := range messagesDB {
+		if m.ID > lastID {
+			lastID = m.ID
+		}
+
+		messages = append(messages, message{
+			sender:  m.Name,
+			message: m.Message,
+			color:   hashColor(m.Name),
+			date:    m.CreatedAt,
+		})
 	}
 
-	formattedMessages := make([]string, 0, len(messages))
-	for _, message := range messages {
-		formattedMessages = append(formattedMessages, formatMessage(message))
-	}
-
-	return Msg{lastMessageID: message.ID, messages: formattedMessages}, nil
+	return Msg{lastMessageID: lastID, messages: messages}, nil
 }
 
 func hashColor(s string) string {
 	h := fnv.New32a()
 	h.Write([]byte(s))
 	hash := h.Sum32()
-	return messageColor[hash%uint32(len(messageColor))]
-}
-
-func formatMessage(msg sqlc.Message) string {
-	dateStyle := lipgloss.NewStyle().Faint(true)
-	date := dateStyle.Render(fmt.Sprintf("%s ", msg.CreatedAt.Format("02/01")))
-
-	color := hashColor(msg.Name)
-	colorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
-
-	sender := fmt.Sprintf("%s %s ", colorStyle.Bold(true).Render(msg.Name), colorStyle.Render("|"))
-	message := colorStyle.Render(msg.Message)
-
-	return fmt.Sprintf("%s%s%s", date, sender, message)
+	return colors[hash%uint32(len(colors))]
 }

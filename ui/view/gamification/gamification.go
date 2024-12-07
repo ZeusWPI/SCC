@@ -8,12 +8,9 @@ import (
 	"fmt"
 	"image"
 	"strconv"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/disintegration/imaging"
-	"github.com/lucasb-eyer/go-colorful"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/config"
@@ -48,7 +45,7 @@ func (m *Model) Init() tea.Cmd {
 
 // Name returns the name of the view
 func (m *Model) Name() string {
-	return "Gammification"
+	return "Gamification"
 }
 
 // Update updates the gamification view
@@ -73,7 +70,7 @@ func (m *Model) View() string {
 			sScore.Render(strconv.Itoa(int(item.item.Score))),
 		)
 
-		column := lipgloss.JoinVertical(lipgloss.Left, gamificationToString(width, item.image), user)
+		column := lipgloss.JoinVertical(lipgloss.Left, view.ImagetoString(width, item.image), user)
 		columns = append(columns, sColumn.Render(column))
 	}
 
@@ -132,31 +129,4 @@ func updateLeaderboard(view view.View) (tea.Msg, error) {
 	}
 
 	return msg, nil
-}
-
-func gamificationToString(width int, img image.Image) string {
-	img = imaging.Resize(img, width, 0, imaging.Lanczos)
-	b := img.Bounds()
-	imageWidth := b.Max.X
-	h := b.Max.Y
-	str := strings.Builder{}
-
-	for heightCounter := 0; heightCounter < h; heightCounter += 2 {
-		for x := imageWidth; x < width; x += 2 {
-			str.WriteString(" ")
-		}
-
-		for x := 0; x < imageWidth; x++ {
-			c1, _ := colorful.MakeColor(img.At(x, heightCounter))
-			color1 := lipgloss.Color(c1.Hex())
-			c2, _ := colorful.MakeColor(img.At(x, heightCounter+1))
-			color2 := lipgloss.Color(c2.Hex())
-			str.WriteString(lipgloss.NewStyle().Foreground(color1).
-				Background(color2).Render("▀"))
-		}
-
-		str.WriteString("\n")
-	}
-
-	return str.String()
 }
