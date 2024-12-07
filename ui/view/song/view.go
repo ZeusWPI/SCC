@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/list"
 )
 
 func (m *Model) viewPlaying() string {
@@ -31,33 +30,53 @@ func (m *Model) viewPlaying() string {
 }
 
 func (m *Model) viewNotPlaying() string {
-	columns := make([]string, 0, 3)
+	rows := make([][]string, 0, 2)
+	for i := 0; i < 2; i++ {
+		rows = append(rows, make([]string, 0, 2))
+	}
 
 	// Recently played
-	l := list.New(m.history).Enumerator(list.Arabic).EnumeratorStyle(sListEnum).String()
-	t := sStatTitle.Width(lipgloss.Width(l)).Align(lipgloss.Center).Render("Recently played")
-
-	column := lipgloss.JoinVertical(lipgloss.Left, t, l)
-	columns = append(columns, sStat.Render(column))
-
-	// Top stats
-	topStats := map[string][]topStat{
-		"Top Tracks":  m.topSongs,
-		"Top Artists": m.topArtists,
-		"Top Genres":  m.topGenres,
+	items := make([]string, 0, len(m.history))
+	for i, track := range m.history {
+		number := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
+		body := sStatBody.Render(track)
+		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, number, body))
 	}
+	l := lipgloss.JoinVertical(lipgloss.Left, items...)
+	title := sStatTitle.Render("Recently Played")
+	rows[0] = append(rows[0], sStat.Render(lipgloss.JoinVertical(lipgloss.Left, title, l)))
 
-	for title, stat := range topStats {
-		var statInfos []string
-		for _, statInfo := range stat {
-			statInfos = append(statInfos, lipgloss.JoinHorizontal(lipgloss.Top, statInfo.name, sStatAmount.Render(fmt.Sprintf("%d", statInfo.amount))))
+	// All other stats
+	topStats := [][]topStat{m.topSongs, m.topArtists, m.topGenres}
+	for i, topStat := range topStats {
+		items := make([]string, 0, len(topStat))
+		for i, stat := range topStat {
+			number := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
+			body := sStatBody.Render(stat.name)
+			amount := sStatAmount.Render(fmt.Sprintf("%d", stat.amount))
+			items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, number, body, amount))
 		}
-		l := list.New(statInfos).Enumerator(list.Arabic).EnumeratorStyle(sListEnum).String()
-		t := sStatTitle.Width(lipgloss.Width(l)).Align(lipgloss.Center).Render(title)
+		l := lipgloss.JoinVertical(lipgloss.Left, items...)
 
-		column := lipgloss.JoinVertical(lipgloss.Left, t, l)
-		columns = append(columns, sStat.Render(column))
+		var row int
+		if i == 0 {
+			title = sStatTitle.Render("Top Tracks")
+			row = 0
+		} else if i == 1 {
+			title = sStatTitle.Render("Top Artists")
+			row = 1
+		} else {
+			title = sStatTitle.Render("Top Genres")
+			row = 1
+		}
+
+		rows[row] = append(rows[row], sStat.Render(lipgloss.JoinVertical(lipgloss.Left, title, l)))
 	}
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, columns...)
+	renderedRows := make([]string, 0, 2)
+	for _, row := range rows {
+		renderedRows = append(renderedRows, lipgloss.JoinHorizontal(lipgloss.Top, row...))
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/lyrics"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/ui/view"
-	"go.uber.org/zap"
 )
 
 var (
@@ -86,6 +85,11 @@ func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
+// Name returns the name of the view
+func (m *Model) Name() string {
+	return "Songs"
+}
+
 // Update updates the song view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -98,15 +102,12 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		m.current = msg.current
 		// New song, start the commands to update the lyrics
 		lyric, ok := m.current.lyrics.Current()
-		zap.S().Info("Song ", ok)
 		if !ok {
 			// Song already done (shouldn't happen)
 			m.current = playing{song: nil}
 			return m, nil
 		}
-		zap.S().Info("Starting")
 		startTime := m.current.song.CreatedAt.Add(lyric.Duration)
-		zap.S().Info("Startime: ", startTime)
 		for startTime.Before(time.Now()) {
 			lyric, ok := m.current.lyrics.Next()
 			if !ok {
@@ -115,7 +116,6 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 				return m, nil
 			}
 			startTime = startTime.Add(lyric.Duration)
-			zap.S().Info("Startime: ", startTime)
 		}
 		m.current.upcoming = lyricsToString(m.current.lyrics.Upcoming(upcomingAmount))
 		return m, updateLyrics(m.current, startTime)
@@ -183,7 +183,6 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 }
 
 func updateCurrentSong(view view.View) (tea.Msg, error) {
-	zap.S().Info("Updating current song")
 	m := view.(*Model)
 
 	songs, err := m.db.Queries.GetLastSongFull(context.Background())
@@ -191,30 +190,25 @@ func updateCurrentSong(view view.View) (tea.Msg, error) {
 		if err == sql.ErrNoRows {
 			err = nil
 		}
-		zap.S().Info("Updating song: DB error")
 		return nil, err
 	}
 	if len(songs) == 0 {
-		zap.S().Info("Updating song: No lenght for songs")
 		return nil, nil
 	}
 
 	// Check if song is still playing
 	if songs[0].CreatedAt.Add(time.Duration(songs[0].DurationMs) * time.Millisecond).Before(time.Now()) {
 		// Song is finished
-		zap.S().Info("Updating song: Song finished")
 		return nil, nil
 	}
 
 	if m.current.song != nil && songs[0].ID == m.current.song.ID {
 		// Song is already set to current
-		zap.S().Info("Updating song: already set to current")
 		return nil, nil
 	}
 
 	song := dto.SongDTOHistory(songs)
 
-	zap.S().Info("Updating song: returning")
 	return msgPlaying{current: playing{song: song, lyrics: lyrics.New(song)}}, nil
 }
 
@@ -266,15 +260,12 @@ func updateLyrics(song playing, start time.Time) tea.Cmd {
 	if start.After(now) {
 		timeout = start.Sub(now)
 	}
-	zap.S().Info("Lyrics: updating in ", timeout)
 
 	return tea.Tick(timeout, func(_ time.Time) tea.Msg {
 		// Next lyric
-		zap.S().Info("Lyrics: Getting next lyric")
 		lyric, ok := song.lyrics.Next()
 		if !ok {
 			// Song finished
-			zap.S().Info("Lyrics: song finished")
 			return msgLyrics{song: *song.song, done: true}
 		}
 
@@ -282,14 +273,6 @@ func updateLyrics(song playing, start time.Time) tea.Cmd {
 		upcoming := song.lyrics.Upcoming(upcomingAmount)
 
 		end := start.Add(lyric.Duration)
-
-		zap.S().Info("Lyrics: Returning: ", msgLyrics{
-			previous:  lyricsToString(previous),
-			current:   lyric.Text,
-			upcoming:  lyricsToString(upcoming),
-			startNext: end,
-			done:      false,
-		})
 
 		return msgLyrics{
 			song:      *song.song,
@@ -301,5 +284,3 @@ func updateLyrics(song playing, start time.Time) tea.Cmd {
 		}
 	})
 }
-
-// TODO: It always start at the first lyric but if it's behind it should skip forward.

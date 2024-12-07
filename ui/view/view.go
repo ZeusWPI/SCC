@@ -16,7 +16,20 @@ type UpdateData struct {
 // View represents a view
 type View interface {
 	Init() tea.Cmd
+	Name() string
 	Update(tea.Msg) (View, tea.Cmd)
 	View() string
 	GetUpdateDatas() []UpdateData
+}
+
+// MsgSize is a message to let a view know its size
+// The key of Sizes is the name of a view
+type MsgSize struct {
+	Sizes map[string]Size
+}
+
+// Size contains the size data
+type Size struct {
+	Width  int
+	Height int
 }

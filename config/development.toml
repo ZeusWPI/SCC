@@ -35,6 +35,7 @@ interval_s = 3600
 
 [event]
 api = "https://zeus.gent/events"
+api_poster = "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master"
 interval_s = 86400
 
 [buzzer]
@@ -51,6 +52,9 @@ song = [
 ]
 
 [tui]
+
+[tui.screen]
+cammie_interval_change_s = 300
 
 [tui.zess]
 weeks = 10
@@ -69,3 +73,6 @@ interval_s = 3600
 [tui.song]
 interval_current_s = 5
 interval_top_s = 3600
+
+[tui.event]
+interval_s = 3600

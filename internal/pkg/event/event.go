@@ -4,7 +4,6 @@ package event
 import (
 	"context"
 	"errors"
-	"fmt"
 	"slices"
 	"sync"
 
@@ -43,15 +42,18 @@ func (e *Event) Update() error {
 		return err
 	}
 
-	equal := false
-	if len(events) == len(eventsDB) {
-		for _, event := range eventsDB {
-			found := slices.ContainsFunc(events, func(ev dto.Event) bool { return ev.Equal(*dto.EventDTO(event)) })
-			if !found {
-				break
-			}
+	// Check if there are any new events
+	equal := true
+	for _, event := range eventsDB {
+		found := slices.ContainsFunc(events, func(ev dto.Event) bool { return ev.Equal(*dto.EventDTO(event)) })
+		if !found {
+			equal = false
+			break
 		}
-		equal = true
+	}
+
+	if len(events) != len(eventsDB) {
+		equal = false
 	}
 
 	// Both are equal, nothing to be done
@@ -79,9 +81,7 @@ func (e *Event) Update() error {
 			}
 		}(&event)
 	}
-	fmt.Printf("Waiting\n")
 	wg.Wait()
-	fmt.Printf("Done\n")
 
 	for _, event := range events {
 		err = e.getPoster(&event)

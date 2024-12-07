@@ -21,7 +21,7 @@ var (
 
 // Colors
 var (
-	cBarChart = lipgloss.Color("#FDEDCA")
+	cBarChart = lipgloss.Color("#32012F")
 
 	cBorder     = lipgloss.Color("#383838")
 	cZeus       = lipgloss.Color("#FF7F00")

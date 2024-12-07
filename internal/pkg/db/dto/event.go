@@ -13,6 +13,7 @@ type Event struct {
 	Date         time.Time
 	AcademicYear string
 	Location     string
+	Poster       []byte
 }
 
 // EventDTO converts a sqlc Event object to a DTO Event
@@ -23,6 +24,7 @@ func EventDTO(e sqlc.Event) *Event {
 		Date:         e.Date,
 		AcademicYear: e.AcademicYear,
 		Location:     e.Location,
+		Poster:       e.Poster,
 	}
 }
 
@@ -38,5 +40,6 @@ func (e *Event) CreateParams() sqlc.CreateEventParams {
 		Date:         e.Date,
 		AcademicYear: e.AcademicYear,
 		Location:     e.Location,
+		Poster:       e.Poster,
 	}
 }
