@@ -305,7 +305,7 @@ func (q *Queries) GetSongGenreByName(ctx context.Context, genre string) (SongGen
 const getSongHistory = `-- name: GetSongHistory :many
 SELECT s.title
 FROM song_history sh
-JOIN song s  ON sh.song_id = s.id
+JOIN song s ON sh.song_id = s.id
 ORDER BY created_at DESC
 LIMIT 5
 `

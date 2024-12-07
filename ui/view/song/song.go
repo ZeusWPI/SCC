@@ -6,11 +6,13 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/lyrics"
 	"github.com/zeusWPI/scc/pkg/config"
+	"github.com/zeusWPI/scc/ui/components/stopwatch"
 	"github.com/zeusWPI/scc/ui/view"
 )
 
@@ -20,11 +22,13 @@ var (
 )
 
 type playing struct {
-	song     *dto.Song
-	lyrics   lyrics.Lyrics
-	previous []string // Lyrics already sang
-	current  string   // Current lyric
-	upcoming []string // Lyrics that are coming up
+	song      *dto.Song
+	progress  progress.Model
+	stopwatch stopwatch.Model
+	lyrics    lyrics.Lyrics
+	previous  []string // Lyrics already sang
+	current   string   // Current lyric
+	upcoming  []string // Lyrics that are coming up
 }
 
 // Model represents the view model for song
@@ -35,6 +39,8 @@ type Model struct {
 	topSongs   []topStat
 	topGenres  []topStat
 	topArtists []topStat
+	width      int
+	height     int
 }
 
 // Msg triggers a song data update
@@ -72,17 +78,19 @@ func NewModel(db *db.DB) view.View {
 
 	return &Model{
 		db:         db,
-		current:    playing{},
+		current:    playing{stopwatch: stopwatch.New(), progress: progress.New()},
 		history:    history,
 		topSongs:   make([]topStat, 0, 5),
 		topGenres:  make([]topStat, 0, 5),
 		topArtists: make([]topStat, 0, 5),
+		width:      0,
+		height:     0,
 	}
 }
 
 // Init starts the song view
 func (m *Model) Init() tea.Cmd {
-	return nil
+	return m.current.stopwatch.Init()
 }
 
 // Name returns the name of the view
@@ -93,6 +101,14 @@ func (m *Model) Name() string {
 // Update updates the song view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
+	case view.MsgSize:
+		entry, ok := msg.Sizes[m.Name()]
+		if ok {
+			m.width = entry.Width
+			m.height = entry.Height
+		}
+
+		return m, nil
 	case msgPlaying:
 		m.history = append(m.history, msg.current.song.Title)
 		if len(m.history) > 5 {
@@ -101,24 +117,28 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 		m.current = msg.current
 		// New song, start the commands to update the lyrics
-		lyric, ok := m.current.lyrics.Current()
+		lyric, ok := m.current.lyrics.Next()
 		if !ok {
-			// Song already done (shouldn't happen)
+			// Song already done
 			m.current = playing{song: nil}
-			return m, nil
+			return m, m.current.stopwatch.Reset()
 		}
+
+		// Go through the lyrics until we get to the current one
 		startTime := m.current.song.CreatedAt.Add(lyric.Duration)
 		for startTime.Before(time.Now()) {
 			lyric, ok := m.current.lyrics.Next()
 			if !ok {
 				// We're too late to display lyrics
 				m.current = playing{song: nil}
-				return m, nil
+				return m, m.current.stopwatch.Reset()
 			}
 			startTime = startTime.Add(lyric.Duration)
 		}
+
 		m.current.upcoming = lyricsToString(m.current.lyrics.Upcoming(upcomingAmount))
-		return m, updateLyrics(m.current, startTime)
+		return m, tea.Batch(updateLyrics(m.current, startTime), m.current.stopwatch.Start(time.Since(m.current.song.CreatedAt)))
+
 	case msgTop:
 		if msg.topSongs != nil {
 			m.topSongs = msg.topSongs
@@ -129,6 +149,9 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		if msg.topArtists != nil {
 			m.topArtists = msg.topArtists
 		}
+
+		return m, nil
+
 	case msgLyrics:
 		// Check if it's still relevant
 		if msg.song.ID != m.current.song.ID {
@@ -139,7 +162,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		if msg.done {
 			// Song has finished. Reset variables
 			m.current = playing{song: nil}
-			return m, nil
+			return m, m.current.stopwatch.Reset()
 		}
 
 		// Msg is relevant, update values
@@ -149,9 +172,18 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 		// Start the cmd to update the lyrics
 		return m, updateLyrics(m.current, msg.startNext)
+
+	case progress.FrameMsg:
+		progressModel, cmd := m.current.progress.Update(msg)
+		m.current.progress = progressModel.(progress.Model)
+
+		return m, cmd
 	}
 
-	return m, nil
+	var cmd tea.Cmd
+	m.current.stopwatch, cmd = m.current.stopwatch.Update(msg)
+
+	return m, cmd
 }
 
 // View draws the song view

@@ -57,3 +57,12 @@ func (p *Plain) Next() (Lyric, bool) {
 func (p *Plain) Upcoming(_ int) []Lyric {
 	return []Lyric{}
 }
+
+// Progress shows the fraction of lyrics that have been used.
+func (p *Plain) Progress() float64 {
+	if p.given {
+		return 1
+	}
+
+	return 0
+}

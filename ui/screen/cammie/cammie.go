@@ -63,7 +63,7 @@ func (c *Cammie) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 		sTop = sTop.Width(c.width/2 - sTop.GetHorizontalFrameSize()).Height(c.height/2 - sTop.GetVerticalFrameSize())
 		sBottom = sBottom.Width(c.width/2 - sBottom.GetHorizontalFrameSize()).Height(c.height/2 - sBottom.GetVerticalFrameSize())
 
-		return c, updateSize(*c)
+		return c, c.GetSizeMsg
 	case msgIndex:
 		c.indexTop = msg.indexBottom
 
@@ -140,6 +140,27 @@ func (c *Cammie) GetUpdateViews() []view.UpdateData {
 	return updates
 }
 
+// GetSizeMsg returns a message for the views informing them about their width and height
+func (c *Cammie) GetSizeMsg() tea.Msg {
+	sizes := make(map[string]view.Size)
+
+	msgW := sMsg.GetWidth()
+	msgH := sMsg.GetHeight()
+	sizes[c.messages.Name()] = view.Size{Width: msgW, Height: msgH}
+
+	bottomW := sBottom.GetWidth()
+	bottomH := sBottom.GetHeight()
+	sizes[c.bottom.Name()] = view.Size{Width: bottomW, Height: bottomH}
+
+	for _, top := range c.top {
+		topW := sTop.GetWidth()
+		topH := sTop.GetHeight()
+		sizes[top.Name()] = view.Size{Width: topW, Height: topH}
+	}
+
+	return view.MsgSize{Sizes: sizes}
+}
+
 func updateBottomIndex(cammie Cammie) tea.Cmd {
 	timeout := time.Duration(config.GetDefaultInt("tui.screen.cammie_interval_change_s", 300) * int(time.Second))
 	return tea.Tick(timeout, func(_ time.Time) tea.Msg {
@@ -147,28 +168,4 @@ func updateBottomIndex(cammie Cammie) tea.Cmd {
 
 		return msgIndex{indexBottom: newIndex}
 	})
-}
-
-func updateSize(cammie Cammie) tea.Cmd {
-	return func() tea.Msg {
-		msg := view.MsgSize{
-			Sizes: make(map[string]view.Size),
-		}
-
-		msgW := sMsg.GetWidth()
-		msgH := sMsg.GetHeight()
-		msg.Sizes[cammie.messages.Name()] = view.Size{Width: msgW, Height: msgH}
-
-		bottomW := sBottom.GetWidth()
-		bottomH := sBottom.GetHeight()
-		msg.Sizes[cammie.bottom.Name()] = view.Size{Width: bottomW, Height: bottomH}
-
-		for _, top := range cammie.top {
-			topW := sTop.GetWidth()
-			topH := sTop.GetHeight()
-			msg.Sizes[top.Name()] = view.Size{Width: topW, Height: topH}
-		}
-
-		return msg
-	}
 }

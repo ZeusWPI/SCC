@@ -14,6 +14,7 @@ type Lyrics interface {
 	Current() (Lyric, bool)
 	Next() (Lyric, bool)
 	Upcoming(int) []Lyric
+	Progress() float64
 }
 
 // Lyric represents a single lyric line.

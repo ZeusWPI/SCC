@@ -12,14 +12,14 @@ import (
 	tui "github.com/zeusWPI/scc/ui"
 	"github.com/zeusWPI/scc/ui/screen"
 	"github.com/zeusWPI/scc/ui/screen/cammie"
+	songScreen "github.com/zeusWPI/scc/ui/screen/song"
 	"github.com/zeusWPI/scc/ui/view"
 	"go.uber.org/zap"
 )
 
 var screens = map[string]func(*db.DB) screen.Screen{
 	"cammie": cammie.New,
-	"song":   screen.NewSong,
-	"test":   screen.NewTest,
+	"song":   songScreen.New,
 }
 
 // TUI starts the terminal user interface
