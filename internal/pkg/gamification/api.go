@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var api = config.GetDefaultString("backend.gamification.api", "https://gamification.zeus.gent")
+
 type gamificationItem struct {
 	ID        int32  `json:"id"`
 	Name      string `json:"github_name"`
@@ -20,7 +22,6 @@ type gamificationItem struct {
 func (g *Gamification) getLeaderboard() ([]dto.Gamification, error) {
 	zap.S().Info("Gamification: Getting leaderboard")
 
-	api := config.GetDefaultString("backend.gamification.api", "https://gamification.zeus.gent")
 	req := fiber.Get(api+"/top4").Set("Accept", "application/json")
 
 	res := new([]gamificationItem)

@@ -10,10 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	api = config.GetDefaultString("backend.zess.api", "https://zess.zeus.gent")
+)
+
 func (z *Zess) getSeasons() (*[]*dto.Season, error) {
 	zap.S().Info("Zess: Getting seasons")
 
-	api := config.GetDefaultString("backend.zess.api", "https://zess.zeus.gent")
 	req := fiber.Get(api + "/seasons")
 
 	res := new([]*dto.Season)
@@ -38,7 +41,6 @@ func (z *Zess) getSeasons() (*[]*dto.Season, error) {
 func (z *Zess) getScans() (*[]*dto.Scan, error) {
 	zap.S().Info("Zess: Getting scans")
 
-	api := config.GetDefaultString("backend.zess.api", "https://zess.zeus.gent")
 	req := fiber.Get(api + "/recent_scans")
 
 	res := new([]*dto.Scan)

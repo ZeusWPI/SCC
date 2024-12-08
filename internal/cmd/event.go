@@ -13,14 +13,14 @@ import (
 func Event(db *db.DB) (*event.Event, chan bool) {
 	ev := event.New(db)
 	done := make(chan bool)
+	interval := config.GetDefaultInt("backend.event.interval_s", 3600)
 
-	go eventPeriodicUpdate(ev, done)
+	go eventPeriodicUpdate(ev, done, interval)
 
 	return ev, done
 }
 
-func eventPeriodicUpdate(ev *event.Event, done chan bool) {
-	interval := config.GetDefaultInt("backend.event.interval_s", 3600)
+func eventPeriodicUpdate(ev *event.Event, done chan bool, interval int) {
 	zap.S().Info("Event: Starting periodic leaderboard update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTimer(time.Duration(interval) * time.Second)

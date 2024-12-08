@@ -11,7 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var api = config.GetDefaultString("backend.song.spotify_api", "https://api.spotify.com/v1")
+var (
+	api       = config.GetDefaultString("backend.song.spotify_api", "https://api.spotify.com/v1")
+	apiLrclib = config.GetDefaultString("backend.song.lrclib_api", "https://lrclib.net/api")
+)
 
 type trackArtist struct {
 	ID   string `json:"id"`
@@ -121,7 +124,7 @@ func (s *Song) getLyrics(track *dto.Song) error {
 	params.Set("album_name", track.Album)
 	params.Set("duration", fmt.Sprintf("%d", track.DurationMS/1000))
 
-	req := fiber.Get(fmt.Sprintf("%s/get?%s", config.GetDefaultString("backend.song.lrclib_api", "https://lrclib.net/api"), params.Encode()))
+	req := fiber.Get(fmt.Sprintf("%s/get?%s", apiLrclib, params.Encode()))
 
 	res := new(lyricsResponse)
 	status, _, errs := req.Struct(res)

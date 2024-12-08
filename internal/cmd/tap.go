@@ -13,14 +13,14 @@ import (
 func Tap(db *db.DB) (*tap.Tap, chan bool) {
 	tap := tap.New(db)
 	done := make(chan bool)
+	interval := config.GetDefaultInt("backend.tap.interval_s", 60)
 
-	go tapPeriodicUpdate(tap, done)
+	go tapPeriodicUpdate(tap, done, interval)
 
 	return tap, done
 }
 
-func tapPeriodicUpdate(tap *tap.Tap, done chan bool) {
-	interval := config.GetDefaultInt("backend.tap.interval_s", 60)
+func tapPeriodicUpdate(tap *tap.Tap, done chan bool, interval int) {
 	zap.S().Info("Tap: Starting periodic update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
