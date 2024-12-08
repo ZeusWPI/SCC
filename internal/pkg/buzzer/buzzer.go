@@ -27,9 +27,8 @@ var defaultSong = []string{
 
 // New returns a new buzzer instance
 func New() *Buzzer {
-	song := config.GetDefaultStringSlice("backend.buzzer.song", defaultSong)
 	return &Buzzer{
-		Song: song,
+		Song: config.GetDefaultStringSlice("backend.buzzer.song", defaultSong),
 	}
 }
 

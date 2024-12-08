@@ -7,13 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
-	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
-)
-
-var (
-	api       = config.GetDefaultString("backend.song.spotify_api", "https://api.spotify.com/v1")
-	apiLrclib = config.GetDefaultString("backend.song.lrclib_api", "https://lrclib.net/api")
 )
 
 type trackArtist struct {
@@ -35,7 +29,7 @@ type trackResponse struct {
 func (s *Song) getTrack(track *dto.Song) error {
 	zap.S().Info("Song: Getting track info for id: ", track.SpotifyID)
 
-	req := fiber.Get(fmt.Sprintf("%s/%s/%s", api, "tracks", track.SpotifyID)).
+	req := fiber.Get(fmt.Sprintf("%s/%s/%s", s.api, "tracks", track.SpotifyID)).
 		Set("Authorization", fmt.Sprintf("Bearer %s", s.AccessToken))
 
 	res := new(trackResponse)
@@ -76,7 +70,7 @@ type artistResponse struct {
 func (s *Song) getArtist(artist *dto.SongArtist) error {
 	zap.S().Info("Song: Getting artists info for ", artist.ID)
 
-	req := fiber.Get(fmt.Sprintf("%s/%s/%s", api, "artists", artist.SpotifyID)).
+	req := fiber.Get(fmt.Sprintf("%s/%s/%s", s.api, "artists", artist.SpotifyID)).
 		Set("Authorization", fmt.Sprintf("Bearer %s", s.AccessToken))
 
 	res := new(artistResponse)
@@ -124,7 +118,7 @@ func (s *Song) getLyrics(track *dto.Song) error {
 	params.Set("album_name", track.Album)
 	params.Set("duration", fmt.Sprintf("%d", track.DurationMS/1000))
 
-	req := fiber.Get(fmt.Sprintf("%s/get?%s", apiLrclib, params.Encode()))
+	req := fiber.Get(fmt.Sprintf("%s/get?%s", s.apiLrclib, params.Encode()))
 
 	res := new(lyricsResponse)
 	status, _, errs := req.Struct(res)

@@ -10,18 +10,12 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
-	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
 // TODO: Look at https://github.com/PuerkitoBio/goquery
 
 var layout = "Monday 02 January, 15:04 2006"
-
-var (
-	website       = config.GetDefaultString("backend.event.website", "https://zeus.gent/events")
-	websitePoster = config.GetDefaultString("backend.event.website_poster", "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master")
-)
 
 func (e *Event) getEvents() ([]dto.Event, error) {
 	zap.S().Info("Events: Getting all events")
@@ -73,7 +67,7 @@ func (e *Event) getEvents() ([]dto.Event, error) {
 		events = append(events, event)
 	})
 
-	err := c.Visit(website)
+	err := c.Visit(e.website)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +96,7 @@ func (e *Event) getPoster(event *dto.Event) error {
 
 	year := fmt.Sprintf("20%d-20%d", yearStart, yearEnd)
 
-	url := fmt.Sprintf("%s/%s/%s/scc.png", websitePoster, year, event.Name)
+	url := fmt.Sprintf("%s/%s/%s/scc.png", e.websitePoster, year, event.Name)
 
 	req := fiber.Get(url)
 	status, body, errs := req.Bytes()

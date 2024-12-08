@@ -6,16 +6,21 @@ import (
 	"errors"
 
 	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/pkg/config"
 )
 
 // Gamification represents a gamification instance
 type Gamification struct {
-	db *db.DB
+	db  *db.DB
+	api string
 }
 
 // New creates a new gamification instance
 func New(db *db.DB) *Gamification {
-	return &Gamification{db: db}
+	return &Gamification{
+		db:  db,
+		api: config.GetDefaultString("backend.gamification.api", "https://gamification.zeus.gent"),
+	}
 }
 
 // Update gets the current leaderboard from gamification

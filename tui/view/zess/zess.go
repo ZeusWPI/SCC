@@ -13,8 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var maxWeeks = config.GetDefaultInt("tui.view.zess.weeks", 10)
-
 // yearWeek represents a yearWeek object by keeping the year and week number
 type yearWeek struct {
 	year int
@@ -32,6 +30,7 @@ type Model struct {
 	db            *db.DB
 	lastScanID    int32
 	scans         []weekScan // Scans per week
+	showWeeks     int        // Amount of weeks to show
 	maxWeekScans  int64
 	currentSeason yearWeek // Start week of the season
 	seasonScans   int64
@@ -59,6 +58,7 @@ func NewModel(db *db.DB) view.View {
 		db:            db,
 		lastScanID:    -1,
 		scans:         make([]weekScan, 0),
+		showWeeks:     config.GetDefaultInt("tui.view.zess.weeks", 10),
 		maxWeekScans:  -1,
 		currentSeason: yearWeek{year: -1, week: -1},
 		seasonScans:   0,
@@ -122,7 +122,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 					m.maxWeekScans = newScan.amount
 				}
 				// Make sure the array doesn't get too big
-				if len(m.scans) > maxWeeks {
+				if len(m.scans) > m.showWeeks {
 					m.scans = m.scans[:1]
 				}
 			}

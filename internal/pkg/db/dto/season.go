@@ -12,7 +12,7 @@ type Season struct {
 	Name    string    `json:"name" validate:"required"`
 	Start   date.Date `json:"start" validate:"required"`
 	End     date.Date `json:"end" validate:"required"`
-	Current bool      `json:"is_current"` // FIXME: This should have `required`. However when added the validation fails even though it's present
+	Current bool      `json:"is_current" validate:"boolean"`
 }
 
 // SeasonDTO converts a sqlc.Season to a Season

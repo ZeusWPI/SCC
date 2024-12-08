@@ -31,17 +31,17 @@ func main() {
 		zap.S().Fatal("DB: Fatal error\n", err)
 	}
 
-	// Tap
-	_, _ = cmd.Tap(db)
+	// // Tap
+	// _, _ = cmd.Tap(db)
 
 	// Zess
 	_, _, _ = cmd.Zess(db)
 
-	// Gamification
-	_, _ = cmd.Gamification(db)
+	// // Gamification
+	// _, _ = cmd.Gamification(db)
 
-	// Event
-	_, _ = cmd.Event(db)
+	// // Event
+	// _, _ = cmd.Event(db)
 
 	// Spotify
 	spotify, err := cmd.Song(db)

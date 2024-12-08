@@ -6,11 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
-	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
-
-var api = config.GetDefaultString("backend.gamification.api", "https://gamification.zeus.gent")
 
 type gamificationItem struct {
 	ID        int32  `json:"id"`
@@ -22,7 +19,7 @@ type gamificationItem struct {
 func (g *Gamification) getLeaderboard() ([]dto.Gamification, error) {
 	zap.S().Info("Gamification: Getting leaderboard")
 
-	req := fiber.Get(api+"/top4").Set("Accept", "application/json")
+	req := fiber.Get(g.api+"/top4").Set("Accept", "application/json")
 
 	res := new([]gamificationItem)
 	status, _, errs := req.Struct(res)
