@@ -18,8 +18,6 @@ import (
 	"github.com/zeusWPI/scc/tui/view/zess"
 )
 
-var bottomTimeout = config.GetDefaultInt("tui.screen.cammie.interval_s", 300)
-
 // Cammie represents the cammie screen
 type Cammie struct {
 	db       *db.DB
@@ -164,7 +162,7 @@ func (c *Cammie) GetSizeMsg() tea.Msg {
 }
 
 func updateBottomIndex(cammie Cammie) tea.Cmd {
-	timeout := time.Duration(bottomTimeout * int(time.Second))
+	timeout := time.Duration(config.GetDefaultInt("tui.screen.cammie.interval_s", 300) * int(time.Second))
 	return tea.Tick(timeout, func(_ time.Time) tea.Msg {
 		newIndex := (cammie.indexTop + 1) % len(cammie.top)
 

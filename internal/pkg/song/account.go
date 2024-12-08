@@ -5,11 +5,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
-
-var apiAccount = config.GetDefaultString("backend.song.spotify_api_account", "https://accounts.spotify.com/api/token")
 
 type accountResponse struct {
 	AccessToken string `json:"access_token"`
@@ -23,7 +20,7 @@ func (s *Song) refreshToken() error {
 	form := &fiber.Args{}
 	form.Add("grant_type", "client_credentials")
 
-	req := fiber.Post(apiAccount).Form(form).BasicAuth(s.ClientID, s.ClientSecret)
+	req := fiber.Post(s.apiAccount).Form(form).BasicAuth(s.ClientID, s.ClientSecret)
 
 	res := new(accountResponse)
 	status, _, errs := req.Struct(res)

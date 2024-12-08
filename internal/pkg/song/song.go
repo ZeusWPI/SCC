@@ -20,6 +20,10 @@ type Song struct {
 	ClientSecret string
 	AccessToken  string
 	ExpiresTime  int64
+
+	api        string
+	apiAccount string
+	apiLrclib  string
 }
 
 // New creates a new song instance
@@ -31,7 +35,15 @@ func New(db *db.DB) (*Song, error) {
 		return &Song{}, errors.New("Song: Spotify client id or secret not set")
 	}
 
-	return &Song{db: db, ClientID: clientID, ClientSecret: clientSecret, ExpiresTime: 0}, nil
+	return &Song{
+		db:           db,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		ExpiresTime:  0,
+		api:          config.GetDefaultString("backend.song.spotify_api", "https://api.spotify.com/v1"),
+		apiAccount:   config.GetDefaultString("backend.song.spotify_api_account", "https://accounts.spotify.com/api/token"),
+		apiLrclib:    config.GetDefaultString("backend.song.lrclib_api", "https://lrclib.net/api"),
+	}, nil
 }
 
 // Track gets information about the current track and stores it in the database

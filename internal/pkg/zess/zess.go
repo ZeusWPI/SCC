@@ -10,17 +10,22 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
+	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/pkg/util"
 )
 
 // Zess represents a zess instance
 type Zess struct {
-	db *db.DB
+	db  *db.DB
+	api string
 }
 
 // New creates a new zess instance
 func New(db *db.DB) *Zess {
-	return &Zess{db: db}
+	return &Zess{
+		db:  db,
+		api: config.GetDefaultString("backend.zess.api", "https://zess.zeus.gent/api"),
+	}
 }
 
 // UpdateSeasons updates the seasons

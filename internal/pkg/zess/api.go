@@ -6,18 +6,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
-	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
-)
-
-var (
-	api = config.GetDefaultString("backend.zess.api", "https://zess.zeus.gent")
 )
 
 func (z *Zess) getSeasons() (*[]*dto.Season, error) {
 	zap.S().Info("Zess: Getting seasons")
 
-	req := fiber.Get(api + "/seasons")
+	req := fiber.Get(z.api + "/seasons")
 
 	res := new([]*dto.Season)
 	status, _, errs := req.Struct(res)
@@ -41,7 +36,7 @@ func (z *Zess) getSeasons() (*[]*dto.Season, error) {
 func (z *Zess) getScans() (*[]*dto.Scan, error) {
 	zap.S().Info("Zess: Getting scans")
 
-	req := fiber.Get(api + "/recent_scans")
+	req := fiber.Get(z.api + "/recent_scans")
 
 	res := new([]*dto.Scan)
 	status, _, errs := req.Struct(res)
