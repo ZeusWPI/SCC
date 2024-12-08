@@ -23,7 +23,7 @@ type Event struct {
 func New(db *db.DB) *Event {
 	return &Event{
 		db:            db,
-		website:       config.GetDefaultString("backend.event.website", "https://zeus.gent/events"),
+		website:       config.GetDefaultString("backend.event.website", "https://zeus.gent/events/"),
 		websitePoster: config.GetDefaultString("backend.event.website_poster", "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master"),
 	}
 }
