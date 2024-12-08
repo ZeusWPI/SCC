@@ -18,7 +18,6 @@ import (
 // Tap represents a tap instance
 type Tap struct {
 	db    *db.DB
-	api   string
 	beers []string
 }
 
@@ -38,10 +37,9 @@ var defaultBeers = []string{
 
 // New creates a new tap instance
 func New(db *db.DB) *Tap {
-	api := config.GetDefaultString("tap.api", "https://tap.zeus.gent")
-	beers := config.GetDefaultStringSlice("tap.beers", defaultBeers)
+	beers := config.GetDefaultStringSlice("backend.tap.beers", defaultBeers)
 
-	return &Tap{db: db, api: api, beers: beers}
+	return &Tap{db: db, beers: beers}
 }
 
 // Update gets all new orders from tap
@@ -77,7 +75,7 @@ func (t *Tap) Update() error {
 	for _, order := range orders {
 		_, err := t.db.Queries.CreateTap(context.Background(), sqlc.CreateTapParams{
 			OrderID:        order.OrderID,
-			OrderCreatedAt: pgtype.Timestamptz{Time: order.OrderCreatedAt},
+			OrderCreatedAt: pgtype.Timestamptz{Time: order.OrderCreatedAt, Valid: true},
 			Name:           order.ProductName,
 			Category:       order.ProductCategory,
 		})

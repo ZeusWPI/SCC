@@ -31,7 +31,7 @@ func API(db *db.DB, song *song.Song) {
 	apiGroup := app.Group("/api")
 	api.New(apiGroup, db, song)
 
-	host := config.GetDefaultString("server.host", "127.0.0.1")
+	host := config.GetDefaultString("server.host", "localhost")
 	port := config.GetDefaultInt("server.port", 3000)
 
 	zap.S().Fatal("API: Fatal server error", app.Listen(fmt.Sprintf("%s:%d", host, port)))

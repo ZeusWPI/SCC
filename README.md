@@ -18,9 +18,9 @@ Displays the cammie chat along with some other statistics.
   - `APP_ENV`. Available options are:
      -  `development`
      -  `production`
-  - `SONG_SPOTIFY_CLIENT_ID`
-  - `SONG_SPOTIFY_CLIENT_SECRET`
-2. Configure the appropriate settings in the corresponding configuration file located in the [config directory](./config)
+  - `BACKEND_SONG_SPOTIFY_CLIENT_ID`
+  - `BACKEND_SONG_SPOTIFY_CLIENT_SECRET`
+2. Configure the appropriate settings in the corresponding configuration file located in the [config directory](./config). you can either set them as environment variables or inside the configuration file.
 
 ## DB
 

@@ -57,6 +57,10 @@ type msgTop struct {
 	topArtists []topStat
 }
 
+type msgHistory struct {
+	history []string
+}
+
 type msgLyrics struct {
 	song      dto.Song
 	previous  []string
@@ -73,13 +77,10 @@ type topStat struct {
 
 // NewModel initializes a new song model
 func NewModel(db *db.DB) view.View {
-	// Get history, afterwards it gets updated when a new currentSong is detected
-	history, _ := db.Queries.GetSongHistory(context.Background())
-
 	return &Model{
 		db:         db,
 		current:    playing{stopwatch: stopwatch.New(), progress: progress.New()},
-		history:    history,
+		history:    make([]string, 0, 5),
 		topSongs:   make([]topStat, 0, 5),
 		topGenres:  make([]topStat, 0, 5),
 		topArtists: make([]topStat, 0, 5),
@@ -110,11 +111,6 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 		return m, nil
 	case msgPlaying:
-		m.history = append(m.history, msg.current.song.Title)
-		if len(m.history) > 5 {
-			m.history = m.history[1:]
-		}
-
 		m.current = msg.current
 		// New song, start the commands to update the lyrics
 		lyric, ok := m.current.lyrics.Next()
@@ -138,6 +134,11 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 		m.current.upcoming = lyricsToString(m.current.lyrics.Upcoming(upcomingAmount))
 		return m, tea.Batch(updateLyrics(m.current, startTime), m.current.stopwatch.Start(time.Since(m.current.song.CreatedAt)))
+
+	case msgHistory:
+		m.history = msg.history
+
+		return m, nil
 
 	case msgTop:
 		if msg.topSongs != nil {
@@ -203,13 +204,19 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Name:     "update current song",
 			View:     m,
 			Update:   updateCurrentSong,
-			Interval: config.GetDefaultInt("tui.song.interval_current_s", 5),
+			Interval: config.GetDefaultInt("tui.view.song.interval_current_s", 5),
+		},
+		{
+			Name:     "update history",
+			View:     m,
+			Update:   updateHistory,
+			Interval: config.GetDefaultInt("tui.view.song.interval_history_s", 5),
 		},
 		{
 			Name:     "top stats",
 			View:     m,
 			Update:   updateTopStats,
-			Interval: config.GetDefaultInt("tui.song.interval_top_s", 3600),
+			Interval: config.GetDefaultInt("tui.view.song.interval_top_s", 3600),
 		},
 	}
 }
@@ -242,6 +249,17 @@ func updateCurrentSong(view view.View) (tea.Msg, error) {
 	song := dto.SongDTOHistory(songs)
 
 	return msgPlaying{current: playing{song: song, lyrics: lyrics.New(song)}}, nil
+}
+
+func updateHistory(view view.View) (tea.Msg, error) {
+	m := view.(*Model)
+
+	history, err := m.db.Queries.GetSongHistory(context.Background())
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	return msgHistory{history: history}, nil
 }
 
 func updateTopStats(view view.View) (tea.Msg, error) {

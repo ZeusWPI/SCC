@@ -9,22 +9,16 @@ import (
 
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
-	"github.com/zeusWPI/scc/pkg/config"
 )
 
 // Event represents a event instance
 type Event struct {
-	db        *db.DB
-	api       string
-	apiPoster string
+	db *db.DB
 }
 
 // New creates a new event instance
 func New(db *db.DB) *Event {
-	api := config.GetDefaultString("event.api", "https://zeus.gent/events")
-	apiPoster := config.GetDefaultString("event.api_poster", "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master")
-
-	return &Event{db: db, api: api, apiPoster: apiPoster}
+	return &Event{db: db}
 }
 
 // Update gets all events from the website of this academic year

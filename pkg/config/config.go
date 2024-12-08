@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// FIXME: Add mutex for map writes
-
 var mu sync.Mutex
 
 func bindEnv(key string) {
@@ -20,7 +18,7 @@ func bindEnv(key string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	viper.BindEnv(key, envName)
+	_ = viper.BindEnv(key, envName)
 }
 
 // Init initializes the configuration

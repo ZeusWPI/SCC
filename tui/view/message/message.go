@@ -87,7 +87,7 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Name:     "cammie messages",
 			View:     m,
 			Update:   updateMessages,
-			Interval: config.GetDefaultInt("tui.message.interval_s", 1),
+			Interval: config.GetDefaultInt("tui.view.message.interval_s", 1),
 		},
 	}
 }

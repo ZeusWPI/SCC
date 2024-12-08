@@ -20,7 +20,7 @@ func Tap(db *db.DB) (*tap.Tap, chan bool) {
 }
 
 func tapPeriodicUpdate(tap *tap.Tap, done chan bool) {
-	interval := config.GetDefaultInt("tap.interval_s", 60)
+	interval := config.GetDefaultInt("backend.tap.interval_s", 60)
 	zap.S().Info("Tap: Starting periodic update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)

@@ -1,0 +1,86 @@
+# [server]
+# host = "localhost"
+# port = 3000
+
+# [db]
+# host = "localhost"
+# port = 5432
+# database = "scc"
+# user = "postgres"
+# password = "postgres"
+
+# [song]
+# spotify_api = "https://api.spotify.com/v1"
+# spotify_account = "https://accounts.spotify.com/api/token"
+# lrclib_api = "https://lrclib.net/api"
+
+# [tap]
+# api = "https://tap.zeus.gent"
+# interval_s = 60
+# beers = [
+# 	"Schelfaut",
+# 	"Duvel",
+# 	"Fourchette",
+# 	"Jupiler",
+# 	"Karmeliet",
+# 	"Kriek",
+# 	"Chouffe",
+# 	"Maes",
+# 	"Somersby",
+# 	"Sportzot",
+# 	"Stella",
+# ]
+
+# [zess]
+# api = "http://localhost:4000/api"
+# interval_season_s = 300
+# interval_scan_s = 60
+
+# [gamification]
+# api = "https://gamification.zeus.gent"
+# interval_s = 3600
+
+# [event]
+# api = "https://zeus.gent/events"
+# api_poster = "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master"
+# interval_s = 86400
+
+# [buzzer]
+# song = [
+#     "-n", "-f880", "-l100", "-d0",
+# 	"-n", "-f988", "-l100", "-d0",
+# 	"-n", "-f588", "-l100", "-d0",
+# 	"-n", "-f989", "-l100", "-d0",
+# 	"-n", "-f660", "-l200", "-d0",
+# 	"-n", "-f660", "-l200", "-d0",
+# 	"-n", "-f588", "-l100", "-d0",
+# 	"-n", "-f555", "-l100", "-d0",
+# 	"-n", "-f495", "-l100", "-d0",
+# ]
+
+# [tui]
+
+# [tui.screen]
+# cammie_interval_change_s = 300
+
+# [tui.zess]
+# weeks = 10
+# interval_scan_s = 60
+# interval_season_s = 3600
+
+# [tui.message]
+# interval_s = 1
+
+# [tui.tap]
+# interval_s = 60
+
+# [tui.gamification]
+# interval_s = 3600
+
+# [tui.song]
+# interval_current_s = 5
+# interval_history_s = 5
+# interval_top_s = 3600
+
+# [tui.event]
+# interval_s = 3600

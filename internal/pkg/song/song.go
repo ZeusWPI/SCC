@@ -24,8 +24,8 @@ type Song struct {
 
 // New creates a new song instance
 func New(db *db.DB) (*Song, error) {
-	clientID := config.GetDefaultString("song.spotify_client_id", "")
-	clientSecret := config.GetDefaultString("song.spotify_client_secret", "")
+	clientID := config.GetDefaultString("backend.song.spotify_client_id", "")
+	clientSecret := config.GetDefaultString("backend.song.spotify_client_secret", "")
 
 	if clientID == "" || clientSecret == "" {
 		return &Song{}, errors.New("Song: Spotify client id or secret not set")

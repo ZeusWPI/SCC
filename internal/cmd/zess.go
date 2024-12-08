@@ -22,7 +22,7 @@ func Zess(db *db.DB) (*zess.Zess, chan bool, chan bool) {
 }
 
 func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
-	interval := config.GetDefaultInt("zess.interval_season_s", 300)
+	interval := config.GetDefaultInt("backend.zess.interval_season_s", 300)
 	zap.S().Info("Zess: Starting periodic season update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
@@ -50,7 +50,7 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
 }
 
 func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool) {
-	interval := config.GetDefaultInt("zess.interval_scan_s", 60)
+	interval := config.GetDefaultInt("backend.zess.interval_scan_s", 60)
 	zap.S().Info("Zess: Starting periodic scan update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)

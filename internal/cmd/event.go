@@ -20,8 +20,8 @@ func Event(db *db.DB) (*event.Event, chan bool) {
 }
 
 func eventPeriodicUpdate(ev *event.Event, done chan bool) {
-	interval := config.GetDefaultInt("event.interval_s", 3600)
-	zap.S().Info("EventL Starting periodic leaderboard update with an interval of ", interval, " seconds")
+	interval := config.GetDefaultInt("backend.event.interval_s", 3600)
+	zap.S().Info("Event: Starting periodic leaderboard update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTimer(time.Duration(interval) * time.Second)
 	defer ticker.Stop()

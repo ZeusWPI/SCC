@@ -7,33 +7,27 @@ import (
 	"slices"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
-	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/pkg/util"
 )
 
 // Zess represents a zess instance
 type Zess struct {
-	db  *db.DB
-	api string
+	db *db.DB
 }
 
 // New creates a new zess instance
 func New(db *db.DB) *Zess {
-	api := config.GetDefaultString("zess.api", "https://zess.zeus.gent")
-	return &Zess{db: db, api: api}
+	return &Zess{db: db}
 }
 
 // UpdateSeasons updates the seasons
 func (z *Zess) UpdateSeasons() error {
 	seasons, err := z.db.Queries.GetAllSeasons(context.Background())
-	if err != nil {
-		if err != pgx.ErrNoRows {
-			return err
-		}
+	if err != nil && err != pgx.ErrNoRows {
+		return err
 	}
 
 	// Get all seasons from zess
@@ -42,41 +36,19 @@ func (z *Zess) UpdateSeasons() error {
 		return err
 	}
 
-	equal := slices.CompareFunc(util.SliceMap(seasons, dto.SeasonDTO), *zessSeasons, dto.SeasonCmp)
-
-	// Same seasons
-	if equal == 0 {
+	if slices.CompareFunc(util.SliceMap(seasons, dto.SeasonDTO), *zessSeasons, dto.SeasonCmp) == 0 {
 		return nil
 	}
 
-	// Update seasons
-	errs := make([]error, 0)
-
-	for i, season := range *zessSeasons {
-		if i < len(seasons) {
-			// Update seasons
-			seasons[i].ID = season.ID
-			seasons[i].Name = season.Name
-			seasons[i].Start = pgtype.Timestamptz{Time: season.Start}
-			seasons[i].End = pgtype.Timestamptz{Time: season.End}
-
-			_, err := z.db.Queries.UpdateSeason(context.Background(), dto.SeasonDTO(seasons[i]).UpdateParams())
-			if err != nil {
-				errs = append(errs, err)
-			}
-		} else {
-			// Create seasons
-			_, err := z.db.Queries.CreateSeason(context.Background(), season.CreateParams())
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}
+	// The seasons differ
+	// Delete all existing and enter the new ones
+	if _, err := z.db.Queries.DeleteSeasonAll(context.Background()); err != nil {
+		return err
 	}
 
-	// Delete seasons
-	for i := len(*zessSeasons); i < len(seasons); i++ {
-		_, err := z.db.Queries.DeleteSeason(context.Background(), seasons[i].ID)
-		if err != nil {
+	var errs []error
+	for _, season := range *zessSeasons {
+		if _, err := z.db.Queries.CreateSeason(context.Background(), season.CreateParams()); err != nil {
 			errs = append(errs, err)
 		}
 	}

@@ -20,7 +20,7 @@ func Gamification(db *db.DB) (*gamification.Gamification, chan bool) {
 }
 
 func gamificationPeriodicUpdate(gam *gamification.Gamification, done chan bool) {
-	interval := config.GetDefaultInt("gamification.interval_s", 3600)
+	interval := config.GetDefaultInt("backend.gamification.interval_s", 3600)
 	zap.S().Info("Gamification: Starting periodic leaderboard update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)

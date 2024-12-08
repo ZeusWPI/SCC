@@ -76,7 +76,7 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Name:     "event update",
 			View:     m,
 			Update:   updateEvents,
-			Interval: config.GetDefaultInt("tui.event.interval_s", 3600),
+			Interval: config.GetDefaultInt("tui.view.event.interval_s", 3600),
 		},
 	}
 }
