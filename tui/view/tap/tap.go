@@ -117,7 +117,7 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Name:     "tap orders",
 			View:     m,
 			Update:   updateOrders,
-			Interval: config.GetDefaultInt("tui.tap.interval_s", 60),
+			Interval: config.GetDefaultInt("tui.view.tap.interval_s", 60),
 		},
 	}
 }

@@ -120,7 +120,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 					m.maxWeekScans = newScan.amount
 				}
 				// Make sure the array doesn't get too big
-				if len(m.scans) > config.GetDefaultInt("tui.zess.weeks", 10) {
+				if len(m.scans) > config.GetDefaultInt("tui.view.zess.weeks", 10) {
 					m.scans = m.scans[:1]
 				}
 			}
@@ -177,13 +177,13 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Name:     "zess scans",
 			View:     m,
 			Update:   updateScans,
-			Interval: config.GetDefaultInt("tui.zess.interval_scan_s", 60),
+			Interval: config.GetDefaultInt("tui.view.zess.interval_scan_s", 60),
 		},
 		{
 			Name:     "zess season",
 			View:     m,
 			Update:   updateSeason,
-			Interval: config.GetDefaultInt("tui.zess.interval_season_s", 3600),
+			Interval: config.GetDefaultInt("tui.view.zess.interval_season_s", 3600),
 		},
 	}
 }

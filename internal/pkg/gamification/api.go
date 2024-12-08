@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
+	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,8 @@ type gamificationItem struct {
 func (g *Gamification) getLeaderboard() ([]dto.Gamification, error) {
 	zap.S().Info("Gamification: Getting leaderboard")
 
-	req := fiber.Get(g.api+"/top4").Set("Accept", "application/json")
+	api := config.GetDefaultString("backend.gamification.api", "https://gamification.zeus.gent")
+	req := fiber.Get(api+"/top4").Set("Accept", "application/json")
 
 	res := new([]gamificationItem)
 	status, _, errs := req.Struct(res)
@@ -56,6 +58,8 @@ func (g *Gamification) getLeaderboard() ([]dto.Gamification, error) {
 }
 
 func downloadAvatar(gam gamificationItem) (dto.Gamification, error) {
+	zap.S().Info("Gamification: Getting avatar for ", gam.Name)
+
 	req := fiber.Get(gam.AvatarURL)
 	status, body, errs := req.Bytes()
 	if len(errs) != 0 {

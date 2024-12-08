@@ -24,6 +24,10 @@ RETURNING *;
 DELETE FROM season
 WHERE id = $1;
 
+-- name: DeleteSeasonAll :execrows
+DELETE FROM season;
+
+
 
 -- Other
 

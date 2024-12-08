@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +23,8 @@ type orderResponse struct {
 func (t *Tap) getOrders() ([]orderResponseItem, error) {
 	zap.S().Info("Tap: Getting orders")
 
-	req := fiber.Get(t.api + "/recent")
+	api := config.GetDefaultString("backend.tap.api", "https://tap.zeus.gent")
+	req := fiber.Get(api + "/recent")
 
 	res := new(orderResponse)
 	status, _, errs := req.Struct(res)

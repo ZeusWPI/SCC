@@ -19,8 +19,8 @@ RETURNING id, name, start, "end", current
 
 type CreateSeasonParams struct {
 	Name    string
-	Start   pgtype.Timestamptz
-	End     pgtype.Timestamptz
+	Start   pgtype.Timestamp
+	End     pgtype.Timestamp
 	Current bool
 }
 
@@ -49,6 +49,18 @@ WHERE id = $1
 
 func (q *Queries) DeleteSeason(ctx context.Context, id int32) (int64, error) {
 	result, err := q.db.Exec(ctx, deleteSeason, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const deleteSeasonAll = `-- name: DeleteSeasonAll :execrows
+DELETE FROM season
+`
+
+func (q *Queries) DeleteSeasonAll(ctx context.Context) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteSeasonAll)
 	if err != nil {
 		return 0, err
 	}
@@ -138,8 +150,8 @@ RETURNING id, name, start, "end", current
 
 type UpdateSeasonParams struct {
 	Name    string
-	Start   pgtype.Timestamptz
-	End     pgtype.Timestamptz
+	Start   pgtype.Timestamp
+	End     pgtype.Timestamp
 	Current bool
 	ID      int32
 }

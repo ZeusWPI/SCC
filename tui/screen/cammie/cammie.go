@@ -39,7 +39,7 @@ func New(db *db.DB) screen.Screen {
 	messages := message.NewModel(db)
 	top := event.NewModel(db)
 	bottom := []view.View{gamification.NewModel(db), tap.NewModel(db), zess.NewModel(db)}
-	return &Cammie{db: db, messages: messages, bottom: top, top: bottom, indexTop: 2, width: 0, height: 0}
+	return &Cammie{db: db, messages: messages, bottom: top, top: bottom, indexTop: 0, width: 0, height: 0}
 }
 
 // Init initializes the cammie screen
@@ -162,7 +162,7 @@ func (c *Cammie) GetSizeMsg() tea.Msg {
 }
 
 func updateBottomIndex(cammie Cammie) tea.Cmd {
-	timeout := time.Duration(config.GetDefaultInt("tui.screen.cammie_interval_change_s", 300) * int(time.Second))
+	timeout := time.Duration(config.GetDefaultInt("tui.screen.cammie.interval_s", 300) * int(time.Second))
 	return tea.Tick(timeout, func(_ time.Time) tea.Msg {
 		newIndex := (cammie.indexTop + 1) % len(cammie.top)
 

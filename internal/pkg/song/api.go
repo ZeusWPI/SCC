@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var api = config.GetDefaultString("song.spotify_api", "https://api.spotify.com/v1")
+var api = config.GetDefaultString("backend.song.spotify_api", "https://api.spotify.com/v1")
 
 type trackArtist struct {
 	ID   string `json:"id"`
@@ -71,6 +71,8 @@ type artistResponse struct {
 }
 
 func (s *Song) getArtist(artist *dto.SongArtist) error {
+	zap.S().Info("Song: Getting artists info for ", artist.ID)
+
 	req := fiber.Get(fmt.Sprintf("%s/%s/%s", api, "artists", artist.SpotifyID)).
 		Set("Authorization", fmt.Sprintf("Bearer %s", s.AccessToken))
 
@@ -99,6 +101,8 @@ type lyricsResponse struct {
 }
 
 func (s *Song) getLyrics(track *dto.Song) error {
+	zap.S().Info("Song: Getting lyrics for ", track.Title)
+
 	// Get most popular artist
 	if len(track.Artists) == 0 {
 		return fmt.Errorf("Song: No artists for track: %v", track)
@@ -117,7 +121,7 @@ func (s *Song) getLyrics(track *dto.Song) error {
 	params.Set("album_name", track.Album)
 	params.Set("duration", fmt.Sprintf("%d", track.DurationMS/1000))
 
-	req := fiber.Get(fmt.Sprintf("%s/get?%s", config.GetDefaultString("song.lrclib_api", "https://lrclib.net/api"), params.Encode()))
+	req := fiber.Get(fmt.Sprintf("%s/get?%s", config.GetDefaultString("backend.song.lrclib_api", "https://lrclib.net/api"), params.Encode()))
 
 	res := new(lyricsResponse)
 	status, _, errs := req.Struct(res)

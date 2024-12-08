@@ -86,7 +86,7 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Name:     "gamification leaderboard",
 			View:     m,
 			Update:   updateLeaderboard,
-			Interval: config.GetDefaultInt("tui.gamification.interval_s", 3600),
+			Interval: config.GetDefaultInt("tui.view.gamification.interval_s", 3600),
 		},
 	}
 }

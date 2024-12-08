@@ -21,7 +21,7 @@ func (s *Song) refreshToken() error {
 	form := &fiber.Args{}
 	form.Add("grant_type", "client_credentials")
 
-	api := config.GetDefaultString("song.spotify_account", "https://accounts.spotify.com/api/token")
+	api := config.GetDefaultString("backend.song.spotify_api_account", "https://accounts.spotify.com/api/token")
 	req := fiber.Post(api).Form(form).BasicAuth(s.ClientID, s.ClientSecret)
 
 	res := new(accountResponse)

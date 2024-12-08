@@ -23,7 +23,7 @@ func ScanDTO(scan sqlc.Scan) *Scan {
 
 // CreateParams converts a Scan to sqlc.CreateScanParams
 func (s *Scan) CreateParams() pgtype.Timestamptz {
-	return pgtype.Timestamptz{Time: s.ScanTime}
+	return pgtype.Timestamptz{Time: s.ScanTime, Valid: true}
 }
 
 // UpdateParams converts a Scan to sqlc.UpdateScanParams

@@ -40,8 +40,8 @@ type Scan struct {
 type Season struct {
 	ID      int32
 	Name    string
-	Start   pgtype.Timestamptz
-	End     pgtype.Timestamptz
+	Start   pgtype.Timestamp
+	End     pgtype.Timestamp
 	Current bool
 }
 
