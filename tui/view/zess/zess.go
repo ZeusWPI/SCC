@@ -13,6 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var maxWeeks = config.GetDefaultInt("tui.view.zess.weeks", 10)
+
 // yearWeek represents a yearWeek object by keeping the year and week number
 type yearWeek struct {
 	year int
@@ -120,7 +122,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 					m.maxWeekScans = newScan.amount
 				}
 				// Make sure the array doesn't get too big
-				if len(m.scans) > config.GetDefaultInt("tui.view.zess.weeks", 10) {
+				if len(m.scans) > maxWeeks {
 					m.scans = m.scans[:1]
 				}
 			}

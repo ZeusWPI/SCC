@@ -13,14 +13,14 @@ import (
 func Gamification(db *db.DB) (*gamification.Gamification, chan bool) {
 	gam := gamification.New(db)
 	done := make(chan bool)
+	interval := config.GetDefaultInt("backend.gamification.interval_s", 3600)
 
-	go gamificationPeriodicUpdate(gam, done)
+	go gamificationPeriodicUpdate(gam, done, interval)
 
 	return gam, done
 }
 
-func gamificationPeriodicUpdate(gam *gamification.Gamification, done chan bool) {
-	interval := config.GetDefaultInt("backend.gamification.interval_s", 3600)
+func gamificationPeriodicUpdate(gam *gamification.Gamification, done chan bool, interval int) {
 	zap.S().Info("Gamification: Starting periodic leaderboard update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)

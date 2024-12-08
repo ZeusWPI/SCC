@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var api = config.GetDefaultString("backend.tap.api", "https://tap.zeus.gent")
+
 type orderResponseItem struct {
 	OrderID         int32     `json:"order_id"`
 	OrderCreatedAt  time.Time `json:"order_created_at"`
@@ -23,7 +25,6 @@ type orderResponse struct {
 func (t *Tap) getOrders() ([]orderResponseItem, error) {
 	zap.S().Info("Tap: Getting orders")
 
-	api := config.GetDefaultString("backend.tap.api", "https://tap.zeus.gent")
 	req := fiber.Get(api + "/recent")
 
 	res := new(orderResponse)

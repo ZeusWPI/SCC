@@ -18,10 +18,13 @@ import (
 
 var layout = "Monday 02 January, 15:04 2006"
 
+var (
+	website       = config.GetDefaultString("backend.event.website", "https://zeus.gent/events")
+	websitePoster = config.GetDefaultString("backend.event.website_poster", "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master")
+)
+
 func (e *Event) getEvents() ([]dto.Event, error) {
 	zap.S().Info("Events: Getting all events")
-
-	website := config.GetDefaultString("backend.event.website", "https://zeus.gent/events")
 
 	var events []dto.Event
 	var errs []error
@@ -83,7 +86,6 @@ func (e *Event) getEvents() ([]dto.Event, error) {
 func (e *Event) getPoster(event *dto.Event) error {
 	zap.S().Info("Events: Getting poster for ", event.Name)
 
-	website := config.GetDefaultString("backend.event.website_poster", "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master")
 	yearParts := strings.Split(event.AcademicYear, "-")
 	if len(yearParts) != 2 {
 		return fmt.Errorf("Event: Academic year not properly formatted %s", event.AcademicYear)
@@ -100,7 +102,7 @@ func (e *Event) getPoster(event *dto.Event) error {
 
 	year := fmt.Sprintf("20%d-20%d", yearStart, yearEnd)
 
-	url := fmt.Sprintf("%s/%s/%s/scc.png", website, year, event.Name)
+	url := fmt.Sprintf("%s/%s/%s/scc.png", websitePoster, year, event.Name)
 
 	req := fiber.Get(url)
 	status, body, errs := req.Bytes()

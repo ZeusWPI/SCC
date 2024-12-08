@@ -12,17 +12,20 @@ import (
 // Zess starts the zess instance
 func Zess(db *db.DB) (*zess.Zess, chan bool, chan bool) {
 	zess := zess.New(db)
-	doneSeason := make(chan bool)
-	doneScan := make(chan bool)
 
-	go zessPeriodicSeasonUpdate(zess, doneSeason)
-	go zessPeriodicScanUpdate(zess, doneScan)
+	doneSeason := make(chan bool)
+	intervalSeason := config.GetDefaultInt("backend.zess.interval_season_s", 300)
+
+	doneScan := make(chan bool)
+	intervalScan := config.GetDefaultInt("backend.zess.interval_scan_s", 60)
+
+	go zessPeriodicSeasonUpdate(zess, doneSeason, intervalSeason)
+	go zessPeriodicScanUpdate(zess, doneScan, intervalScan)
 
 	return zess, doneSeason, doneScan
 }
 
-func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
-	interval := config.GetDefaultInt("backend.zess.interval_season_s", 300)
+func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool, interval int) {
 	zap.S().Info("Zess: Starting periodic season update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
@@ -49,8 +52,7 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool) {
 	}
 }
 
-func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool) {
-	interval := config.GetDefaultInt("backend.zess.interval_scan_s", 60)
+func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool, interval int) {
 	zap.S().Info("Zess: Starting periodic scan update with an interval of ", interval, " seconds")
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
