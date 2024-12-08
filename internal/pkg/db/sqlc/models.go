@@ -5,93 +5,92 @@
 package sqlc
 
 import (
-	"database/sql"
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Event struct {
-	ID           int64
+	ID           int32
 	Name         string
-	Date         time.Time
+	Date         pgtype.Timestamptz
 	AcademicYear string
 	Location     string
 	Poster       []byte
 }
 
 type Gamification struct {
-	ID     int64
+	ID     int32
 	Name   string
-	Score  int64
+	Score  int32
 	Avatar []byte
 }
 
 type Message struct {
-	ID        int64
+	ID        int32
 	Name      string
 	Ip        string
 	Message   string
-	CreatedAt time.Time
+	CreatedAt pgtype.Timestamptz
 }
 
 type Scan struct {
-	ID       int64
-	ScanTime time.Time
+	ID       int32
+	ScanTime pgtype.Timestamptz
 }
 
 type Season struct {
-	ID      int64
+	ID      int32
 	Name    string
-	Start   time.Time
-	End     time.Time
+	Start   pgtype.Timestamptz
+	End     pgtype.Timestamptz
 	Current bool
 }
 
 type Song struct {
-	ID         int64
+	ID         int32
 	Title      string
 	SpotifyID  string
-	DurationMs int64
+	DurationMs int32
 	Album      string
-	LyricsType sql.NullString
-	Lyrics     sql.NullString
+	LyricsType pgtype.Text
+	Lyrics     pgtype.Text
 }
 
 type SongArtist struct {
-	ID         int64
+	ID         int32
 	Name       string
 	SpotifyID  string
-	Followers  int64
-	Popularity int64
+	Followers  int32
+	Popularity int32
 }
 
 type SongArtistGenre struct {
-	ID       int64
-	ArtistID int64
-	GenreID  int64
+	ID       int32
+	ArtistID int32
+	GenreID  int32
 }
 
 type SongArtistSong struct {
-	ID       int64
-	ArtistID int64
-	SongID   int64
+	ID       int32
+	ArtistID int32
+	SongID   int32
 }
 
 type SongGenre struct {
-	ID    int64
+	ID    int32
 	Genre string
 }
 
 type SongHistory struct {
-	ID        int64
-	SongID    int64
-	CreatedAt time.Time
+	ID        int32
+	SongID    int32
+	CreatedAt pgtype.Timestamptz
 }
 
 type Tap struct {
-	ID             int64
-	OrderID        int64
-	OrderCreatedAt time.Time
+	ID             int32
+	OrderID        int32
+	OrderCreatedAt pgtype.Timestamptz
 	Name           string
 	Category       string
-	CreatedAt      time.Time
+	CreatedAt      pgtype.Timestamptz
 }

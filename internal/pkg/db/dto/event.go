@@ -3,12 +3,13 @@ package dto
 import (
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 )
 
 // Event represents the DTO object for event
 type Event struct {
-	ID           int64
+	ID           int32
 	Name         string
 	Date         time.Time
 	AcademicYear string
@@ -21,7 +22,7 @@ func EventDTO(e sqlc.Event) *Event {
 	return &Event{
 		ID:           e.ID,
 		Name:         e.Name,
-		Date:         e.Date,
+		Date:         e.Date.Time,
 		AcademicYear: e.AcademicYear,
 		Location:     e.Location,
 		Poster:       e.Poster,
@@ -37,7 +38,7 @@ func (e *Event) Equal(e2 Event) bool {
 func (e *Event) CreateParams() sqlc.CreateEventParams {
 	return sqlc.CreateEventParams{
 		Name:         e.Name,
-		Date:         e.Date,
+		Date:         pgtype.Timestamptz{Time: e.Date, Valid: true},
 		AcademicYear: e.AcademicYear,
 		Location:     e.Location,
 		Poster:       e.Poster,

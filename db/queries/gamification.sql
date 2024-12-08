@@ -6,12 +6,12 @@ FROM gamification;
 
 -- name: CreateGamification :one
 INSERT INTO gamification (name, score, avatar)
-VALUES (?, ?, ?)
+VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: DeleteGamification :execrows
 DELETE FROM gamification
-WHERE id = ?;
+WHERE id = $1;
 
 -- name: DeleteGamificationAll :execrows
 DELETE FROM gamification;
@@ -22,8 +22,8 @@ DELETE FROM gamification;
 
 -- name: UpdateGamificationScore :one
 UPDATE gamification
-SET score = ?
-WHERE id = ?
+SET score = $1
+WHERE id = $2
 RETURNING *;
 
 -- name: GetAllGamificationByScore :many

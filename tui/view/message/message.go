@@ -3,14 +3,14 @@ package message
 
 import (
 	"context"
-	"database/sql"
 	"hash/fnv"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jackc/pgx/v5"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/view"
 )
 
 // Model represents the model for the message view
@@ -18,7 +18,7 @@ type Model struct {
 	width         int
 	height        int
 	db            *db.DB
-	lastMessageID int64
+	lastMessageID int32
 	messages      []message
 }
 
@@ -31,7 +31,7 @@ type message struct {
 
 // Msg represents the message to update the message view
 type Msg struct {
-	lastMessageID int64
+	lastMessageID int32
 	messages      []message
 }
 
@@ -98,7 +98,7 @@ func updateMessages(view view.View) (tea.Msg, error) {
 
 	messagesDB, err := m.db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			err = nil
 		}
 		return nil, err
@@ -119,7 +119,7 @@ func updateMessages(view view.View) (tea.Msg, error) {
 			sender:  m.Name,
 			message: m.Message,
 			color:   hashColor(m.Name),
-			date:    m.CreatedAt,
+			date:    m.CreatedAt.Time,
 		})
 	}
 

@@ -8,7 +8,7 @@ import (
 
 // Message is the DTO for the message
 type Message struct {
-	ID        int64     `json:"id"`
+	ID        int32     `json:"id"`
 	Name      string    `json:"name" validate:"required"`
 	IP        string    `json:"ip" validate:"required"`
 	Message   string    `json:"message" validate:"required"`
@@ -22,7 +22,7 @@ func MessageDTO(message sqlc.Message) *Message {
 		Name:      message.Name,
 		IP:        message.Ip,
 		Message:   message.Message,
-		CreatedAt: message.CreatedAt,
+		CreatedAt: message.CreatedAt.Time,
 	}
 }
 

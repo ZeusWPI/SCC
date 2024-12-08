@@ -3,15 +3,15 @@ package tap
 
 import (
 	"context"
-	"database/sql"
 	"slices"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jackc/pgx/v5"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/view"
 )
 
 type category string
@@ -33,13 +33,13 @@ var categoryToStyle = map[category]lipgloss.Style{
 // Model represents the tap model
 type Model struct {
 	db          *db.DB
-	lastOrderID int64
+	lastOrderID int32
 	items       []tapItem
 }
 
 // Msg represents a tap message
 type Msg struct {
-	lastOrderID int64
+	lastOrderID int32
 	items       []tapItem
 }
 
@@ -128,7 +128,7 @@ func updateOrders(view view.View) (tea.Msg, error) {
 
 	order, err := m.db.Queries.GetLastOrderByOrderID(context.Background())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			err = nil
 		}
 		return nil, err
@@ -155,7 +155,7 @@ func updateOrders(view view.View) (tea.Msg, error) {
 		counts[category(order.Category)] = tapItem{
 			category: category(order.Category),
 			amount:   int(order.Count),
-			last:     time.Unix(order.LatestOrderCreatedAt, 0),
+			last:     time.Unix(int64(order.LatestOrderCreatedAt), 0),
 		}
 	}
 

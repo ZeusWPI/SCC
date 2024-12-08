@@ -28,16 +28,10 @@ tmp/
 !.env.example
 
 # Project build
-backend
-tui
+backend_bin
+tui_bin
 
 .data/
 
 # Log files
 logs/
-
-# DB
-*.db
-
-# UI Test file
-ui/screen/test.go

@@ -4,17 +4,17 @@ package gamification
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"fmt"
 	"image"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jackc/pgx/v5"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/view"
 )
 
 // Model represents the view model for gamification
@@ -96,7 +96,7 @@ func updateLeaderboard(view view.View) (tea.Msg, error) {
 
 	gams, err := m.db.Queries.GetAllGamificationByScore(context.Background())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			err = nil
 		}
 		return nil, err

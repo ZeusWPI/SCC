@@ -3,10 +3,10 @@ package song
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
@@ -44,7 +44,7 @@ func (s *Song) Track(track *dto.Song) error {
 
 	// Check if song is already in DB
 	trackDB, err := s.db.Queries.GetSongBySpotifyID(context.Background(), track.SpotifyID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return err
 	}
 
@@ -52,7 +52,7 @@ func (s *Song) Track(track *dto.Song) error {
 		// Already in DB
 		// Add to song history if it's not the latest song
 		songHistory, err := s.db.Queries.GetLastSongHistory(context.Background())
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && err != pgx.ErrNoRows {
 			return err
 		}
 
@@ -96,7 +96,7 @@ func (s *Song) Track(track *dto.Song) error {
 	// Handle artists
 	for i, artist := range track.Artists {
 		a, err := s.db.Queries.GetSongArtistBySpotifyID(context.Background(), artist.SpotifyID)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && err != pgx.ErrNoRows {
 			errs = append(errs, err)
 			continue
 		}
@@ -133,7 +133,7 @@ func (s *Song) Track(track *dto.Song) error {
 		// Check if the artists genres are in db
 		for j, genre := range track.Artists[i].Genres {
 			g, err := s.db.Queries.GetSongGenreByName(context.Background(), genre.Genre)
-			if err != nil && err != sql.ErrNoRows {
+			if err != nil && err != pgx.ErrNoRows {
 				errs = append(errs, err)
 				continue
 			}

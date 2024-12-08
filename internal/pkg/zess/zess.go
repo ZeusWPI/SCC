@@ -3,10 +3,11 @@ package zess
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"slices"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
@@ -30,7 +31,7 @@ func New(db *db.DB) *Zess {
 func (z *Zess) UpdateSeasons() error {
 	seasons, err := z.db.Queries.GetAllSeasons(context.Background())
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err != pgx.ErrNoRows {
 			return err
 		}
 	}
@@ -56,8 +57,8 @@ func (z *Zess) UpdateSeasons() error {
 			// Update seasons
 			seasons[i].ID = season.ID
 			seasons[i].Name = season.Name
-			seasons[i].Start = season.Start
-			seasons[i].End = season.End
+			seasons[i].Start = pgtype.Timestamptz{Time: season.Start}
+			seasons[i].End = pgtype.Timestamptz{Time: season.End}
 
 			_, err := z.db.Queries.UpdateSeason(context.Background(), dto.SeasonDTO(seasons[i]).UpdateParams())
 			if err != nil {
@@ -87,7 +88,7 @@ func (z *Zess) UpdateSeasons() error {
 func (z *Zess) UpdateScans() error {
 	lastScan, err := z.db.Queries.GetLastScan(context.Background())
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err != pgx.ErrNoRows {
 			return err
 		}
 

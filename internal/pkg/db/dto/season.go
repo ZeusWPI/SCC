@@ -3,12 +3,13 @@ package dto
 import (
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 )
 
 // Season is the DTO for the season
 type Season struct {
-	ID      int64     `json:"id"`
+	ID      int32     `json:"id"`
 	Name    string    `json:"name" validate:"required"`
 	Start   time.Time `json:"start" validate:"required"`
 	End     time.Time `json:"end" validate:"required"`
@@ -20,8 +21,8 @@ func SeasonDTO(season sqlc.Season) *Season {
 	return &Season{
 		ID:      season.ID,
 		Name:    season.Name,
-		Start:   season.Start,
-		End:     season.End,
+		Start:   season.Start.Time,
+		End:     season.End.Time,
 		Current: season.Current,
 	}
 }
@@ -40,8 +41,8 @@ func SeasonCmp(s1, s2 *Season) int {
 func (s *Season) CreateParams() sqlc.CreateSeasonParams {
 	return sqlc.CreateSeasonParams{
 		Name:    s.Name,
-		Start:   s.Start,
-		End:     s.End,
+		Start:   pgtype.Timestamptz{Time: s.Start, Valid: true},
+		End:     pgtype.Timestamptz{Time: s.End, Valid: true},
 		Current: s.Current,
 	}
 }
@@ -51,8 +52,8 @@ func (s *Season) UpdateParams() sqlc.UpdateSeasonParams {
 	return sqlc.UpdateSeasonParams{
 		ID:      s.ID,
 		Name:    s.Name,
-		Start:   s.Start,
-		End:     s.End,
+		Start:   pgtype.Timestamptz{Time: s.Start, Valid: true},
+		End:     pgtype.Timestamptz{Time: s.End, Valid: true},
 		Current: s.Current,
 	}
 }

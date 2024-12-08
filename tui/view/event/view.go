@@ -5,7 +5,7 @@ import (
 	"image"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/view"
 )
 
 func (m *Model) viewToday() string {

@@ -7,24 +7,25 @@ package sqlc
 
 import (
 	"context"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSeason = `-- name: CreateSeason :one
-INSERT INTO season (name, start, end, current)
-VALUES (?, ?, ?, ?)
-RETURNING id, name, start, "end", "current"
+INSERT INTO season (name, start, "end", current)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, start, "end", current
 `
 
 type CreateSeasonParams struct {
 	Name    string
-	Start   time.Time
-	End     time.Time
+	Start   pgtype.Timestamptz
+	End     pgtype.Timestamptz
 	Current bool
 }
 
 func (q *Queries) CreateSeason(ctx context.Context, arg CreateSeasonParams) (Season, error) {
-	row := q.db.QueryRowContext(ctx, createSeason,
+	row := q.db.QueryRow(ctx, createSeason,
 		arg.Name,
 		arg.Start,
 		arg.End,
@@ -43,26 +44,26 @@ func (q *Queries) CreateSeason(ctx context.Context, arg CreateSeasonParams) (Sea
 
 const deleteSeason = `-- name: DeleteSeason :execrows
 DELETE FROM season
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) DeleteSeason(ctx context.Context, id int64) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteSeason, id)
+func (q *Queries) DeleteSeason(ctx context.Context, id int32) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteSeason, id)
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 const getAllSeasons = `-- name: GetAllSeasons :many
 
-SELECT id, name, start, "end", "current"
+SELECT id, name, start, "end", current
 FROM season
 `
 
 // CRUD
 func (q *Queries) GetAllSeasons(ctx context.Context) ([]Season, error) {
-	rows, err := q.db.QueryContext(ctx, getAllSeasons)
+	rows, err := q.db.Query(ctx, getAllSeasons)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +82,6 @@ func (q *Queries) GetAllSeasons(ctx context.Context) ([]Season, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -91,13 +89,13 @@ func (q *Queries) GetAllSeasons(ctx context.Context) ([]Season, error) {
 }
 
 const getSeasonByID = `-- name: GetSeasonByID :one
-SELECT id, name, start, "end", "current"
+SELECT id, name, start, "end", current
 FROM season
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) GetSeasonByID(ctx context.Context, id int64) (Season, error) {
-	row := q.db.QueryRowContext(ctx, getSeasonByID, id)
+func (q *Queries) GetSeasonByID(ctx context.Context, id int32) (Season, error) {
+	row := q.db.QueryRow(ctx, getSeasonByID, id)
 	var i Season
 	err := row.Scan(
 		&i.ID,
@@ -112,14 +110,14 @@ func (q *Queries) GetSeasonByID(ctx context.Context, id int64) (Season, error) {
 const getSeasonCurrent = `-- name: GetSeasonCurrent :one
 
 
-SELECT id, name, start, "end", "current"
+SELECT id, name, start, "end", current
 FROM season
 WHERE current = true
 `
 
 // Other
 func (q *Queries) GetSeasonCurrent(ctx context.Context) (Season, error) {
-	row := q.db.QueryRowContext(ctx, getSeasonCurrent)
+	row := q.db.QueryRow(ctx, getSeasonCurrent)
 	var i Season
 	err := row.Scan(
 		&i.ID,
@@ -133,21 +131,21 @@ func (q *Queries) GetSeasonCurrent(ctx context.Context) (Season, error) {
 
 const updateSeason = `-- name: UpdateSeason :one
 UPDATE season
-SET name = ?, start = ?, end = ?, current = ?
-WHERE id = ?
-RETURNING id, name, start, "end", "current"
+SET name = $1, start = $2, "end" = $3, current = $4
+WHERE id = $5
+RETURNING id, name, start, "end", current
 `
 
 type UpdateSeasonParams struct {
 	Name    string
-	Start   time.Time
-	End     time.Time
+	Start   pgtype.Timestamptz
+	End     pgtype.Timestamptz
 	Current bool
-	ID      int64
+	ID      int32
 }
 
 func (q *Queries) UpdateSeason(ctx context.Context, arg UpdateSeasonParams) (Season, error) {
-	row := q.db.QueryRowContext(ctx, updateSeason,
+	row := q.db.QueryRow(ctx, updateSeason,
 		arg.Name,
 		arg.Start,
 		arg.End,

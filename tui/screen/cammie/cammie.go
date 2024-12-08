@@ -9,13 +9,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/ui/screen"
-	"github.com/zeusWPI/scc/ui/view"
-	"github.com/zeusWPI/scc/ui/view/event"
-	"github.com/zeusWPI/scc/ui/view/gamification"
-	"github.com/zeusWPI/scc/ui/view/message"
-	"github.com/zeusWPI/scc/ui/view/tap"
-	"github.com/zeusWPI/scc/ui/view/zess"
+	"github.com/zeusWPI/scc/tui/screen"
+	"github.com/zeusWPI/scc/tui/view"
+	"github.com/zeusWPI/scc/tui/view/event"
+	"github.com/zeusWPI/scc/tui/view/gamification"
+	"github.com/zeusWPI/scc/tui/view/message"
+	"github.com/zeusWPI/scc/tui/view/tap"
+	"github.com/zeusWPI/scc/tui/view/zess"
 )
 
 // Cammie represents the cammie screen

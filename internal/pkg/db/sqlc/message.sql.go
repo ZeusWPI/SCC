@@ -11,7 +11,7 @@ import (
 
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO message (name, ip, message)
-VALUES (?, ?, ?)
+VALUES ($1, $2, $3)
 RETURNING id, name, ip, message, created_at
 `
 
@@ -22,7 +22,7 @@ type CreateMessageParams struct {
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
-	row := q.db.QueryRowContext(ctx, createMessage, arg.Name, arg.Ip, arg.Message)
+	row := q.db.QueryRow(ctx, createMessage, arg.Name, arg.Ip, arg.Message)
 	var i Message
 	err := row.Scan(
 		&i.ID,
@@ -36,15 +36,15 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 
 const deleteMessage = `-- name: DeleteMessage :execrows
 DELETE FROM message
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) DeleteMessage(ctx context.Context, id int64) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteMessage, id)
+func (q *Queries) DeleteMessage(ctx context.Context, id int32) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteMessage, id)
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 const getAllMessages = `-- name: GetAllMessages :many
@@ -55,7 +55,7 @@ FROM message
 
 // CRUD
 func (q *Queries) GetAllMessages(ctx context.Context) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, getAllMessages)
+	rows, err := q.db.Query(ctx, getAllMessages)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +73,6 @@ func (q *Queries) GetAllMessages(ctx context.Context) ([]Message, error) {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -94,7 +91,7 @@ LIMIT 1
 
 // Other
 func (q *Queries) GetLastMessage(ctx context.Context) (Message, error) {
-	row := q.db.QueryRowContext(ctx, getLastMessage)
+	row := q.db.QueryRow(ctx, getLastMessage)
 	var i Message
 	err := row.Scan(
 		&i.ID,
@@ -109,11 +106,11 @@ func (q *Queries) GetLastMessage(ctx context.Context) (Message, error) {
 const getMessageByID = `-- name: GetMessageByID :one
 SELECT id, name, ip, message, created_at
 FROM message
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) GetMessageByID(ctx context.Context, id int64) (Message, error) {
-	row := q.db.QueryRowContext(ctx, getMessageByID, id)
+func (q *Queries) GetMessageByID(ctx context.Context, id int32) (Message, error) {
+	row := q.db.QueryRow(ctx, getMessageByID, id)
 	var i Message
 	err := row.Scan(
 		&i.ID,
@@ -128,12 +125,12 @@ func (q *Queries) GetMessageByID(ctx context.Context, id int64) (Message, error)
 const getMessageSinceID = `-- name: GetMessageSinceID :many
 SELECT id, name, ip, message, created_at
 FROM message
-WHERE id > ?
+WHERE id > $1
 ORDER BY created_at ASC
 `
 
-func (q *Queries) GetMessageSinceID(ctx context.Context, id int64) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, getMessageSinceID, id)
+func (q *Queries) GetMessageSinceID(ctx context.Context, id int32) ([]Message, error) {
+	rows, err := q.db.Query(ctx, getMessageSinceID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -152,9 +149,6 @@ func (q *Queries) GetMessageSinceID(ctx context.Context, id int64) ([]Message, e
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -163,8 +157,8 @@ func (q *Queries) GetMessageSinceID(ctx context.Context, id int64) ([]Message, e
 
 const updateMessage = `-- name: UpdateMessage :one
 UPDATE message
-SET name = ?, ip = ?, message = ?
-WHERE id = ?
+SET name = $1, ip = $2, message = $3
+WHERE id = $4
 RETURNING id, name, ip, message, created_at
 `
 
@@ -172,11 +166,11 @@ type UpdateMessageParams struct {
 	Name    string
 	Ip      string
 	Message string
-	ID      int64
+	ID      int32
 }
 
 func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error) {
-	row := q.db.QueryRowContext(ctx, updateMessage,
+	row := q.db.QueryRow(ctx, updateMessage,
 		arg.Name,
 		arg.Ip,
 		arg.Message,

@@ -7,24 +7,25 @@ package sqlc
 
 import (
 	"context"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createTap = `-- name: CreateTap :one
 INSERT INTO tap (order_id, order_created_at, name, category)
-VALUES (?, ?, ?, ?)
+VALUES ($1, $2, $3, $4)
 RETURNING id, order_id, order_created_at, name, category, created_at
 `
 
 type CreateTapParams struct {
-	OrderID        int64
-	OrderCreatedAt time.Time
+	OrderID        int32
+	OrderCreatedAt pgtype.Timestamptz
 	Name           string
 	Category       string
 }
 
 func (q *Queries) CreateTap(ctx context.Context, arg CreateTapParams) (Tap, error) {
-	row := q.db.QueryRowContext(ctx, createTap,
+	row := q.db.QueryRow(ctx, createTap,
 		arg.OrderID,
 		arg.OrderCreatedAt,
 		arg.Name,
@@ -44,15 +45,15 @@ func (q *Queries) CreateTap(ctx context.Context, arg CreateTapParams) (Tap, erro
 
 const deleteTap = `-- name: DeleteTap :execrows
 DELETE FROM tap
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) DeleteTap(ctx context.Context, id int64) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteTap, id)
+func (q *Queries) DeleteTap(ctx context.Context, id int32) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteTap, id)
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 const getAllTaps = `-- name: GetAllTaps :many
@@ -63,7 +64,7 @@ FROM tap
 
 // CRUD
 func (q *Queries) GetAllTaps(ctx context.Context) ([]Tap, error) {
-	rows, err := q.db.QueryContext(ctx, getAllTaps)
+	rows, err := q.db.Query(ctx, getAllTaps)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +84,6 @@ func (q *Queries) GetAllTaps(ctx context.Context) ([]Tap, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -100,7 +98,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetLastOrderByOrderID(ctx context.Context) (Tap, error) {
-	row := q.db.QueryRowContext(ctx, getLastOrderByOrderID)
+	row := q.db.QueryRow(ctx, getLastOrderByOrderID)
 	var i Tap
 	err := row.Scan(
 		&i.ID,
@@ -125,7 +123,7 @@ type GetOrderCountRow struct {
 }
 
 func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOrderCount)
+	rows, err := q.db.Query(ctx, getOrderCount)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +136,6 @@ func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error)
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -150,18 +145,18 @@ func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error)
 const getOrderCountByCategorySinceOrderID = `-- name: GetOrderCountByCategorySinceOrderID :many
 SELECT category, COUNT(*), CAST(MAX(order_created_at) AS INTEGER) AS latest_order_created_at
 FROM tap
-WHERE order_id >= ?
+WHERE order_id >= $1
 GROUP BY category
 `
 
 type GetOrderCountByCategorySinceOrderIDRow struct {
 	Category             string
 	Count                int64
-	LatestOrderCreatedAt int64
+	LatestOrderCreatedAt int32
 }
 
-func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, orderID int64) ([]GetOrderCountByCategorySinceOrderIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOrderCountByCategorySinceOrderID, orderID)
+func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, orderID int32) ([]GetOrderCountByCategorySinceOrderIDRow, error) {
+	rows, err := q.db.Query(ctx, getOrderCountByCategorySinceOrderID, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -174,9 +169,6 @@ func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, order
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -186,11 +178,11 @@ func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, order
 const getTapByCategory = `-- name: GetTapByCategory :many
 SELECT id, order_id, order_created_at, name, category, created_at
 FROM tap
-WHERE category = ?
+WHERE category = $1
 `
 
 func (q *Queries) GetTapByCategory(ctx context.Context, category string) ([]Tap, error) {
-	rows, err := q.db.QueryContext(ctx, getTapByCategory, category)
+	rows, err := q.db.Query(ctx, getTapByCategory, category)
 	if err != nil {
 		return nil, err
 	}
@@ -210,9 +202,6 @@ func (q *Queries) GetTapByCategory(ctx context.Context, category string) ([]Tap,
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -222,11 +211,11 @@ func (q *Queries) GetTapByCategory(ctx context.Context, category string) ([]Tap,
 const getTapByID = `-- name: GetTapByID :one
 SELECT id, order_id, order_created_at, name, category, created_at
 FROM tap
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) GetTapByID(ctx context.Context, id int64) (Tap, error) {
-	row := q.db.QueryRowContext(ctx, getTapByID, id)
+func (q *Queries) GetTapByID(ctx context.Context, id int32) (Tap, error) {
+	row := q.db.QueryRow(ctx, getTapByID, id)
 	var i Tap
 	err := row.Scan(
 		&i.ID,
@@ -244,12 +233,12 @@ const getTapByOrderID = `-- name: GetTapByOrderID :one
 
 SELECT id, order_id, order_created_at, name, category, created_at
 FROM tap
-WHERE order_id = ?
+WHERE order_id = $1
 `
 
 // Other
-func (q *Queries) GetTapByOrderID(ctx context.Context, orderID int64) (Tap, error) {
-	row := q.db.QueryRowContext(ctx, getTapByOrderID, orderID)
+func (q *Queries) GetTapByOrderID(ctx context.Context, orderID int32) (Tap, error) {
+	row := q.db.QueryRow(ctx, getTapByOrderID, orderID)
 	var i Tap
 	err := row.Scan(
 		&i.ID,
@@ -264,21 +253,21 @@ func (q *Queries) GetTapByOrderID(ctx context.Context, orderID int64) (Tap, erro
 
 const updateTap = `-- name: UpdateTap :one
 UPDATE tap
-SET order_id = ?, order_created_at = ?, name = ?, category = ?
-WHERE id = ?
+SET order_id = $1, order_created_at = $2, name = $3, category = $4
+WHERE id = $5
 RETURNING id, order_id, order_created_at, name, category, created_at
 `
 
 type UpdateTapParams struct {
-	OrderID        int64
-	OrderCreatedAt time.Time
+	OrderID        int32
+	OrderCreatedAt pgtype.Timestamptz
 	Name           string
 	Category       string
-	ID             int64
+	ID             int32
 }
 
 func (q *Queries) UpdateTap(ctx context.Context, arg UpdateTapParams) (Tap, error) {
-	row := q.db.QueryRowContext(ctx, updateTap,
+	row := q.db.QueryRow(ctx, updateTap,
 		arg.OrderID,
 		arg.OrderCreatedAt,
 		arg.Name,

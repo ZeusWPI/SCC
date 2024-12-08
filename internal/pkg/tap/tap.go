@@ -3,11 +3,12 @@ package tap
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"slices"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 	"github.com/zeusWPI/scc/pkg/config"
@@ -48,7 +49,7 @@ func (t *Tap) Update() error {
 	// Get latest order
 	lastOrder, err := t.db.Queries.GetLastOrderByOrderID(context.Background())
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err != pgx.ErrNoRows {
 			return err
 		}
 
@@ -76,7 +77,7 @@ func (t *Tap) Update() error {
 	for _, order := range orders {
 		_, err := t.db.Queries.CreateTap(context.Background(), sqlc.CreateTapParams{
 			OrderID:        order.OrderID,
-			OrderCreatedAt: order.OrderCreatedAt,
+			OrderCreatedAt: pgtype.Timestamptz{Time: order.OrderCreatedAt},
 			Name:           order.ProductName,
 			Category:       order.ProductCategory,
 		})

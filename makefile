@@ -1,13 +1,15 @@
 # Variables
-BACKEND_BIN := backend
-TUI_BIN := tui
+BACKEND_BIN := backend_bin
+TUI_BIN := tui_bin
 BACKEND_SRC := cmd/backend/backend.go
 TUI_SRC := cmd/tui/tui.go
 DB_DIR := ./db/migrations
-DB_FILE := ./sqlite.db
+DB_USER := postgres
+DB_PASSWORD := postgres
+DB_NAME := scc
 
 # Phony targets
-.PHONY: all build clean run run-backend run-tui sqlc create-migration goose migrate watch
+.PHONY: all build build-backed build-tui clean run run-backend run-tui db sqlc create-migration goose migrate watch
 
 # Default target: build everything
 all: build
@@ -15,14 +17,12 @@ all: build
 # Build targets
 build: clean build-backend build-tui
 
-build-backend:
+build-backend: clean-backend
 	@echo "Building $(BACKEND_BIN)..."
-	@rm -f $(BACKEND_BIN)
 	@go build -o $(BACKEND_BIN) $(BACKEND_SRC)
 
-build-tui:
+build-tui: clean-tui
 	@echo "Building $(TUI_BIN)..."
-	@rm -f $(TUI_BIN)
 	@go build -o $(TUI_BIN) $(TUI_SRC)
 
 # Run targets
@@ -37,16 +37,24 @@ run-tui:
 	@read -p "Enter screen name: " screen; \
 	./$(TUI_BIN) $$screen
 
+# Run db
+db:
+	@docker compose up
+
 # Clean targets
 clean: clean-backend clean-tui
 
 clean-backend:
-	@echo "Cleaning $(BACKEND_BIN)..."
-	@rm -f $(BACKEND_BIN)
+	@if [ -f "$(BACKEND_BIN)" ]; then \
+		echo "Cleaning $(BACKEND_BIN)..."; \
+		rm -f "$(BACKEND_BIN)"; \
+	fi
 
 clean-tui:
-	@echo "Cleaning $(TUI_BIN)..."
-	@rm -f $(TUI_BIN)
+	@if [ -f "$(TUI_BIN)" ]; then \
+		echo "Cleaning $(TUI_BIN)..."; \
+		rm -f "$(TUI_BIN)"; \
+	fi
 
 # SQL and migration targets
 sqlc:
@@ -57,8 +65,8 @@ create-migration:
 	goose -dir $(DB_DIR) create $$name sql
 
 migrate:
-	@goose -dir $(DB_DIR) sqlite3 $(DB_FILE) up
+	@goose -dir $(DB_DIR) postgres "user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) host=localhost sslmode=disable" up
 
 goose:
 	@read -p "Action: " action; \
-	goose -dir $(DB_DIR) sqlite3 $(DB_FILE) $$action
+	goose -dir $(DB_DIR) postgres "user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) host=localhost sslmode=disable" $$action

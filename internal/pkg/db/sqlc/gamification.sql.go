@@ -11,18 +11,18 @@ import (
 
 const createGamification = `-- name: CreateGamification :one
 INSERT INTO gamification (name, score, avatar)
-VALUES (?, ?, ?)
+VALUES ($1, $2, $3)
 RETURNING id, name, score, avatar
 `
 
 type CreateGamificationParams struct {
 	Name   string
-	Score  int64
+	Score  int32
 	Avatar []byte
 }
 
 func (q *Queries) CreateGamification(ctx context.Context, arg CreateGamificationParams) (Gamification, error) {
-	row := q.db.QueryRowContext(ctx, createGamification, arg.Name, arg.Score, arg.Avatar)
+	row := q.db.QueryRow(ctx, createGamification, arg.Name, arg.Score, arg.Avatar)
 	var i Gamification
 	err := row.Scan(
 		&i.ID,
@@ -35,15 +35,15 @@ func (q *Queries) CreateGamification(ctx context.Context, arg CreateGamification
 
 const deleteGamification = `-- name: DeleteGamification :execrows
 DELETE FROM gamification
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) DeleteGamification(ctx context.Context, id int64) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteGamification, id)
+func (q *Queries) DeleteGamification(ctx context.Context, id int32) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteGamification, id)
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 const deleteGamificationAll = `-- name: DeleteGamificationAll :execrows
@@ -51,11 +51,11 @@ DELETE FROM gamification
 `
 
 func (q *Queries) DeleteGamificationAll(ctx context.Context) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteGamificationAll)
+	result, err := q.db.Exec(ctx, deleteGamificationAll)
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 const getAllGamification = `-- name: GetAllGamification :many
@@ -66,7 +66,7 @@ FROM gamification
 
 // CRUD
 func (q *Queries) GetAllGamification(ctx context.Context) ([]Gamification, error) {
-	rows, err := q.db.QueryContext(ctx, getAllGamification)
+	rows, err := q.db.Query(ctx, getAllGamification)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +83,6 @@ func (q *Queries) GetAllGamification(ctx context.Context) ([]Gamification, error
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -100,7 +97,7 @@ ORDER BY score DESC
 `
 
 func (q *Queries) GetAllGamificationByScore(ctx context.Context) ([]Gamification, error) {
-	rows, err := q.db.QueryContext(ctx, getAllGamificationByScore)
+	rows, err := q.db.Query(ctx, getAllGamificationByScore)
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +115,6 @@ func (q *Queries) GetAllGamificationByScore(ctx context.Context) ([]Gamification
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -131,19 +125,19 @@ const updateGamificationScore = `-- name: UpdateGamificationScore :one
 
 
 UPDATE gamification
-SET score = ?
-WHERE id = ?
+SET score = $1
+WHERE id = $2
 RETURNING id, name, score, avatar
 `
 
 type UpdateGamificationScoreParams struct {
-	Score int64
-	ID    int64
+	Score int32
+	ID    int32
 }
 
 // Other
 func (q *Queries) UpdateGamificationScore(ctx context.Context, arg UpdateGamificationScoreParams) (Gamification, error) {
-	row := q.db.QueryRowContext(ctx, updateGamificationScore, arg.Score, arg.ID)
+	row := q.db.QueryRow(ctx, updateGamificationScore, arg.Score, arg.ID)
 	var i Gamification
 	err := row.Scan(
 		&i.ID,

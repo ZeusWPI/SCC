@@ -3,17 +3,17 @@ package song
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jackc/pgx/v5"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/lyrics"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/ui/components/stopwatch"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/components/stopwatch"
+	"github.com/zeusWPI/scc/tui/view"
 )
 
 var (
@@ -219,7 +219,7 @@ func updateCurrentSong(view view.View) (tea.Msg, error) {
 
 	songs, err := m.db.Queries.GetLastSongFull(context.Background())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			err = nil
 		}
 		return nil, err
@@ -229,7 +229,7 @@ func updateCurrentSong(view view.View) (tea.Msg, error) {
 	}
 
 	// Check if song is still playing
-	if songs[0].CreatedAt.Add(time.Duration(songs[0].DurationMs) * time.Millisecond).Before(time.Now()) {
+	if songs[0].CreatedAt.Time.Add(time.Duration(songs[0].DurationMs) * time.Millisecond).Before(time.Now()) {
 		// Song is finished
 		return nil, nil
 	}
@@ -250,7 +250,7 @@ func updateTopStats(view view.View) (tea.Msg, error) {
 	change := false
 
 	songs, err := m.db.Queries.GetTopSongs(context.Background())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
@@ -260,7 +260,7 @@ func updateTopStats(view view.View) (tea.Msg, error) {
 	}
 
 	genres, err := m.db.Queries.GetTopGenres(context.Background())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
@@ -270,7 +270,7 @@ func updateTopStats(view view.View) (tea.Msg, error) {
 	}
 
 	artists, err := m.db.Queries.GetTopArtists(context.Background())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 

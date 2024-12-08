@@ -9,7 +9,7 @@ import (
 )
 
 type orderResponseItem struct {
-	OrderID         int64     `json:"order_id"`
+	OrderID         int32     `json:"order_id"`
 	OrderCreatedAt  time.Time `json:"order_created_at"`
 	ProductName     string    `json:"product_name"`
 	ProductCategory string    `json:"product_category"`

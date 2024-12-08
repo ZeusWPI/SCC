@@ -4,7 +4,7 @@ ALTER TABLE gamification
 DROP COLUMN avatar;
 
 ALTER TABLE gamification
-ADD COLUMN avatar BLOB;
+ADD COLUMN avatar BYTEA;
 -- +goose StatementEnd
 
 -- +goose Down
