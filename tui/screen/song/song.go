@@ -4,9 +4,9 @@ package song
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/ui/screen"
-	"github.com/zeusWPI/scc/ui/view"
-	"github.com/zeusWPI/scc/ui/view/song"
+	"github.com/zeusWPI/scc/tui/screen"
+	"github.com/zeusWPI/scc/tui/view"
+	"github.com/zeusWPI/scc/tui/view/song"
 )
 
 // Song represents the song screen

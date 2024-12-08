@@ -3,13 +3,13 @@ package zess
 
 import (
 	"context"
-	"database/sql"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jackc/pgx/v5"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/view"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +28,7 @@ type weekScan struct {
 // Model represents the Model for the zess view
 type Model struct {
 	db            *db.DB
-	lastScanID    int64
+	lastScanID    int32
 	scans         []weekScan // Scans per week
 	maxWeekScans  int64
 	currentSeason yearWeek // Start week of the season
@@ -41,7 +41,7 @@ type Msg struct{}
 // scanMsg is used to indicate that the zess view should be updated with new scans
 type scanMsg struct {
 	Msg
-	lastScanID int64
+	lastScanID int32
 	scans      []weekScan
 }
 
@@ -196,7 +196,7 @@ func updateScans(view view.View) (tea.Msg, error) {
 	// Get new scans
 	scans, err := m.db.Queries.GetAllScansSinceID(context.Background(), lastScanID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			// No rows shouldn't be considered an error
 			err = nil
 		}
@@ -212,7 +212,7 @@ func updateScans(view view.View) (tea.Msg, error) {
 
 	// Add new scans to scan msg
 	for _, newScan := range scans {
-		yearNumber, weekNumber := newScan.ScanTime.ISOWeek()
+		yearNumber, weekNumber := newScan.ScanTime.Time.ISOWeek()
 		newTime := yearWeek{year: yearNumber, week: weekNumber}
 
 		found := false
@@ -225,7 +225,7 @@ func updateScans(view view.View) (tea.Msg, error) {
 		}
 
 		if !found {
-			zessScanMsg.scans = append(zessScanMsg.scans, weekScan{time: newTime, amount: 1, label: newScan.ScanTime.Format("02/01")})
+			zessScanMsg.scans = append(zessScanMsg.scans, weekScan{time: newTime, amount: 1, label: newScan.ScanTime.Time.Format("02/01")})
 		}
 
 		// Update scan ID
@@ -244,7 +244,7 @@ func updateSeason(view view.View) (tea.Msg, error) {
 
 	season, err := m.db.Queries.GetSeasonCurrent(context.Background())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			// No rows shouldn't be considered an error
 			err = nil
 		}
@@ -252,7 +252,7 @@ func updateSeason(view view.View) (tea.Msg, error) {
 	}
 
 	// Check if we have a new season
-	yearNumber, weekNumber := season.Start.ISOWeek()
+	yearNumber, weekNumber := season.Start.Time.ISOWeek()
 	seasonStart := yearWeek{year: yearNumber, week: weekNumber}
 	if m.currentSeason.equal(seasonStart) {
 		// Same season

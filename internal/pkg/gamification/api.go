@@ -10,9 +10,9 @@ import (
 )
 
 type gamificationItem struct {
-	ID        int64  `json:"id"`
+	ID        int32  `json:"id"`
 	Name      string `json:"github_name"`
-	Score     int64  `json:"score"`
+	Score     int32  `json:"score"`
 	AvatarURL string `json:"avatar_url"`
 }
 

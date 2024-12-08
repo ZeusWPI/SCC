@@ -7,22 +7,22 @@ FROM scan;
 -- name: GetScanByID :one
 SELECT *
 FROM scan
-WHERE id = ?;
+WHERE id = $1;
 
 -- name: CreateScan :one
 INSERT INTO scan (scan_time)
-VALUES (?)
+VALUES ($1)
 RETURNING *;
 
 -- name: UpdateScan :one
 UPDATE scan
-SET scan_time = ?
-WHERE id = ?
+SET scan_time = $1
+WHERE id = $2
 RETURNING *;
 
 -- name: DeleteScan :execrows
 DELETE FROM scan
-WHERE id = ?;
+WHERE id = $1;
 
 
 -- Other
@@ -37,7 +37,7 @@ LIMIT 1;
 -- name: GetAllScansSinceID :many
 SELECT *
 FROM scan
-WHERE id > ?
+WHERE id > $1
 ORDER BY scan_time ASC;
 
 -- name: GetScansInCurrentSeason :one

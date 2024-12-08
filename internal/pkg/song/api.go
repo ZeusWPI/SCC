@@ -26,7 +26,7 @@ type trackResponse struct {
 	Name       string        `json:"name"`
 	Album      trackAlbum    `json:"album"`
 	Artists    []trackArtist `json:"artists"`
-	DurationMS int64         `json:"duration_ms"`
+	DurationMS int32         `json:"duration_ms"`
 }
 
 func (s *Song) getTrack(track *dto.Song) error {
@@ -83,8 +83,8 @@ func (s *Song) getArtist(artist *dto.SongArtist) error {
 		return fmt.Errorf("Song: Artist request wrong status code %d", status)
 	}
 
-	artist.Popularity = int64(res.Popularity)
-	artist.Followers = int64(res.Followers.Total)
+	artist.Popularity = int32(res.Popularity)
+	artist.Followers = int32(res.Followers.Total)
 
 	for _, genre := range res.Genres {
 		artist.Genres = append(artist.Genres, dto.SongGenre{Genre: genre})

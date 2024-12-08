@@ -7,12 +7,12 @@ FROM event;
 
 -- name: CreateEvent :one
 INSERT INTO event (name, date, academic_year, location, poster)
-VALUES (?, ?, ?, ?, ?)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: DeleteEvent :exec
 DELETE FROM event
-WHERE id = ?;
+WHERE id = $1;
 
 
 -- Other
@@ -21,11 +21,11 @@ WHERE id = ?;
 -- name: GetEventByAcademicYear :many
 SELECT *
 FROM event
-WHERE academic_year = ?;
+WHERE academic_year = $1;
 
 -- name: DeleteEventByAcademicYear :exec
 DELETE FROM event
-WHERE academic_year = ?;
+WHERE academic_year = $1;
 
 -- name: GetEventsCurrentAcademicYear :many
 SELECT *

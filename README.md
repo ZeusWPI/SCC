@@ -24,11 +24,12 @@ Displays the cammie chat along with some other statistics.
 
 ## DB
 
-This project uses an SQLite database.
+This project uses a postgres database.
 SQLC is used to generate statically typed queries and goose is responsible for the database migrations.
 
 ### Usefull commands
 
+- `make db`: Start the database
 - `make migrate`: Run database migrations to update your database schema (watch out, migrations might result in minor data loss).
 - `make create-migration`: Create a new migration in the [db/migrations](./db/migrations/) directory.
 - `make sqlc`: Generate statically typed queries based on the .sql files in the [db/queries](./db/queries/) directory. Add new queries to this directory as needed.
@@ -60,9 +61,9 @@ To build and run the TUI, use the following commands:
 - `make build-tui`: Build the TUI binary.
 - `make run-tui`: Run the TUI.
 -
-The TUI requires one argument: the screen name to display. You can create new screens in the [screens directory](./ui/screen/), and you must add them to the startup command list in [tui.go](./internal/cmd/tui.go).
+The TUI requires one argument: the screen name to display. You can create new screens in the [screens directory](./tui/screen/), and you must add them to the startup command list in [tui.go](./internal/cmd/tui.go).
 
-A screen is responsible for creating and managing the layout, consisting of various [views](./ui/view/).
+A screen is responsible for creating and managing the layout, consisting of various [views](./tui/view/).
 
 ### Logs
 

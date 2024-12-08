@@ -8,9 +8,9 @@ import (
 
 // Gamification represents the DTO object for gamification
 type Gamification struct {
-	ID     int64  `json:"id"`
+	ID     int32  `json:"id"`
 	Name   string `json:"github_name"`
-	Score  int64  `json:"score"`
+	Score  int32  `json:"score"`
 	Avatar []byte `json:"avatar"`
 }
 

@@ -3,7 +3,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/zeusWPI/scc/ui/screen"
+	"github.com/zeusWPI/scc/tui/screen"
 	"go.uber.org/zap"
 )
 

@@ -4,12 +4,12 @@ ALTER TABLE song
 DROP COLUMN artists;
 
 CREATE TABLE IF NOT EXISTS song_genre (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     genre TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS song_artist (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     spotify_id TEXT NOT NULL,
     followers INTEGER NOT NULL,
@@ -17,19 +17,19 @@ CREATE TABLE IF NOT EXISTS song_artist (
 );
 
 CREATE TABLE IF NOT EXISTS song_artist_song (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     artist_id INTEGER NOT NULL,
     song_id INTEGER NOT NULL,
-    FOREIGN KEY(artist_id) REFERENCES artist(id),
-    FOREIGN KEY(song_id) REFERENCES song(id)
+    FOREIGN KEY(artist_id) REFERENCES song_artist(id)  ON DELETE CASCADE,
+    FOREIGN KEY(song_id) REFERENCES song(id)  ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS song_artist_genre (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     artist_id INTEGER NOT NULL,
     genre_id INTEGER NOT NULL,
-    FOREIGN KEY(artist_id) REFERENCES artist(id),
-    FOREIGN KEY(genre_id) REFERENCES genre(id)
+    FOREIGN KEY(artist_id) REFERENCES song_artist(id)  ON DELETE CASCADE,
+    FOREIGN KEY(genre_id) REFERENCES song_genre(id)  ON DELETE CASCADE
 );
 -- +goose StatementEnd
 

@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 ALTER TABLE event
-ADD COLUMN poster BLOB;
+ADD COLUMN poster BYTEA;
 -- +goose StatementEnd
 
 -- +goose Down

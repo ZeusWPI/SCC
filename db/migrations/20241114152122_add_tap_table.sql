@@ -1,12 +1,12 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS tap (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL,
-    order_created_at TIMESTAMP NOT NULL,
+    order_created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     name TEXT NOT NULL,
     category TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 -- +goose StatementEnd
 

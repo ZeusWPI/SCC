@@ -3,7 +3,7 @@ package screen
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui/view"
 )
 
 // Screen represents a screen

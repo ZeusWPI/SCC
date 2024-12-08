@@ -1,19 +1,19 @@
 package dto
 
 import (
-	"database/sql"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 )
 
 // Song is the DTO for a song
 type Song struct {
-	ID         int64        `json:"id"`
+	ID         int32        `json:"id"`
 	Title      string       `json:"title"`
 	Album      string       `json:"album"`
 	SpotifyID  string       `json:"spotify_id" validate:"required"`
-	DurationMS int64        `json:"duration_ms"`
+	DurationMS int32        `json:"duration_ms"`
 	LyricsType string       `json:"lyrics_type"` // Either 'synced' or 'plain'
 	Lyrics     string       `json:"lyrics"`
 	CreatedAt  time.Time    `json:"created_at"`
@@ -22,17 +22,17 @@ type Song struct {
 
 // SongArtist is the DTO for a song artist
 type SongArtist struct {
-	ID         int64       `json:"id"`
+	ID         int32       `json:"id"`
 	Name       string      `json:"name"`
 	SpotifyID  string      `json:"spotify_id"`
-	Followers  int64       `json:"followers"`
-	Popularity int64       `json:"popularity"`
+	Followers  int32       `json:"followers"`
+	Popularity int32       `json:"popularity"`
 	Genres     []SongGenre `json:"genres"`
 }
 
 // SongGenre is the DTO for a song genre
 type SongGenre struct {
-	ID    int64  `json:"id"`
+	ID    int32  `json:"id"`
 	Genre string `json:"genre"`
 }
 
@@ -73,30 +73,30 @@ func SongDTOHistory(songs []sqlc.GetLastSongFullRow) *Song {
 		lyrics = songs[0].Lyrics.String
 	}
 
-	artistsMap := make(map[int64]SongArtist)
+	artistsMap := make(map[int32]SongArtist)
 	for _, song := range songs {
 		if !song.ArtistID.Valid {
 			continue
 		}
 
 		// Get artist
-		artist, ok := artistsMap[song.ArtistID.Int64]
+		artist, ok := artistsMap[song.ArtistID.Int32]
 		if !ok {
 			// Artist doesn't exist yet, add him
 			artist = SongArtist{
-				ID:         song.ArtistID.Int64,
+				ID:         song.ArtistID.Int32,
 				Name:       song.ArtistName.String,
 				SpotifyID:  song.ArtistSpotifyID.String,
-				Followers:  song.ArtistFollowers.Int64,
-				Popularity: song.ArtistPopularity.Int64,
+				Followers:  song.ArtistFollowers.Int32,
+				Popularity: song.ArtistPopularity.Int32,
 				Genres:     make([]SongGenre, 0),
 			}
-			artistsMap[song.ArtistID.Int64] = artist
+			artistsMap[song.ArtistID.Int32] = artist
 		}
 
 		// Add genre
 		artist.Genres = append(artist.Genres, SongGenre{
-			ID:    song.GenreID.Int64,
+			ID:    song.GenreID.Int32,
 			Genre: song.Genre.String,
 		})
 	}
@@ -114,28 +114,20 @@ func SongDTOHistory(songs []sqlc.GetLastSongFullRow) *Song {
 		DurationMS: songs[0].DurationMs,
 		LyricsType: lyricsType,
 		Lyrics:     lyrics,
-		CreatedAt:  songs[0].CreatedAt,
+		CreatedAt:  songs[0].CreatedAt.Time,
 		Artists:    artists,
 	}
 }
 
 // CreateSongParams converts a Song DTO to a sqlc CreateSongParams object
 func (s *Song) CreateSongParams() *sqlc.CreateSongParams {
-	lyricsType := sql.NullString{String: s.LyricsType, Valid: false}
-	if s.LyricsType != "" {
-		lyricsType.Valid = true
-	}
-	lyrics := sql.NullString{String: s.Lyrics, Valid: false}
-	if s.Lyrics != "" {
-		lyrics.Valid = true
-	}
 	return &sqlc.CreateSongParams{
 		Title:      s.Title,
 		Album:      s.Album,
 		SpotifyID:  s.SpotifyID,
 		DurationMs: s.DurationMS,
-		LyricsType: lyricsType,
-		Lyrics:     lyrics,
+		LyricsType: pgtype.Text{String: s.LyricsType, Valid: true},
+		Lyrics:     pgtype.Text{String: s.Lyrics, Valid: true},
 	}
 }
 

@@ -9,11 +9,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/util"
-	tui "github.com/zeusWPI/scc/ui"
-	"github.com/zeusWPI/scc/ui/screen"
-	"github.com/zeusWPI/scc/ui/screen/cammie"
-	songScreen "github.com/zeusWPI/scc/ui/screen/song"
-	"github.com/zeusWPI/scc/ui/view"
+	"github.com/zeusWPI/scc/tui"
+	"github.com/zeusWPI/scc/tui/screen"
+	"github.com/zeusWPI/scc/tui/screen/cammie"
+	songScreen "github.com/zeusWPI/scc/tui/screen/song"
+	"github.com/zeusWPI/scc/tui/view"
 	"go.uber.org/zap"
 )
 

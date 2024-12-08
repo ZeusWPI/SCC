@@ -7,25 +7,26 @@ package sqlc
 
 import (
 	"context"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO event (name, date, academic_year, location, poster)
-VALUES (?, ?, ?, ?, ?)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, name, date, academic_year, location, poster
 `
 
 type CreateEventParams struct {
 	Name         string
-	Date         time.Time
+	Date         pgtype.Timestamptz
 	AcademicYear string
 	Location     string
 	Poster       []byte
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
-	row := q.db.QueryRowContext(ctx, createEvent,
+	row := q.db.QueryRow(ctx, createEvent,
 		arg.Name,
 		arg.Date,
 		arg.AcademicYear,
@@ -46,21 +47,21 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 
 const deleteEvent = `-- name: DeleteEvent :exec
 DELETE FROM event
-WHERE id = ?
+WHERE id = $1
 `
 
-func (q *Queries) DeleteEvent(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteEvent, id)
+func (q *Queries) DeleteEvent(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteEvent, id)
 	return err
 }
 
 const deleteEventByAcademicYear = `-- name: DeleteEventByAcademicYear :exec
 DELETE FROM event
-WHERE academic_year = ?
+WHERE academic_year = $1
 `
 
 func (q *Queries) DeleteEventByAcademicYear(ctx context.Context, academicYear string) error {
-	_, err := q.db.ExecContext(ctx, deleteEventByAcademicYear, academicYear)
+	_, err := q.db.Exec(ctx, deleteEventByAcademicYear, academicYear)
 	return err
 }
 
@@ -73,7 +74,7 @@ FROM event
 
 // CRUD
 func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, getAllEvents)
+	rows, err := q.db.Query(ctx, getAllEvents)
 	if err != nil {
 		return nil, err
 	}
@@ -92,9 +93,6 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -107,12 +105,12 @@ const getEventByAcademicYear = `-- name: GetEventByAcademicYear :many
 
 SELECT id, name, date, academic_year, location, poster
 FROM event
-WHERE academic_year = ?
+WHERE academic_year = $1
 `
 
 // Other
 func (q *Queries) GetEventByAcademicYear(ctx context.Context, academicYear string) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, getEventByAcademicYear, academicYear)
+	rows, err := q.db.Query(ctx, getEventByAcademicYear, academicYear)
 	if err != nil {
 		return nil, err
 	}
@@ -131,9 +129,6 @@ func (q *Queries) GetEventByAcademicYear(ctx context.Context, academicYear strin
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -152,7 +147,7 @@ ORDER BY date ASC
 `
 
 func (q *Queries) GetEventsCurrentAcademicYear(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, getEventsCurrentAcademicYear)
+	rows, err := q.db.Query(ctx, getEventsCurrentAcademicYear)
 	if err != nil {
 		return nil, err
 	}
@@ -171,9 +166,6 @@ func (q *Queries) GetEventsCurrentAcademicYear(ctx context.Context) ([]Event, er
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

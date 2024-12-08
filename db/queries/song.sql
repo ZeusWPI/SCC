@@ -2,32 +2,32 @@
 
 -- name: CreateSong :one
 INSERT INTO song (title, album, spotify_id, duration_ms, lyrics_type, lyrics)
-VALUES (?, ?, ?, ?, ?, ?)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: CreateSongHistory :one
 INSERT INTO song_history (song_id)
-VALUES (?)
+VALUES ($1)
 RETURNING *;
 
 -- name: CreateSongGenre :one
 INSERT INTO song_genre (genre)
-VALUES (?)
+VALUES ($1)
 RETURNING *;
 
 -- name: CreateSongArtist :one
 INSERT INTO song_artist (name, spotify_id, followers, popularity)
-VALUES (?, ?, ?, ?)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: CreateSongArtistSong :one
 INSERT INTO song_artist_song (artist_id, song_id)
-VALUES (?, ?)
+VALUES ($1, $2)
 RETURNING *;
 
 -- name: CreateSongArtistGenre :one
 INSERT INTO song_artist_genre (artist_id, genre_id)
-VALUES (?, ?)
+VALUES ($1, $2)
 RETURNING *;
 
 
@@ -36,12 +36,12 @@ RETURNING *;
 -- name: GetSongBySpotifyID :one
 SELECT *
 FROM song
-WHERE spotify_id = ?;
+WHERE spotify_id = $1;
 
 -- name: GetSongArtistBySpotifyID :one
 SELECT *
 FROM song_artist
-WHERE spotify_id = ?;
+WHERE spotify_id = $1;
 
 -- name: GetLastSongHistory :one
 SELECT *
@@ -52,12 +52,12 @@ LIMIT 1;
 -- name: GetSongGenreByName :one
 SELECT *
 FROM song_genre
-WHERE genre = ?;
+WHERE genre = $1;
 
 -- name: GetSongArtistByName :one
 SELECT *
 FROM song_artist
-WHERE name = ?;
+WHERE name = $1;
 
 -- name: GetLastSongFull :many
 SELECT s.id, s.title AS song_title, s.spotify_id, s.album, s.duration_ms, s.lyrics_type, s.lyrics, sh.created_at, a.id AS artist_id, a.name AS artist_name, a.spotify_id AS artist_spotify_id, a.followers AS artist_followers, a.popularity AS artist_popularity, g.id AS genre_id, g.genre AS genre, sh.created_at
