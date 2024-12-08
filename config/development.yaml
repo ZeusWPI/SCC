@@ -49,7 +49,7 @@ backend:
             - "-d0"
 
     event:
-        website: "https://zeus.gent/events"
+        website: "https://zeus.gent/events/"
         website_poster: "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master"
         interval_s: 3600
 

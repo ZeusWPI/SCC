@@ -13,8 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// TODO: Look at https://github.com/PuerkitoBio/goquery
-
 var layout = "Monday 02 January, 15:04 2006"
 
 func (e *Event) getEvents() ([]dto.Event, error) {
