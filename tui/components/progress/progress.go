@@ -8,7 +8,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"go.uber.org/zap"
 )
 
 var lastID int64
@@ -41,19 +40,16 @@ type Model struct {
 
 // New creates a new progress
 func New(styleFainted, styleGlow lipgloss.Style) Model {
-	zap.S().Info(styleFainted)
 	return Model{id: nextID(), styleFainted: styleFainted, styleGlow: styleGlow}
 }
 
 // Init initializes the progress component
 func (m Model) Init() tea.Cmd {
-	zap.S().Info(m.styleFainted)
 	return nil
 }
 
 // Start starts a progress bar until it reaches a given width in a given duration
 func (m Model) Start(width int, runningTime time.Duration, duration time.Duration) tea.Cmd {
-	zap.S().Info(m.styleFainted)
 	return func() tea.Msg {
 		interval := (duration / 2) / time.Duration(width)
 
@@ -67,7 +63,6 @@ func (m Model) Start(width int, runningTime time.Duration, duration time.Duratio
 
 // Update handles the progress frame tick
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-	zap.S().Info(m.styleFainted)
 	switch msg := msg.(type) {
 	case FrameMsg:
 		if msg.id != m.id {
@@ -96,7 +91,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 // View of the progress bar component
 func (m Model) View() string {
-	zap.S().Info(m.styleFainted)
 	glowCount := min(20, m.width)
 	// Make sure if m.width is uneven that the half block string is in the glow part
 	if m.width%2 == 1 && glowCount%2 == 0 {
