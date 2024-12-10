@@ -12,15 +12,20 @@ import (
 )
 
 const createScan = `-- name: CreateScan :one
-INSERT INTO scan (scan_time)
-VALUES ($1)
-RETURNING id, scan_time
+INSERT INTO scan (scan_id, scan_time)
+VALUES ($1, $2)
+RETURNING id, scan_time, scan_id
 `
 
-func (q *Queries) CreateScan(ctx context.Context, scanTime pgtype.Timestamptz) (Scan, error) {
-	row := q.db.QueryRow(ctx, createScan, scanTime)
+type CreateScanParams struct {
+	ScanID   int32
+	ScanTime pgtype.Timestamptz
+}
+
+func (q *Queries) CreateScan(ctx context.Context, arg CreateScanParams) (Scan, error) {
+	row := q.db.QueryRow(ctx, createScan, arg.ScanID, arg.ScanTime)
 	var i Scan
-	err := row.Scan(&i.ID, &i.ScanTime)
+	err := row.Scan(&i.ID, &i.ScanTime, &i.ScanID)
 	return i, err
 }
 
@@ -39,7 +44,7 @@ func (q *Queries) DeleteScan(ctx context.Context, id int32) (int64, error) {
 
 const getAllScans = `-- name: GetAllScans :many
 
-SELECT id, scan_time
+SELECT id, scan_time, scan_id
 FROM scan
 `
 
@@ -53,7 +58,7 @@ func (q *Queries) GetAllScans(ctx context.Context) ([]Scan, error) {
 	var items []Scan
 	for rows.Next() {
 		var i Scan
-		if err := rows.Scan(&i.ID, &i.ScanTime); err != nil {
+		if err := rows.Scan(&i.ID, &i.ScanTime, &i.ScanID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -65,10 +70,10 @@ func (q *Queries) GetAllScans(ctx context.Context) ([]Scan, error) {
 }
 
 const getAllScansSinceID = `-- name: GetAllScansSinceID :many
-SELECT id, scan_time
+SELECT id, scan_time, scan_id
 FROM scan
 WHERE id > $1
-ORDER BY scan_time ASC
+ORDER BY scan_id, scan_time ASC
 `
 
 func (q *Queries) GetAllScansSinceID(ctx context.Context, id int32) ([]Scan, error) {
@@ -80,7 +85,7 @@ func (q *Queries) GetAllScansSinceID(ctx context.Context, id int32) ([]Scan, err
 	var items []Scan
 	for rows.Next() {
 		var i Scan
-		if err := rows.Scan(&i.ID, &i.ScanTime); err != nil {
+		if err := rows.Scan(&i.ID, &i.ScanTime, &i.ScanID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -94,7 +99,7 @@ func (q *Queries) GetAllScansSinceID(ctx context.Context, id int32) ([]Scan, err
 const getLastScan = `-- name: GetLastScan :one
 
 
-SELECT id, scan_time
+SELECT id, scan_time, scan_id
 FROM scan
 ORDER BY id DESC
 LIMIT 1
@@ -104,12 +109,12 @@ LIMIT 1
 func (q *Queries) GetLastScan(ctx context.Context) (Scan, error) {
 	row := q.db.QueryRow(ctx, getLastScan)
 	var i Scan
-	err := row.Scan(&i.ID, &i.ScanTime)
+	err := row.Scan(&i.ID, &i.ScanTime, &i.ScanID)
 	return i, err
 }
 
 const getScanByID = `-- name: GetScanByID :one
-SELECT id, scan_time
+SELECT id, scan_time, scan_id
 FROM scan
 WHERE id = $1
 `
@@ -117,7 +122,7 @@ WHERE id = $1
 func (q *Queries) GetScanByID(ctx context.Context, id int32) (Scan, error) {
 	row := q.db.QueryRow(ctx, getScanByID, id)
 	var i Scan
-	err := row.Scan(&i.ID, &i.ScanTime)
+	err := row.Scan(&i.ID, &i.ScanTime, &i.ScanID)
 	return i, err
 }
 
@@ -137,19 +142,20 @@ func (q *Queries) GetScansInCurrentSeason(ctx context.Context) (int64, error) {
 
 const updateScan = `-- name: UpdateScan :one
 UPDATE scan
-SET scan_time = $1
-WHERE id = $2
-RETURNING id, scan_time
+SET scan_id = $1, scan_time = $2
+WHERE id = $3
+RETURNING id, scan_time, scan_id
 `
 
 type UpdateScanParams struct {
+	ScanID   int32
 	ScanTime pgtype.Timestamptz
 	ID       int32
 }
 
 func (q *Queries) UpdateScan(ctx context.Context, arg UpdateScanParams) (Scan, error) {
-	row := q.db.QueryRow(ctx, updateScan, arg.ScanTime, arg.ID)
+	row := q.db.QueryRow(ctx, updateScan, arg.ScanID, arg.ScanTime, arg.ID)
 	var i Scan
-	err := row.Scan(&i.ID, &i.ScanTime)
+	err := row.Scan(&i.ID, &i.ScanTime, &i.ScanID)
 	return i, err
 }

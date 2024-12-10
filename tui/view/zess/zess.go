@@ -3,6 +3,7 @@ package zess
 
 import (
 	"context"
+	"math/rand/v2"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -23,6 +24,7 @@ type weekScan struct {
 	time   yearWeek
 	amount int64
 	label  string
+	color  string
 }
 
 // Model represents the Model for the zess view
@@ -227,7 +229,12 @@ func updateScans(view view.View) (tea.Msg, error) {
 		}
 
 		if !found {
-			zessScanMsg.scans = append(zessScanMsg.scans, weekScan{time: newTime, amount: 1, label: newScan.ScanTime.Time.Format("02/01")})
+			zessScanMsg.scans = append(zessScanMsg.scans, weekScan{
+				time:   newTime,
+				amount: 1,
+				label:  newScan.ScanTime.Time.Format("02/01"),
+				color:  randomColor(),
+			})
 		}
 
 		// Update scan ID
@@ -275,4 +282,8 @@ func (z *yearWeek) after(z2 yearWeek) bool {
 	}
 
 	return z.week > z2.week
+}
+
+func randomColor() string {
+	return colors[rand.IntN(len(colors))]
 }

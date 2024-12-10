@@ -60,6 +60,11 @@ func (m *Model) viewNormal() string {
 	title := sOverviewTitle.Render("Events")
 	overview = lipgloss.JoinVertical(lipgloss.Left, title, overview)
 
+	// Center the overview
+	if lipgloss.Height(im) > lipgloss.Height(overview) {
+		overview = sOverviewTotal.Height(lipgloss.Height(im)).Render(overview)
+	}
+
 	// Combine image and overview
 	view := lipgloss.JoinHorizontal(lipgloss.Top, overview, im)
 

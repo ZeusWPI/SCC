@@ -43,6 +43,7 @@ var (
 
 // Styles overview
 var (
+	sOverviewTotal = base.AlignVertical(lipgloss.Center)
 	sOverviewTitle = base.Bold(true).Foreground(cWarning).Width(widthOverview).Align(lipgloss.Center)
 	sOverview      = base.Border(lipgloss.NormalBorder(), true, false, false, false).BorderForeground(cBorder).Width(widthOverview).MarginRight(mOverview)
 	sPassedName    = base.Foreground(cZeus).Faint(true).Width(widthOverviewName)
