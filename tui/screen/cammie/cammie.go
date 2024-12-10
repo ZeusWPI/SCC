@@ -59,7 +59,7 @@ func (c *Cammie) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 		c.width = msg.Width
 		c.height = msg.Height
 
-		sMsg = sMsg.Width(c.width/2 - sMsg.GetHorizontalFrameSize() - sMsg.GetHorizontalPadding()).Height(c.height - sMsg.GetVerticalFrameSize() - sMsg.GetVerticalPadding())
+		sMsg = sMsg.Width(c.width/2 - view.GetOuterWidth(sMsg)).Height(c.height - sMsg.GetVerticalFrameSize() - sMsg.GetVerticalPadding())
 		sTop = sTop.Width(c.width/2 - sTop.GetHorizontalFrameSize()).Height(c.height/2 - sTop.GetVerticalFrameSize())
 		sBottom = sBottom.Width(c.width/2 - sBottom.GetHorizontalFrameSize()).Height(c.height/2 - sBottom.GetVerticalFrameSize())
 

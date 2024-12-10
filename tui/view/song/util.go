@@ -5,7 +5,7 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/lyrics"
 )
 
-func equalTopSongs(s1 []topStat, s2 []sqlc.GetTopSongsRow) bool {
+func equalTopSongs(s1 []topStatEntry, s2 []sqlc.GetTopSongsRow) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
@@ -19,15 +19,15 @@ func equalTopSongs(s1 []topStat, s2 []sqlc.GetTopSongsRow) bool {
 	return true
 }
 
-func topStatSqlcSong(songs []sqlc.GetTopSongsRow) []topStat {
-	topstats := make([]topStat, 0, len(songs))
+func topStatSqlcSong(songs []sqlc.GetTopSongsRow) []topStatEntry {
+	topstats := make([]topStatEntry, 0, len(songs))
 	for _, s := range songs {
-		topstats = append(topstats, topStat{name: s.Title, amount: int(s.PlayCount)})
+		topstats = append(topstats, topStatEntry{name: s.Title, amount: int(s.PlayCount)})
 	}
 	return topstats
 }
 
-func equalTopGenres(s1 []topStat, s2 []sqlc.GetTopGenresRow) bool {
+func equalTopGenres(s1 []topStatEntry, s2 []sqlc.GetTopGenresRow) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
@@ -41,15 +41,15 @@ func equalTopGenres(s1 []topStat, s2 []sqlc.GetTopGenresRow) bool {
 	return true
 }
 
-func topStatSqlcGenre(songs []sqlc.GetTopGenresRow) []topStat {
-	topstats := make([]topStat, 0, len(songs))
+func topStatSqlcGenre(songs []sqlc.GetTopGenresRow) []topStatEntry {
+	topstats := make([]topStatEntry, 0, len(songs))
 	for _, s := range songs {
-		topstats = append(topstats, topStat{name: s.GenreName, amount: int(s.TotalPlays)})
+		topstats = append(topstats, topStatEntry{name: s.GenreName, amount: int(s.TotalPlays)})
 	}
 	return topstats
 }
 
-func equalTopArtists(s1 []topStat, s2 []sqlc.GetTopArtistsRow) bool {
+func equalTopArtists(s1 []topStatEntry, s2 []sqlc.GetTopArtistsRow) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
@@ -63,10 +63,10 @@ func equalTopArtists(s1 []topStat, s2 []sqlc.GetTopArtistsRow) bool {
 	return true
 }
 
-func topStatSqlcArtist(songs []sqlc.GetTopArtistsRow) []topStat {
-	topstats := make([]topStat, 0, len(songs))
+func topStatSqlcArtist(songs []sqlc.GetTopArtistsRow) []topStatEntry {
+	topstats := make([]topStatEntry, 0, len(songs))
 	for _, s := range songs {
-		topstats = append(topstats, topStat{name: s.ArtistName, amount: int(s.TotalPlays)})
+		topstats = append(topstats, topStatEntry{name: s.ArtistName, amount: int(s.TotalPlays)})
 	}
 	return topstats
 }

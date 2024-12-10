@@ -42,3 +42,23 @@ func ImagetoString(width int, img image.Image) string {
 
 	return str.String()
 }
+
+// GetOuterWidth returns the outer border size of a lipgloss Style
+func GetOuterWidth(style lipgloss.Style) int {
+	return style.GetHorizontalFrameSize() + style.GetHorizontalPadding()
+}
+
+// GetWidth returns the inner width of a lipgloss Style
+func GetWidth(style lipgloss.Style) int {
+	return style.GetWidth() - GetOuterWidth(style)
+}
+
+// GetOuterHeight returns the outer border size of a lipgloss Style
+func GetOuterHeight(style lipgloss.Style) int {
+	return style.GetVerticalFrameSize() + style.GetVerticalPadding()
+}
+
+// GetHeight returns the inner width of a lipgloss Style
+func GetHeight(style lipgloss.Style) int {
+	return style.GetHeight() - GetOuterHeight(style)
+}

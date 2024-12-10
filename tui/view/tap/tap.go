@@ -155,7 +155,7 @@ func updateOrders(view view.View) (tea.Msg, error) {
 		counts[category(order.Category)] = tapItem{
 			category: category(order.Category),
 			amount:   int(order.Count),
-			last:     time.Unix(int64(order.LatestOrderCreatedAt), 0),
+			last:     order.LatestOrderCreatedAt.Time,
 		}
 	}
 

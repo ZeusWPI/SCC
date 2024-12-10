@@ -68,7 +68,7 @@ type artistResponse struct {
 }
 
 func (s *Song) getArtist(artist *dto.SongArtist) error {
-	zap.S().Info("Song: Getting artists info for ", artist.ID)
+	zap.S().Info("Song: Getting artists info for ", artist.SpotifyID)
 
 	req := fiber.Get(fmt.Sprintf("%s/%s/%s", s.api, "artists", artist.SpotifyID)).
 		Set("Authorization", fmt.Sprintf("Bearer %s", s.AccessToken))

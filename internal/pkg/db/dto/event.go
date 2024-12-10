@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -31,7 +32,7 @@ func EventDTO(e sqlc.Event) *Event {
 
 // Equal compares 2 events
 func (e *Event) Equal(e2 Event) bool {
-	return e.Name == e2.Name && e.Date.Equal(e2.Date) && e.AcademicYear == e2.AcademicYear && e.Location == e2.Location
+	return e.Name == e2.Name && e.Date.Equal(e2.Date) && e.AcademicYear == e2.AcademicYear && e.Location == e2.Location && bytes.Equal(e.Poster, e2.Poster)
 }
 
 // CreateParams converts a Event DTO to a sqlc CreateEventParams object

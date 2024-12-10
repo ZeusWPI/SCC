@@ -304,7 +304,7 @@ SELECT s.title
 FROM song_history sh
 JOIN song s ON sh.song_id = s.id
 ORDER BY created_at DESC
-LIMIT 5
+LIMIT 10
 `
 
 func (q *Queries) GetSongHistory(ctx context.Context) ([]string, error) {
@@ -335,7 +335,7 @@ JOIN song_artist_song sas ON s.id = sas.song_id
 JOIN song_artist sa ON sas.artist_id = sa.id
 GROUP BY sa.id, sa.name
 ORDER BY total_plays DESC
-LIMIT 5
+LIMIT 10
 `
 
 type GetTopArtistsRow struct {
@@ -374,7 +374,7 @@ JOIN song_artist_genre sag ON sa.id = sag.artist_id
 JOIN song_genre g ON sag.genre_id = g.id
 GROUP BY g.genre
 ORDER BY total_plays DESC
-LIMIT 5
+LIMIT 10
 `
 
 type GetTopGenresRow struct {
@@ -408,7 +408,7 @@ FROM song_history sh
 JOIN song s ON sh.song_id = s.id
 GROUP BY s.id, s.title
 ORDER BY play_count DESC
-LIMIT 5
+LIMIT 10
 `
 
 type GetTopSongsRow struct {

@@ -116,6 +116,7 @@ func (s *Song) Track(track *dto.Song) error {
 		if (a != sqlc.SongArtist{}) {
 			// Artist already exists
 			// Add it as an artist for this track
+			track.Artists[i].ID = a.ID
 			if _, err := s.db.Queries.CreateSongArtistSong(context.Background(), *track.CreateSongArtistSongParams(i)); err != nil {
 				errs = append(errs, err)
 			}
