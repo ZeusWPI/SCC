@@ -3,6 +3,7 @@ package message
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/zeusWPI/scc/internal/pkg/buzzer"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/util"
@@ -13,13 +14,15 @@ import (
 type Router struct {
 	router fiber.Router
 	db     *db.DB
+	buzz   *buzzer.Buzzer
 }
 
 // New creates a new message API instance
-func New(router fiber.Router, db *db.DB) *Router {
+func New(router fiber.Router, db *db.DB, buzz *buzzer.Buzzer) *Router {
 	api := &Router{
 		router: router.Group("/messages"),
 		db:     db,
+		buzz:   buzz,
 	}
 	api.createRoutes()
 
@@ -59,6 +62,8 @@ func (r *Router) create(c *fiber.Ctx) error {
 		zap.S().Error("DB: Create message\n", err)
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
+
+	r.buzz.Play()
 
 	return c.Status(fiber.StatusCreated).JSON(dto.MessageDTO(messageDB))
 }
