@@ -9,6 +9,7 @@ import (
 
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
+	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 	"github.com/zeusWPI/scc/pkg/config"
 )
 
@@ -38,15 +39,35 @@ func (e *Event) Update() error {
 		return nil
 	}
 
-	eventsDB, err := e.db.Queries.GetEventByAcademicYear(context.Background(), events[0].AcademicYear)
+	eventsDBSQL, err := e.db.Queries.GetEventByAcademicYear(context.Background(), events[0].AcademicYear)
 	if err != nil {
 		return err
 	}
 
+	eventsDB := make([]*dto.Event, 0, len(eventsDBSQL))
+
+	var wg sync.WaitGroup
+	var errs []error
+	for _, event := range eventsDBSQL {
+		wg.Add(1)
+
+		go func(event sqlc.Event) {
+			defer wg.Done()
+
+			ev := dto.EventDTO(event)
+			eventsDB = append(eventsDB, ev)
+			err := e.getPoster(ev)
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}(event)
+	}
+	wg.Wait()
+
 	// Check if there are any new events
 	equal := true
 	for _, event := range eventsDB {
-		found := slices.ContainsFunc(events, func(ev dto.Event) bool { return ev.Equal(*dto.EventDTO(event)) })
+		found := slices.ContainsFunc(events, func(ev dto.Event) bool { return ev.Equal(*event) })
 		if !found {
 			equal = false
 			break
@@ -67,22 +88,6 @@ func (e *Event) Update() error {
 	if err != nil {
 		return err
 	}
-	var errs []error
-
-	var wg sync.WaitGroup
-	for _, event := range events {
-		wg.Add(1)
-
-		go func(event *dto.Event) {
-			defer wg.Done()
-
-			err := e.getPoster(event)
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}(&event)
-	}
-	wg.Wait()
 
 	for _, event := range events {
 		err = e.getPoster(&event)

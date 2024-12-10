@@ -13,13 +13,13 @@ import (
 
 var lastID int64
 
-func nextID() int {
-	return int(atomic.AddInt64(&lastID, 1))
+func nextID() int64 {
+	return atomic.AddInt64(&lastID, 1)
 }
 
 // TickMsg is a message that is sent on every stopwatch tick
 type TickMsg struct {
-	id int
+	id int64
 }
 
 // StartStopMsg is a message that controls if the stopwatch is running or not
@@ -34,12 +34,12 @@ type ResetMsg struct {
 
 // Model for the stopwatch component
 type Model struct {
-	id       int
+	id       int64
 	duration time.Duration
 	running  bool
 }
 
-// New created a new stopwatch with a given interval
+// New creates a new stopwatch with a given interval
 func New() Model {
 	return Model{
 		id:       nextID(),
@@ -48,7 +48,7 @@ func New() Model {
 	}
 }
 
-// Init initiates the stopwatch component
+// Init initializes the stopwatch component
 func (m Model) Init() tea.Cmd {
 	return nil
 }
@@ -121,7 +121,7 @@ func (m Model) View() string {
 	return fmt.Sprintf("%02d:%02d", min, sec)
 }
 
-func tick(id int) tea.Cmd {
+func tick(id int64) tea.Cmd {
 	return tea.Tick(time.Second, func(_ time.Time) tea.Msg {
 		return TickMsg{id: id}
 	})

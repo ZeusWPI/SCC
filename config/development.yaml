@@ -1,5 +1,5 @@
 server:
-    host: "localhost"
+    host: "0.0.0.0"
     port: 3000
 
 db:
@@ -102,7 +102,7 @@ tui:
         song:
             interval_current_s: 5
             interval_history_s: 5
-            interval_top_s: 3600
+            interval_top_s: 300
 
         tap:
             interval_s: 60

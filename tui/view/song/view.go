@@ -10,11 +10,17 @@ import (
 
 func (m *Model) viewPlaying() string {
 	status := m.viewPlayingStatus()
+	status = sStatus.Render(status)
+
+	stats := m.viewPlayingStats()
+	stats = sStatAll.Render(stats)
+
 	lyrics := m.viewPlayingLyrics()
+	lyrics = sLyric.Height(sAll.GetHeight() - lipgloss.Height(status) - lipgloss.Height(stats)).Render(lyrics)
 
-	view := lipgloss.JoinVertical(lipgloss.Left, status, lyrics)
+	view := lipgloss.JoinVertical(lipgloss.Left, status, lyrics, stats)
 
-	return view
+	return sAll.Render(view)
 }
 
 func (m *Model) viewPlayingStatus() string {
@@ -33,14 +39,11 @@ func (m *Model) viewPlayingStatus() string {
 		artist = artist[:len(artist)-3]
 	}
 
-	song := sStatusSong.Width(m.width - lipgloss.Width(stopwatch)).Render(fmt.Sprintf("%s | %s", m.current.song.Title, artist))
+	song := sStatusSong.Width(sStatusSong.GetWidth() - lipgloss.Width(stopwatch)).Render(fmt.Sprintf("%s | %s", m.current.song.Title, artist))
 
 	// Progress bar
-	// zap.S().Info(m.current.lyrics.Progress())
-	// progress := sStatusProgress.Width(m.width).Render(m.current.progress.ViewAs(m.current.lyrics.Progress()))
-	// zap.S().Info(progress)
-
-	progress := sStatusProgress.Width(m.width).Render(strings.Repeat("▄", int(m.current.lyrics.Progress()*float64(m.width))))
+	progress := m.current.progress.View()
+	progress = sStatusProgress.Render(progress)
 
 	view := lipgloss.JoinHorizontal(lipgloss.Top, song, stopwatch)
 	view = lipgloss.JoinVertical(lipgloss.Left, view, progress)
@@ -67,7 +70,18 @@ func (m *Model) viewPlayingLyrics() string {
 	}
 	upcoming := sLyricUpcoming.Render(upcomingB.String())
 
-	return base.MarginLeft(5).Render(lipgloss.JoinVertical(lipgloss.Left, previous, current, upcoming))
+	return sLyric.Render(lipgloss.JoinVertical(lipgloss.Left, previous, current, upcoming))
+}
+
+func (m *Model) viewPlayingStats() string {
+	columns := make([]string, 0, 4)
+
+	columns = append(columns, m.viewRecent())
+	columns = append(columns, m.viewTopStat(m.topSongs))
+	columns = append(columns, m.viewTopStat(m.topArtists))
+	columns = append(columns, m.viewTopStat(m.topGenres))
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, columns...)
 }
 
 func (m *Model) viewNotPlaying() string {
@@ -76,43 +90,10 @@ func (m *Model) viewNotPlaying() string {
 		rows = append(rows, make([]string, 0, 2))
 	}
 
-	// Recently played
-	items := make([]string, 0, len(m.history))
-	for i, track := range m.history {
-		number := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
-		body := sStatBody.Render(track)
-		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, number, body))
-	}
-	l := lipgloss.JoinVertical(lipgloss.Left, items...)
-	title := sStatTitle.Render("Recently Played")
-	rows[0] = append(rows[0], sStat.Render(lipgloss.JoinVertical(lipgloss.Left, title, l)))
-
-	// All other stats
-	topStats := [][]topStat{m.topSongs, m.topArtists, m.topGenres}
-	for i, topStat := range topStats {
-		items := make([]string, 0, len(topStat))
-		for i, stat := range topStat {
-			number := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
-			body := sStatBody.Render(stat.name)
-			amount := sStatAmount.Render(fmt.Sprintf("%d", stat.amount))
-			items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, number, body, amount))
-		}
-		l := lipgloss.JoinVertical(lipgloss.Left, items...)
-
-		var row int
-		if i == 0 {
-			title = sStatTitle.Render("Top Tracks")
-			row = 0
-		} else if i == 1 {
-			title = sStatTitle.Render("Top Artists")
-			row = 1
-		} else {
-			title = sStatTitle.Render("Top Genres")
-			row = 1
-		}
-
-		rows[row] = append(rows[row], sStat.Render(lipgloss.JoinVertical(lipgloss.Left, title, l)))
-	}
+	rows[0] = append(rows[0], m.viewRecent())
+	rows[0] = append(rows[0], m.viewTopStat(m.topSongs))
+	rows[1] = append(rows[1], m.viewTopStat(m.topArtists))
+	rows[1] = append(rows[1], m.viewTopStat(m.topGenres))
 
 	renderedRows := make([]string, 0, 2)
 	for _, row := range rows {
@@ -121,5 +102,33 @@ func (m *Model) viewNotPlaying() string {
 
 	view := lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
 
-	return view
+	return sAll.Render(view)
+}
+
+func (m *Model) viewRecent() string {
+	items := make([]string, 0, len(m.history))
+	for i, track := range m.history {
+		number := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
+		body := sStatBody.Render(track)
+		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, number, body))
+	}
+	l := lipgloss.JoinVertical(lipgloss.Left, items...)
+	title := sStatTitle.Render("Recently Played")
+
+	return sStat.Render(lipgloss.JoinVertical(lipgloss.Left, title, l))
+}
+
+func (m *Model) viewTopStat(topStat topStat) string {
+	items := make([]string, 0, len(topStat.entries))
+	for i, stat := range topStat.entries {
+		number := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
+		body := sStatBody.Render(stat.name)
+		amount := sStatAmount.Render(fmt.Sprintf("%d", stat.amount))
+		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, number, body, amount))
+	}
+	l := lipgloss.JoinVertical(lipgloss.Left, items...)
+
+	title := sStatTitle.Render(topStat.title)
+
+	return sStat.Render(lipgloss.JoinVertical(lipgloss.Left, title, l))
 }

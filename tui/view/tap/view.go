@@ -39,7 +39,7 @@ func (m *Model) viewStats() string {
 	for _, item := range m.items {
 		amount := sStatsAmount.Render(strconv.Itoa(item.amount))
 		category := sStatsCategory.Inherit(categoryToStyle[item.category]).Render(string(item.category))
-		last := sStatsLast.Render(item.last.Format("02/01 15:04"))
+		last := sStatsLast.Render(item.last.Format("15:04 02/01"))
 
 		text := lipgloss.JoinHorizontal(lipgloss.Top, amount, category, last)
 		rows = append(rows, text)

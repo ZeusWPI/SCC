@@ -19,7 +19,7 @@ type Song struct {
 
 // New creates a new song screen
 func New(db *db.DB) screen.Screen {
-	return &Song{db: db, song: song.NewModel(db), width: 0, height: 0}
+	return &Song{db: db, song: song.New(db), width: 0, height: 0}
 }
 
 // Init initializes the song screen
@@ -34,7 +34,7 @@ func (s *Song) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 		s.width = msg.Width
 		s.height = msg.Height
 
-		sSong = sSong.Width(s.width - sSong.GetHorizontalFrameSize() - sSong.GetHorizontalPadding()).Height(s.height - sSong.GetVerticalFrameSize() - sSong.GetVerticalPadding())
+		sSong = sSong.Width(s.width - view.GetOuterWidth(sSong)).Height(s.height - sSong.GetVerticalFrameSize() - sSong.GetVerticalPadding())
 
 		return s, s.GetSizeMsg
 	}

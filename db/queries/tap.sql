@@ -50,7 +50,7 @@ FROM tap
 GROUP BY category;
 
 -- name: GetOrderCountByCategorySinceOrderID :many
-SELECT category, COUNT(*), CAST(MAX(order_created_at) AS INTEGER) AS latest_order_created_at
+SELECT category, COUNT(*), MAX(order_created_at)::TIMESTAMP AS latest_order_created_at
 FROM tap
 WHERE order_id >= $1
 GROUP BY category;

@@ -143,7 +143,7 @@ func (q *Queries) GetOrderCount(ctx context.Context) ([]GetOrderCountRow, error)
 }
 
 const getOrderCountByCategorySinceOrderID = `-- name: GetOrderCountByCategorySinceOrderID :many
-SELECT category, COUNT(*), CAST(MAX(order_created_at) AS INTEGER) AS latest_order_created_at
+SELECT category, COUNT(*), MAX(order_created_at)::TIMESTAMP AS latest_order_created_at
 FROM tap
 WHERE order_id >= $1
 GROUP BY category
@@ -152,7 +152,7 @@ GROUP BY category
 type GetOrderCountByCategorySinceOrderIDRow struct {
 	Category             string
 	Count                int64
-	LatestOrderCreatedAt int32
+	LatestOrderCreatedAt pgtype.Timestamp
 }
 
 func (q *Queries) GetOrderCountByCategorySinceOrderID(ctx context.Context, orderID int32) ([]GetOrderCountByCategorySinceOrderIDRow, error) {
