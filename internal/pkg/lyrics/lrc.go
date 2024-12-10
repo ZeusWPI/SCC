@@ -86,6 +86,10 @@ func (l *LRC) Progress() float64 {
 func parseLRC(text string, totalDuration time.Duration) []Lyric {
 	lines := strings.Split(text, "\n")
 
+	if len(lines) == 0 {
+		return []Lyric{}
+	}
+
 	lyrics := make([]Lyric, 0, len(lines)+1)
 	var previousTimestamp time.Duration
 
