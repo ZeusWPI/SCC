@@ -10,14 +10,14 @@ FROM scan
 WHERE id = $1;
 
 -- name: CreateScan :one
-INSERT INTO scan (scan_time)
-VALUES ($1)
+INSERT INTO scan (scan_id, scan_time)
+VALUES ($1, $2)
 RETURNING *;
 
 -- name: UpdateScan :one
 UPDATE scan
-SET scan_time = $1
-WHERE id = $2
+SET scan_id = $1, scan_time = $2
+WHERE id = $3
 RETURNING *;
 
 -- name: DeleteScan :execrows
@@ -38,7 +38,7 @@ LIMIT 1;
 SELECT *
 FROM scan
 WHERE id > $1
-ORDER BY scan_time ASC;
+ORDER BY scan_id, scan_time ASC;
 
 -- name: GetScansInCurrentSeason :one
 SELECT COUNT(*) AS amount

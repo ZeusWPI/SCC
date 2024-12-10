@@ -16,7 +16,7 @@ func (m *Model) viewChart() string {
 			Values: []barchart.BarValue{{
 				Name:  scan.label,
 				Value: float64(scan.amount),
-				Style: sBar,
+				Style: sBar.Foreground(lipgloss.Color(scan.color)),
 			}},
 		}
 

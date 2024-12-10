@@ -35,6 +35,7 @@ type Message struct {
 type Scan struct {
 	ID       int32
 	ScanTime pgtype.Timestamptz
+	ScanID   int32
 }
 
 type Season struct {

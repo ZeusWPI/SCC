@@ -21,16 +21,39 @@ var (
 
 // Colors
 var (
-	cBarChart = lipgloss.Color("#32012F")
-
 	cBorder     = lipgloss.Color("#383838")
 	cZeus       = lipgloss.Color("#FF7F00")
 	cStatsTitle = lipgloss.Color("#EE4B2B")
 )
 
+// Message colors
+var colors = []string{
+	"#FAF500", // Yellow
+	"#3AFA00", // Green
+	"#FAD700", // Yellow Green
+	"#FAA600", // Orange
+	"#FAE200", // Yellow Orange
+	"#FA7200", // Orange Red
+	"#FA4600", // Red
+	"#FA0400", // Real Red
+	"#FA0079", // Pink Red
+	"#FA00FA", // Pink
+	"#EE00FA", // Purple
+	"#8300FA", // Purple Blue
+	"#3100FA", // Blue
+	"#00FAFA", // Light Blue
+	"#00FAA5", // Green Blue
+	"#00FA81", // IDK
+	"#F8FA91", // Weird Light Green
+	"#FAD392", // Light Orange
+	"#FA9E96", // Salmon
+	"#DEA2F9", // Fuchsia
+	"#B3D2F9", // Boring Blue
+}
+
 // Styles chart
 var (
-	sBar = base.Foreground(cBarChart)
+	sBar = base
 )
 
 // Styles stats
