@@ -133,7 +133,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		lyric, ok := m.current.lyrics.Next()
 		if !ok {
 			// Song already done
-			m.current = playing{song: nil}
+			m.current.song = nil
 			return m, m.current.stopwatch.Reset()
 		}
 
