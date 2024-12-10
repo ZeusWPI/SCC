@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/zeusWPI/scc/internal/api"
+	"github.com/zeusWPI/scc/internal/pkg/buzzer"
 	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/internal/pkg/song"
 	"github.com/zeusWPI/scc/pkg/config"
@@ -28,8 +29,10 @@ func API(db *db.DB, song *song.Song) {
 		}),
 	)
 
+	buzz := buzzer.New()
+
 	apiGroup := app.Group("/api")
-	api.New(apiGroup, db, song)
+	api.New(apiGroup, db, buzz, song)
 
 	host := config.GetDefaultString("server.host", "localhost")
 	port := config.GetDefaultInt("server.port", 3000)
