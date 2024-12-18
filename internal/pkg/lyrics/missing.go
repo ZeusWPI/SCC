@@ -6,63 +6,64 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 )
 
-// Plain represents lyrics that don't have timestamps or songs without lyrics
-type Plain struct {
+// Missing represents lyrics that are absent
+type Missing struct {
 	song   dto.Song
 	lyrics Lyric
 	given  bool
 }
 
-func newPlain(song dto.Song) Lyrics {
+func newMissing(song dto.Song) Lyrics {
 	lyric := Lyric{
-		Text:     song.Lyrics,
+		Text:     "Missing lyrics\n\nHelp the open source community by adding them to\nhttps://lrclib.net/",
 		Duration: time.Duration(song.DurationMS) * time.Millisecond,
 	}
-	return &Plain{song: song, lyrics: lyric, given: false}
+
+	return &Missing{song: song, lyrics: lyric, given: false}
 }
 
 // GetSong returns the song associated to the lyrics
-func (p *Plain) GetSong() dto.Song {
-	return p.song
+func (m *Missing) GetSong() dto.Song {
+	return m.song
 }
 
 // Previous provides the previous `amount` of lyrics without affecting the current lyric
-// In this case it's always nothing
-func (p *Plain) Previous(_ int) []Lyric {
+// In this case it's alway nothing
+func (m *Missing) Previous(_ int) []Lyric {
 	return []Lyric{}
 }
 
 // Current provides the current lyric if any.
 // If the song is finished the boolean is set to false
-func (p *Plain) Current() (Lyric, bool) {
-	if p.given {
+func (m *Missing) Current() (Lyric, bool) {
+	if m.given {
 		return Lyric{}, false
 	}
 
-	return Lyric{}, true
+	return m.lyrics, true
 }
 
 // Next provides the next lyric.
 // If the lyrics are finished the boolean is set to false
-func (p *Plain) Next() (Lyric, bool) {
-	if p.given {
+func (m *Missing) Next() (Lyric, bool) {
+	if m.given {
 		return Lyric{}, false
 	}
 
-	p.given = true
+	m.given = true
 
-	return p.lyrics, true
+	return m.lyrics, true
 }
 
 // Upcoming provides the next `amount` lyrics without affecting the current lyric
 // In this case it's always empty
-func (p *Plain) Upcoming(_ int) []Lyric {
+func (m *Missing) Upcoming(_ int) []Lyric {
 	return []Lyric{}
 }
 
 // Progress shows the fraction of lyrics that have been used.
-func (p *Plain) Progress() float64 {
-	if p.given {
+func (m *Missing) Progress() float64 {
+	if m.given {
 		return 1
 	}
 
