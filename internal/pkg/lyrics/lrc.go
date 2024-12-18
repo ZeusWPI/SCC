@@ -18,8 +18,8 @@ type LRC struct {
 	i      int
 }
 
-func newLRC(song *dto.Song) Lyrics {
-	return &LRC{song: *song, lyrics: parseLRC(song.Lyrics, time.Duration(song.DurationMS)), i: 0}
+func newLRC(song dto.Song) Lyrics {
+	return &LRC{song: song, lyrics: parseLRC(song.Lyrics, time.Duration(song.DurationMS)), i: 0}
 }
 
 // GetSong returns the song associated to the lyrics

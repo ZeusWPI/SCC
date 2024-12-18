@@ -300,26 +300,36 @@ func (q *Queries) GetSongGenreByName(ctx context.Context, genre string) (SongGen
 }
 
 const getSongHistory = `-- name: GetSongHistory :many
-SELECT s.title
-FROM song_history sh
-JOIN song s ON sh.song_id = s.id
-ORDER BY created_at DESC
+SELECT s.title, play_count, aggregated.created_at
+FROM (
+    SELECT sh.song_id, MAX(sh.created_at) AS created_at, COUNT(sh.song_id) AS play_count
+    FROM song_history sh
+    GROUP BY sh.song_id
+) aggregated
+JOIN song s ON aggregated.song_id = s.id
+ORDER BY aggregated.created_at DESC
 LIMIT 10
 `
 
-func (q *Queries) GetSongHistory(ctx context.Context) ([]string, error) {
+type GetSongHistoryRow struct {
+	Title     string
+	PlayCount int64
+	CreatedAt interface{}
+}
+
+func (q *Queries) GetSongHistory(ctx context.Context) ([]GetSongHistoryRow, error) {
 	rows, err := q.db.Query(ctx, getSongHistory)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []GetSongHistoryRow
 	for rows.Next() {
-		var title string
-		if err := rows.Scan(&title); err != nil {
+		var i GetSongHistoryRow
+		if err := rows.Scan(&i.Title, &i.PlayCount, &i.CreatedAt); err != nil {
 			return nil, err
 		}
-		items = append(items, title)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -392,6 +402,119 @@ func (q *Queries) GetTopGenres(ctx context.Context) ([]GetTopGenresRow, error) {
 	for rows.Next() {
 		var i GetTopGenresRow
 		if err := rows.Scan(&i.GenreName, &i.TotalPlays); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTopMonthlyArtists = `-- name: GetTopMonthlyArtists :many
+SELECT sa.id AS artist_id, sa.name AS artist_name, COUNT(sh.id) AS total_plays
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY sa.id, sa.name
+ORDER BY total_plays DESC
+LIMIT 10
+`
+
+type GetTopMonthlyArtistsRow struct {
+	ArtistID   int32
+	ArtistName string
+	TotalPlays int64
+}
+
+func (q *Queries) GetTopMonthlyArtists(ctx context.Context) ([]GetTopMonthlyArtistsRow, error) {
+	rows, err := q.db.Query(ctx, getTopMonthlyArtists)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopMonthlyArtistsRow
+	for rows.Next() {
+		var i GetTopMonthlyArtistsRow
+		if err := rows.Scan(&i.ArtistID, &i.ArtistName, &i.TotalPlays); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTopMonthlyGenres = `-- name: GetTopMonthlyGenres :many
+SELECT g.genre AS genre_name, COUNT(sh.id) AS total_plays
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+JOIN song_artist_genre sag ON sa.id = sag.artist_id
+JOIN song_genre g ON sag.genre_id = g.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY g.genre
+ORDER BY total_plays DESC
+LIMIT 10
+`
+
+type GetTopMonthlyGenresRow struct {
+	GenreName  string
+	TotalPlays int64
+}
+
+func (q *Queries) GetTopMonthlyGenres(ctx context.Context) ([]GetTopMonthlyGenresRow, error) {
+	rows, err := q.db.Query(ctx, getTopMonthlyGenres)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopMonthlyGenresRow
+	for rows.Next() {
+		var i GetTopMonthlyGenresRow
+		if err := rows.Scan(&i.GenreName, &i.TotalPlays); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTopMonthlySongs = `-- name: GetTopMonthlySongs :many
+SELECT s.id AS song_id, s.title, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY s.id, s.title
+ORDER BY play_count DESC
+LIMIT 10
+`
+
+type GetTopMonthlySongsRow struct {
+	SongID    int32
+	Title     string
+	PlayCount int64
+}
+
+func (q *Queries) GetTopMonthlySongs(ctx context.Context) ([]GetTopMonthlySongsRow, error) {
+	rows, err := q.db.Query(ctx, getTopMonthlySongs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopMonthlySongsRow
+	for rows.Next() {
+		var i GetTopMonthlySongsRow
+		if err := rows.Scan(&i.SongID, &i.Title, &i.PlayCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

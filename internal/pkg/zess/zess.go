@@ -12,7 +12,6 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db/sqlc"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/pkg/util"
-	"go.uber.org/zap"
 )
 
 // Zess represents a zess instance
@@ -78,8 +77,6 @@ func (z *Zess) UpdateScans() error {
 	if err != nil {
 		return err
 	}
-
-	zap.S().Info(lastScan)
 
 	errs := make([]error, 0)
 	for _, scan := range *zessScans {

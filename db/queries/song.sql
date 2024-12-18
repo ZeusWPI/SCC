@@ -71,11 +71,15 @@ WHERE sh.created_at = (SELECT MAX(created_at) FROM song_history)
 ORDER BY a.name, g.genre;
 
 -- name: GetSongHistory :many
-SELECT s.title
-FROM song_history sh
-JOIN song s ON sh.song_id = s.id
-ORDER BY created_at DESC
-LIMIT 10;
+SELECT s.title, play_count, aggregated.created_at
+FROM (
+    SELECT sh.song_id, MAX(sh.created_at) AS created_at, COUNT(sh.song_id) AS play_count
+    FROM song_history sh
+    GROUP BY sh.song_id
+) aggregated
+JOIN song s ON aggregated.song_id = s.id
+ORDER BY aggregated.created_at DESC
+LIMIT 20;
 
 -- name: GetTopSongs :many
 SELECT s.id AS song_id, s.title, COUNT(sh.id) AS play_count
@@ -103,6 +107,39 @@ JOIN song_artist_song sas ON s.id = sas.song_id
 JOIN song_artist sa ON sas.artist_id = sa.id
 JOIN song_artist_genre sag ON sa.id = sag.artist_id
 JOIN song_genre g ON sag.genre_id = g.id
+GROUP BY g.genre
+ORDER BY total_plays DESC
+LIMIT 10;
+
+-- name: GetTopMonthlySongs :many
+SELECT s.id AS song_id, s.title, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY s.id, s.title
+ORDER BY play_count DESC
+LIMIT 10;
+
+-- name: GetTopMonthlyArtists :many
+SELECT sa.id AS artist_id, sa.name AS artist_name, COUNT(sh.id) AS total_plays
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY sa.id, sa.name
+ORDER BY total_plays DESC
+LIMIT 10;
+
+-- name: GetTopMonthlyGenres :many
+SELECT g.genre AS genre_name, COUNT(sh.id) AS total_plays
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+JOIN song_artist_genre sag ON sa.id = sag.artist_id
+JOIN song_genre g ON sag.genre_id = g.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
 GROUP BY g.genre
 ORDER BY total_plays DESC
 LIMIT 10;

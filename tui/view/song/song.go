@@ -11,9 +11,10 @@ import (
 	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/internal/pkg/lyrics"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/tui/components/progress"
+	"github.com/zeusWPI/scc/tui/components/bar"
 	"github.com/zeusWPI/scc/tui/components/stopwatch"
 	"github.com/zeusWPI/scc/tui/view"
+	"go.uber.org/zap"
 )
 
 var (
@@ -21,85 +22,85 @@ var (
 	upcomingAmount = 12 // Amount of upcoming lyrics to show
 )
 
+type stat struct {
+	title   string
+	entries []statEntry
+}
+
+type statEntry struct {
+	name   string
+	amount int
+}
+
 type playing struct {
-	song      *dto.Song
+	song     dto.Song
+	playing  bool
+	lyrics   lyrics.Lyrics
+	previous []string // Lyrics already sang
+	current  string   // Current lyric
+	upcoming []string // Lyrics that are coming up
+}
+
+type progression struct {
 	stopwatch stopwatch.Model
-	progress  progress.Model
-	lyrics    lyrics.Lyrics
-	previous  []string // Lyrics already sang
-	current   string   // Current lyric
-	upcoming  []string // Lyrics that are coming up
+	bar       bar.Model
 }
 
 // Model represents the view model for song
 type Model struct {
-	db         *db.DB
-	current    playing
-	history    []string
-	topSongs   topStat
-	topGenres  topStat
-	topArtists topStat
-	width      int
-	height     int
+	db           *db.DB
+	current      playing
+	progress     progression
+	history      stat
+	stats        []stat
+	statsMonthly []stat
+	width        int
+	height       int
 }
 
 // Msg triggers a song data update
-// Required for the View interface
+// Required for the view interface
 type Msg struct{}
 
+type msgHistory struct {
+	history stat
+}
+
+type msgStats struct {
+	monthly bool
+	stats   []stat
+}
+
 type msgPlaying struct {
-	song   *dto.Song
+	song   dto.Song
 	lyrics lyrics.Lyrics
 }
 
-type msgTop struct {
-	topSongs   []topStatEntry
-	topGenres  []topStatEntry
-	topArtists []topStatEntry
-}
-
-type msgHistory struct {
-	history []string
-}
-
 type msgLyrics struct {
-	song      *dto.Song
+	song      dto.Song
+	playing   bool
 	previous  []string
 	current   string
 	upcoming  []string
 	startNext time.Time
-	done      bool
-}
-
-type topStat struct {
-	title   string
-	entries []topStatEntry
-}
-
-type topStatEntry struct {
-	name   string
-	amount int
 }
 
 // New initializes a new song model
 func New(db *db.DB) view.View {
 	return &Model{
-		db:         db,
-		current:    playing{stopwatch: stopwatch.New(), progress: progress.New(sStatusProgressFainted, sStatusProgressGlow)},
-		history:    make([]string, 0, 5),
-		topSongs:   topStat{title: "Top Tracks", entries: make([]topStatEntry, 0, 5)},
-		topGenres:  topStat{title: "Top Genres", entries: make([]topStatEntry, 0, 5)},
-		topArtists: topStat{title: "Top Artists", entries: make([]topStatEntry, 0, 5)},
-		width:      0,
-		height:     0,
+		db:           db,
+		current:      playing{},
+		progress:     progression{stopwatch: stopwatch.New(), bar: bar.New(sStatusBar)},
+		stats:        make([]stat, 4),
+		statsMonthly: make([]stat, 4),
 	}
 }
 
 // Init starts the song view
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
-		m.current.stopwatch.Init(),
-		m.current.progress.Init(),
+		m.progress.stopwatch.Init(),
+		m.progress.bar.Init(),
 	)
 }
 
@@ -112,49 +113,61 @@ func (m *Model) Name() string {
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case view.MsgSize:
+		// Size update!
+		// Check if it's relevant for this view
 		entry, ok := msg.Sizes[m.Name()]
 		if ok {
+			// Update all dependent styles
 			m.width = entry.Width
 			m.height = entry.Height
 
-			sStatusSong = sStatusSong.Width(m.width - view.GetOuterWidth(sStatusSong))
-			sStatusProgress = sStatusProgress.Width(m.width - view.GetOuterWidth(sStatusProgress))
-			sLyric = sLyric.Width(m.width - view.GetOuterWidth(sLyric))
-			sStatAll = sStatAll.Width(m.width - view.GetOuterWidth(sStatAll))
-			sAll = sAll.Height(m.height - view.GetOuterHeight(sAll)).Width(m.width - view.GetOuterWidth(sAll))
+			m.updateStyles()
 		}
 
 		return m, nil
 
 	case msgPlaying:
+		// We're playing a song
+		// Initialize the variables
 		m.current.song = msg.song
+		m.current.playing = true
 		m.current.lyrics = msg.lyrics
-		// New song, start the commands to update the lyrics
-		lyric, ok := m.current.lyrics.Next()
+		m.current.current = ""
+		m.current.previous = []string{""}
+		m.current.upcoming = []string{""}
+
+		// The song might already been playing for some time
+		// Let's go through the lyrics until we get to the current one
+		lyric, ok := m.current.lyrics.Current()
 		if !ok {
-			// Song already done
-			m.current.song = nil
-			return m, m.current.stopwatch.Reset()
+			// Shouldn't happen
+			zap.S().Error("song: unable to get current lyric in initialization phase: ", m.current.song.Title)
+			m.current.playing = false
+			return m, nil
 		}
 
-		// Go through the lyrics until we get to the current one
-		startTime := m.current.song.CreatedAt.Add(lyric.Duration)
+		startTime := m.current.song.CreatedAt.Add(lyric.Duration) // Start time of the next lyric
 		for startTime.Before(time.Now()) {
+			// This lyric is already finished, onto the next!
 			lyric, ok := m.current.lyrics.Next()
 			if !ok {
-				// We're too late to display lyrics
-				m.current.song = nil
-				return m, m.current.stopwatch.Reset()
+				// No more lyrics to display, the song is already finished
+				m.current.playing = false
+				return m, m.progress.stopwatch.Reset()
 			}
 			startTime = startTime.Add(lyric.Duration)
 		}
 
+		// We have the right lyric, let's get the previous and upcoming lyrics
+		m.current.current = lyric.Text
 		m.current.previous = lyricsToString(m.current.lyrics.Previous(previousAmount))
 		m.current.upcoming = lyricsToString(m.current.lyrics.Upcoming(upcomingAmount))
+
+		// Start the update loop
 		return m, tea.Batch(
 			updateLyrics(m.current, startTime),
-			m.current.stopwatch.Start(time.Since(m.current.song.CreatedAt)),
-			m.current.progress.Start(view.GetWidth(sStatusProgress), time.Since(m.current.song.CreatedAt), time.Duration(m.current.song.DurationMS)*time.Millisecond),
+			m.progress.stopwatch.Start(time.Since(m.current.song.CreatedAt)),
+			m.progress.bar.Start(view.GetWidth(sStatusBar), time.Since(m.current.song.CreatedAt), time.Duration(m.current.song.DurationMS)*time.Millisecond),
 		)
 
 	case msgHistory:
@@ -162,17 +175,14 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 		return m, nil
 
-	case msgTop:
-		if msg.topSongs != nil {
-			m.topSongs.entries = msg.topSongs
-		}
-		if msg.topGenres != nil {
-			m.topGenres.entries = msg.topGenres
-		}
-		if msg.topArtists != nil {
-			m.topArtists.entries = msg.topArtists
+	case msgStats:
+		if msg.monthly {
+			// Monthly stats
+			m.statsMonthly = msg.stats
+			return m, nil
 		}
 
+		m.stats = msg.stats
 		return m, nil
 
 	case msgLyrics:
@@ -182,13 +192,12 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 			return m, nil
 		}
 
-		if msg.done {
+		m.current.playing = msg.playing
+		if !m.current.playing {
 			// Song has finished. Reset variables
-			m.current.song = nil
-			return m, m.current.stopwatch.Reset()
+			return m, m.progress.stopwatch.Reset()
 		}
 
-		// Msg is relevant, update values
 		m.current.previous = msg.previous
 		m.current.current = msg.current
 		m.current.upcoming = msg.upcoming
@@ -199,25 +208,24 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 	// Maybe a stopwatch message?
 	var cmd tea.Cmd
-	m.current.stopwatch, cmd = m.current.stopwatch.Update(msg)
+	m.progress.stopwatch, cmd = m.progress.stopwatch.Update(msg)
 	if cmd != nil {
 		return m, cmd
 	}
 
-	// Maybe a progress bar message?
-	m.current.progress, cmd = m.current.progress.Update(msg)
+	// Apparently not, lets try the bar!
+	m.progress.bar, cmd = m.progress.bar.Update(msg)
 
 	return m, cmd
 }
 
 // View draws the song view
 func (m *Model) View() string {
-	if m.current.song != nil {
+	if m.current.playing {
 		return m.viewPlaying()
 	}
 
 	return m.viewNotPlaying()
-
 }
 
 // GetUpdateDatas gets all update functions for the song view
@@ -236,14 +244,21 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Interval: config.GetDefaultInt("tui.view.song.interval_history_s", 5),
 		},
 		{
-			Name:     "top stats",
+			Name:     "monthly stats",
 			View:     m,
-			Update:   updateTopStats,
-			Interval: config.GetDefaultInt("tui.view.song.interval_top_s", 3600),
+			Update:   updateMonthlyStats,
+			Interval: config.GetDefaultInt("tui.view.song.interval_monthly_stats_s", 300),
+		},
+		{
+			Name:     "all time stats",
+			View:     m,
+			Update:   updateStats,
+			Interval: config.GetDefaultInt("tui.view.song.interval_stats_s", 3600),
 		},
 	}
 }
 
+// updateCurrentSong checks if there's currently a song playing
 func updateCurrentSong(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 
@@ -264,16 +279,18 @@ func updateCurrentSong(view view.View) (tea.Msg, error) {
 		return nil, nil
 	}
 
-	if m.current.song != nil && songs[0].ID == m.current.song.ID {
+	if m.current.playing && songs[0].ID == m.current.song.ID {
 		// Song is already set to current
 		return nil, nil
 	}
 
-	song := dto.SongDTOHistory(songs)
+	// Convert sqlc song to a dto song
+	song := *dto.SongDTOHistory(songs)
 
 	return msgPlaying{song: song, lyrics: lyrics.New(song)}, nil
 }
 
+// updateHistory updates the recently played list
 func updateHistory(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 
@@ -282,22 +299,69 @@ func updateHistory(view view.View) (tea.Msg, error) {
 		return nil, err
 	}
 
-	return msgHistory{history: history}, nil
+	stat := stat{title: tStatHistory, entries: []statEntry{}}
+	for _, h := range history {
+		stat.entries = append(stat.entries, statEntry{name: h.Title, amount: int(h.PlayCount)})
+	}
+
+	return msgHistory{history: stat}, nil
 }
 
-func updateTopStats(view view.View) (tea.Msg, error) {
+// Update all monthly stats
+func updateMonthlyStats(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
-	msg := msgTop{}
-	change := false
 
-	songs, err := m.db.Queries.GetTopSongs(context.Background())
+	songs, err := m.db.Queries.GetTopMonthlySongs(context.Background())
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
-	if !equalTopSongs(m.topSongs.entries, songs) {
-		msg.topSongs = topStatSqlcSong(songs)
-		change = true
+	genres, err := m.db.Queries.GetTopMonthlyGenres(context.Background())
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	artists, err := m.db.Queries.GetTopMonthlyArtists(context.Background())
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	// Don't bother checking if anything has changed
+	// A single extra refresh won't matter
+
+	msg := msgStats{monthly: true, stats: []stat{}}
+
+	// Songs
+	s := stat{title: tStatSong, entries: []statEntry{}}
+	for _, song := range songs {
+		s.entries = append(s.entries, statEntry{name: song.Title, amount: int(song.PlayCount)})
+	}
+	msg.stats = append(msg.stats, s)
+
+	// Genres
+	s = stat{title: tStatGenre, entries: []statEntry{}}
+	for _, genre := range genres {
+		s.entries = append(s.entries, statEntry{name: genre.GenreName, amount: int(genre.TotalPlays)})
+	}
+	msg.stats = append(msg.stats, s)
+
+	// Artists
+	s = stat{title: tStatArtist, entries: []statEntry{}}
+	for _, artist := range artists {
+		s.entries = append(s.entries, statEntry{name: artist.ArtistName, amount: int(artist.TotalPlays)})
+	}
+	msg.stats = append(msg.stats, s)
+
+	return msg, nil
+}
+
+// Update all stats
+func updateStats(view view.View) (tea.Msg, error) {
+	m := view.(*Model)
+
+	songs, err := m.db.Queries.GetTopSongs(context.Background())
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
 	}
 
 	genres, err := m.db.Queries.GetTopGenres(context.Background())
@@ -305,29 +369,43 @@ func updateTopStats(view view.View) (tea.Msg, error) {
 		return nil, err
 	}
 
-	if !equalTopGenres(m.topGenres.entries, genres) {
-		msg.topGenres = topStatSqlcGenre(genres)
-		change = true
-	}
-
 	artists, err := m.db.Queries.GetTopArtists(context.Background())
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
-	if !equalTopArtists(m.topArtists.entries, artists) {
-		msg.topArtists = topStatSqlcArtist(artists)
-		change = true
-	}
+	// Don't bother checking if anything has changed
+	// A single extra refresh won't matter
 
-	if !change {
-		return nil, nil
+	msg := msgStats{monthly: false, stats: []stat{}}
+
+	// Songs
+	s := stat{title: tStatSong, entries: []statEntry{}}
+	for _, song := range songs {
+		s.entries = append(s.entries, statEntry{name: song.Title, amount: int(song.PlayCount)})
 	}
+	msg.stats = append(msg.stats, s)
+
+	// Genres
+	s = stat{title: tStatGenre, entries: []statEntry{}}
+	for _, genre := range genres {
+		s.entries = append(s.entries, statEntry{name: genre.GenreName, amount: int(genre.TotalPlays)})
+	}
+	msg.stats = append(msg.stats, s)
+
+	// Artists
+	s = stat{title: tStatArtist, entries: []statEntry{}}
+	for _, artist := range artists {
+		s.entries = append(s.entries, statEntry{name: artist.ArtistName, amount: int(artist.TotalPlays)})
+	}
+	msg.stats = append(msg.stats, s)
 
 	return msg, nil
 }
 
+// Update the current lyric
 func updateLyrics(song playing, start time.Time) tea.Cmd {
+	// How long do we need to wait until we can update the lyric?
 	timeout := time.Duration(0)
 	now := time.Now()
 	if start.After(now) {
@@ -339,7 +417,7 @@ func updateLyrics(song playing, start time.Time) tea.Cmd {
 		lyric, ok := song.lyrics.Next()
 		if !ok {
 			// Song finished
-			return msgLyrics{song: song.song, done: true}
+			return msgLyrics{song: song.song, playing: false} // Values in the other fields are not looked at when the song is finished
 		}
 
 		previous := song.lyrics.Previous(previousAmount)
@@ -349,11 +427,11 @@ func updateLyrics(song playing, start time.Time) tea.Cmd {
 
 		return msgLyrics{
 			song:      song.song,
+			playing:   true,
 			previous:  lyricsToString(previous),
 			current:   lyric.Text,
 			upcoming:  lyricsToString(upcoming),
 			startNext: end,
-			done:      false,
 		}
 	})
 }

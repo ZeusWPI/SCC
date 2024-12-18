@@ -1,5 +1,5 @@
-// Package progress provides an animated progress bar
-package progress
+// Package bar provides an animated progress bar
+package bar
 
 import (
 	"strings"
@@ -30,17 +30,16 @@ type StartMsg struct {
 
 // Model for the progress component
 type Model struct {
-	id           int64
-	width        int
-	widthTarget  int
-	interval     time.Duration
-	styleFainted lipgloss.Style
-	styleGlow    lipgloss.Style
+	id          int64
+	width       int
+	widthTarget int
+	interval    time.Duration
+	style       lipgloss.Style
 }
 
 // New creates a new progress
-func New(styleFainted, styleGlow lipgloss.Style) Model {
-	return Model{id: nextID(), styleFainted: styleFainted, styleGlow: styleGlow}
+func New(style lipgloss.Style) Model {
+	return Model{id: nextID(), style: style}
 }
 
 // Init initializes the progress component
@@ -91,25 +90,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 // View of the progress bar component
 func (m Model) View() string {
-	glowCount := min(20, m.width)
-	// Make sure if m.width is uneven that the half block string is in the glow part
-	if m.width%2 == 1 && glowCount%2 == 0 {
-		glowCount--
+	b := strings.Repeat("▄", m.width/2)
+	if m.width%2 == 1 {
+		b += "▖"
 	}
-	faintedCount := m.width - glowCount
-
-	// Construct fainted
-	fainted := strings.Repeat("▄", faintedCount/2)
-	fainted = m.styleFainted.Render(fainted)
-
-	// Construct glow
-	glow := strings.Repeat("▄", glowCount/2)
-	if glowCount%2 == 1 {
-		glow += "▖"
-	}
-	glow = m.styleGlow.Render(glow)
-
-	return lipgloss.JoinHorizontal(lipgloss.Top, fainted, glow)
+	return m.style.Render(b)
 }
 
 func tick(id int64, interval time.Duration) tea.Cmd {
