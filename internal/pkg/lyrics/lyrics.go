@@ -25,16 +25,21 @@ type Lyric struct {
 
 // New returns a new object that implements the Lyrics interface
 func New(song dto.Song) Lyrics {
-	// No lyrics
-	if song.LyricsType == "" {
-		return newMissing(song)
-	}
-
 	// Basic sync
 	if song.LyricsType == "synced" {
 		return newLRC(song)
 	}
 
-	// Lyrics but no syncing
-	return newPlain(song)
+	// Plain
+	if song.LyricsType == "plain" {
+		return newPlain(song)
+	}
+
+	// Instrumental
+	if song.LyricsType == "instrumental" {
+		return newInstrumental(song)
+	}
+
+	// No lyrics found
+	return newMissing(song)
 }

@@ -90,7 +90,7 @@ func parseLRC(text string, totalDuration time.Duration) []Lyric {
 		return []Lyric{}
 	}
 
-	lyrics := make([]Lyric, 0, len(lines)+1)
+	lyrics := make([]Lyric, 0, len(lines)+1) // + 1 for a start empty lyric
 	var previousTimestamp time.Duration
 
 	// Add first lyric (no text)
