@@ -14,7 +14,7 @@ type Song struct {
 	Album      string       `json:"album"`
 	SpotifyID  string       `json:"spotify_id" validate:"required"`
 	DurationMS int32        `json:"duration_ms"`
-	LyricsType string       `json:"lyrics_type"` // Either 'synced' or 'plain'
+	LyricsType string       `json:"lyrics_type"` // Either 'synced' ,'plain' or 'instrumental'
 	Lyrics     string       `json:"lyrics"`
 	CreatedAt  time.Time    `json:"created_at"`
 	Artists    []SongArtist `json:"artists"`

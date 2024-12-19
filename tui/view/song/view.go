@@ -78,48 +78,85 @@ func (m *Model) viewPlayingLyrics() string {
 func (m *Model) viewPlayingStats() string {
 	columns := make([]string, 0, 4)
 
-	columns = append(columns, m.viewStat(m.history))
-	columns = append(columns, m.viewStat(m.stats[0]))
-	columns = append(columns, m.viewStat(m.stats[1]))
-	columns = append(columns, m.viewStat(m.stats[2]))
+	columns = append(columns, m.viewStatPlaying(m.history))
+	columns = append(columns, m.viewStatPlaying(m.statsMonthly[0]))
+	columns = append(columns, m.viewStatPlaying(m.statsMonthly[1]))
+	columns = append(columns, m.viewStatPlaying(m.statsMonthly[2]))
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, columns...)
 }
 
 func (m *Model) viewNotPlaying() string {
-	rows := make([][]string, 0, 2)
-	for i := 0; i < 2; i++ {
+	// Render stats
+	rows := make([][]string, 0, 3)
+	for i := 0; i < 3; i++ {
 		rows = append(rows, make([]string, 0, 2))
 	}
 
-	rows[0] = append(rows[0], m.viewStat(m.history))
-	rows[0] = append(rows[0], m.viewStat(m.stats[0]))
-	rows[1] = append(rows[1], m.viewStat(m.stats[1]))
-	rows[1] = append(rows[1], m.viewStat(m.stats[2]))
+	rows[0] = append(rows[0], m.viewStatPlaying(m.statsMonthly[0], "Monthly"))
+	rows[0] = append(rows[0], m.viewStatPlaying(m.stats[0], "All Time"))
+	rows[1] = append(rows[1], m.viewStatPlaying(m.statsMonthly[1], "Monthly"))
+	rows[1] = append(rows[1], m.viewStatPlaying(m.stats[1], "All Time"))
+	rows[2] = append(rows[2], m.viewStatPlaying(m.statsMonthly[2], "Monthly"))
+	rows[2] = append(rows[2], m.viewStatPlaying(m.stats[2], "All Time"))
 
-	renderedRows := make([]string, 0, 2)
-	for _, row := range rows {
-		renderedRows = append(renderedRows, lipgloss.JoinHorizontal(lipgloss.Top, row...))
+	renderedRows := make([]string, 0, 3)
+	var title string
+	for i, row := range rows {
+		r := lipgloss.JoinHorizontal(lipgloss.Top, row...)
+		title = sStatCategory.Render(sStatCategoryTitle.Render(m.stats[i].title)) // HACK: Make border same size as 2 stats next to each other
+		renderedRows = append(renderedRows, lipgloss.JoinVertical(lipgloss.Left, title, r))
 	}
 
-	view := lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
+	v := lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
 
-	return sAll.Render(view)
+	// Render history
+	items := make([]string, 0, len(m.history.entries))
+
+	// Push it down
+	for range lipgloss.Height(title) {
+		items = append(items, "")
+	}
+	items = append(items, sStatTitle.Render(m.history.title))
+
+	for i, entry := range m.history.entries {
+		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
+		body := sStatEntry.Render(entry.name)
+		amount := sStatAmount.Render(fmt.Sprintf("%d", entry.amount))
+		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, enum, body, amount))
+	}
+	items = append(items, "") // HACK: Avoid the last item shifting to the right
+	list := lipgloss.JoinVertical(lipgloss.Left, items...)
+	// title := sStatTitle.Render(m.history.title)
+	history := sStatHistory.Height(lipgloss.Height(v) - 1).MaxHeight(lipgloss.Height(v) - 1).Render(list) // - 1 to compensate for the hack newline at the end
+
+	v = lipgloss.JoinHorizontal(lipgloss.Top, history, v)
+
+	return sAll.Render(v)
 }
 
-func (m *Model) viewStat(stat stat) string {
-	items := make([]string, 0, len(stat.entries))
-	for i, stat := range stat.entries {
-		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
-		entry := sStatEntry.Render(stat.name)
-		amount := sStatAmount.Render(fmt.Sprintf("%d", stat.amount))
+func (m *Model) viewStatPlaying(stat stat, titleOpt ...string) string {
+	title := stat.title
+	if len(titleOpt) > 0 {
+		title = titleOpt[0]
+	}
 
-		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, enum, entry, amount))
+	items := make([]string, 0, len(stat.entries))
+	for i := range stat.entries {
+		if i >= 10 {
+			break
+		}
+
+		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
+		body := sStatEntry.Render(stat.entries[i].name)
+		amount := sStatAmount.Render(fmt.Sprintf("%d", stat.entries[i].amount))
+
+		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, enum, body, amount))
 	}
 	items = append(items, "") // HACK: Avoid the last item shifting to the right
 	l := lipgloss.JoinVertical(lipgloss.Left, items...)
 
-	title := sStatTitle.Render(stat.title)
+	t := sStatTitle.Render(title)
 
-	return sStatOne.Render(lipgloss.JoinVertical(lipgloss.Left, title, l))
+	return sStatOne.Render(lipgloss.JoinVertical(lipgloss.Left, t, l))
 }
