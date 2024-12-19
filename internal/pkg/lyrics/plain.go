@@ -10,7 +10,6 @@ import (
 type Plain struct {
 	song   dto.Song
 	lyrics Lyric
-	given  bool
 }
 
 func newPlain(song dto.Song) Lyrics {
@@ -18,7 +17,7 @@ func newPlain(song dto.Song) Lyrics {
 		Text:     song.Lyrics,
 		Duration: time.Duration(song.DurationMS) * time.Millisecond,
 	}
-	return &Plain{song: song, lyrics: lyric, given: false}
+	return &Plain{song: song, lyrics: lyric}
 }
 
 // GetSong returns the song associated to the lyrics
@@ -33,25 +32,14 @@ func (p *Plain) Previous(_ int) []Lyric {
 }
 
 // Current provides the current lyric if any.
-// If the song is finished the boolean is set to false
 func (p *Plain) Current() (Lyric, bool) {
-	if p.given {
-		return Lyric{}, false
-	}
-
-	return Lyric{}, true
+	return p.lyrics, true
 }
 
 // Next provides the next lyric.
-// If the lyrics are finished the boolean is set to false
+// In this case it's alway nothing
 func (p *Plain) Next() (Lyric, bool) {
-	if p.given {
-		return Lyric{}, false
-	}
-
-	p.given = true
-
-	return p.lyrics, true
+	return Lyric{}, false
 }
 
 // Upcoming provides the next `amount` lyrics without affecting the current lyric
@@ -62,9 +50,5 @@ func (p *Plain) Upcoming(_ int) []Lyric {
 
 // Progress shows the fraction of lyrics that have been used.
 func (p *Plain) Progress() float64 {
-	if p.given {
-		return 1
-	}
-
-	return 0
+	return 1
 }
