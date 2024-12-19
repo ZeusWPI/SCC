@@ -79,7 +79,7 @@ FROM (
 ) aggregated
 JOIN song s ON aggregated.song_id = s.id
 ORDER BY aggregated.created_at DESC
-LIMIT 20;
+LIMIT 50;
 
 -- name: GetTopSongs :many
 SELECT s.id AS song_id, s.title, COUNT(sh.id) AS play_count

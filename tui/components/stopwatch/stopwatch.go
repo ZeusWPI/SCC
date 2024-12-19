@@ -92,11 +92,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case StartStopMsg:
 		if msg.running {
 			// Start
-			if m.running {
-				// Already running
-				return m, nil
-			}
-
 			m.id = nextID()
 			m.duration = msg.startDuration
 			m.running = true

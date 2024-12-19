@@ -39,6 +39,11 @@ var (
 	sStatEnum   = base.Foreground(cSpotify).Width(wStatEnum).Align(lipgloss.Left)
 	sStatEntry  = base.Align(lipgloss.Left)
 	sStatAmount = base.Foreground(cZeus).Width(wStatAmount).Align(lipgloss.Right)
+
+	// Specific styles for when no song is playing
+	sStatCategory      = base.Align(lipgloss.Center)
+	sStatCategoryTitle = base.Foreground(cZeus).Align(lipgloss.Center).Border(lipgloss.NormalBorder(), true, false).BorderForeground(cBorder)
+	sStatHistory       = base.MarginRight(1).PaddingRight(2).Border(lipgloss.ThickBorder(), false, true, false, false).BorderForeground(cBorder)
 )
 
 // Styles for the lyrics
@@ -53,7 +58,7 @@ var (
 
 // Styles for the status
 var (
-	sStatus          = base
+	sStatus          = base.MarginTop(1)
 	sStatusSong      = base.Align(lipgloss.Center)
 	sStatusStopwatch = base.Faint(true)
 	sStatusBar       = base.Foreground(cZeus).Align(lipgloss.Left)
@@ -77,6 +82,8 @@ func (m *Model) updateStyles() {
 		// We're full screen
 		sStatOne = sStatOne.Margin(0, 3)
 	}
+	sStatCategory = sStatCategory.Width(2 * (sStatOne.GetWidth() + view.GetOuterWidth(sStatOne)))
+	sStatCategoryTitle = sStatCategoryTitle.Width(2*sStatOne.GetWidth() + view.GetOuterWidth(sStatOne))
 
 	// Adjust lyrics styles
 	sLyric = sLyric.Width(m.width)

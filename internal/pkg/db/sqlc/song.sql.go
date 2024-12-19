@@ -308,7 +308,7 @@ FROM (
 ) aggregated
 JOIN song s ON aggregated.song_id = s.id
 ORDER BY aggregated.created_at DESC
-LIMIT 10
+LIMIT 50
 `
 
 type GetSongHistoryRow struct {

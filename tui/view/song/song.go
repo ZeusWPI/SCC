@@ -141,7 +141,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		lyric, ok := m.current.lyrics.Current()
 		if !ok {
 			// Shouldn't happen
-			zap.S().Error("song: unable to get current lyric in initialization phase: ", m.current.song.Title)
+			zap.S().Error("song: Unable to get current lyric in initialization phase: ", m.current.song.Title)
 			m.current.playing = false
 			return m, nil
 		}
@@ -325,9 +325,6 @@ func updateMonthlyStats(view view.View) (tea.Msg, error) {
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
-
-	// Don't bother checking if anything has changed
-	// A single extra refresh won't matter
 
 	msg := msgStats{monthly: true, stats: []stat{}}
 

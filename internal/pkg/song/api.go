@@ -93,6 +93,7 @@ func (s *Song) getArtist(artist *dto.SongArtist) error {
 }
 
 type lyricsResponse struct {
+	Instrumental bool   `json:"instrumental"`
 	PlainLyrics  string `json:"plainLyrics"`
 	SyncedLyrics string `json:"SyncedLyrics"`
 }
@@ -126,18 +127,31 @@ func (s *Song) getLyrics(track *dto.Song) error {
 		return errors.Join(append([]error{errors.New("Song: Lyrics request failed")}, errs...)...)
 	}
 	if status != fiber.StatusOK {
+		if status == fiber.StatusNotFound {
+			// Lyrics not found
+			return nil
+		}
+
 		return fmt.Errorf("Song: Lyrics request wrong status code %d", status)
 	}
 	if (res == &lyricsResponse{}) {
 		return errors.New("Song: Lyrics request returned empty struct")
 	}
 
+	zap.S().Info(res)
+
 	if res.SyncedLyrics != "" {
+		// Synced lyrics ?
 		track.LyricsType = "synced"
 		track.Lyrics = res.SyncedLyrics
-	} else {
+	} else if res.PlainLyrics != "" {
+		// Plain lyrics ?
 		track.LyricsType = "plain"
 		track.Lyrics = res.PlainLyrics
+	} else if res.Instrumental {
+		// Instrumental ?
+		track.LyricsType = "instrumental"
+		track.Lyrics = ""
 	}
 
 	return nil
