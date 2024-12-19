@@ -101,7 +101,7 @@ func (t *Tap) adjustCategories(orders []orderResponseItem) {
 			order.ProductCategory = "Other"
 		case "beverages":
 			// Atm only beverages get special categories
-			if strings.Contains(order.ProductName, "Mate") {
+			if strings.Contains(order.ProductName, "Mate") || strings.Contains(order.ProductName, "Mio Mio") {
 				order.ProductCategory = "Mate"
 			} else if slices.ContainsFunc(t.beers, func(beer string) bool { return strings.Contains(order.ProductName, beer) }) {
 				order.ProductCategory = "Beer"
