@@ -8,21 +8,21 @@ import (
 )
 
 func (m *Model) viewChart() string {
-	chart := barchart.New(widthBar, heightBar)
+	chart := barchart.New(sBar.GetWidth(), sBar.GetHeight(), barchart.WithNoAutoBarWidth(), barchart.WithBarGap(wBarGap), barchart.WithBarWidth(wBar))
 	bars := make([]barchart.BarData, 0, len(m.items))
 
 	for _, item := range m.items {
 		style, ok := categoryToStyle[item.category]
 		if !ok {
-			style = sUnknown
+			continue
 		}
 
 		bars = append(bars, barchart.BarData{
-			Label: string(item.category),
+			Label: sBarLabel.Render(string(item.category)),
 			Values: []barchart.BarValue{{
 				Name:  string(item.category),
 				Value: float64(item.amount),
-				Style: style,
+				Style: style.Inherit(sBarOne),
 			}},
 		})
 	}
@@ -37,9 +37,9 @@ func (m *Model) viewStats() string {
 	rows := make([]string, 0, len(m.items))
 
 	for _, item := range m.items {
-		amount := sStatsAmount.Render(strconv.Itoa(item.amount))
-		category := sStatsCategory.Inherit(categoryToStyle[item.category]).Render(string(item.category))
-		last := sStatsLast.Render(item.last.Format("15:04 02/01"))
+		amount := sStatAmount.Render(strconv.Itoa(item.amount))
+		category := sStatCategory.Inherit(categoryToStyle[item.category]).Render(string(item.category))
+		last := sStatLast.Render(item.last.Format("15:04 02/01"))
 
 		text := lipgloss.JoinHorizontal(lipgloss.Top, amount, category, last)
 		rows = append(rows, text)
@@ -48,8 +48,8 @@ func (m *Model) viewStats() string {
 	view := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
 	// Add title
-	title := sStatsTitle.Render("Leaderboard")
+	title := sStatTitle.Render("Leaderboard")
 	view = lipgloss.JoinVertical(lipgloss.Left, title, view)
 
-	return view
+	return sStat.Render(view)
 }

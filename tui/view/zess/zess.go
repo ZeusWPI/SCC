@@ -114,6 +114,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		}
 
 		return m, nil
+
 	// New scan(s)
 	case scanMsg:
 		m.lastScanID = msg.lastScanID
@@ -181,9 +182,6 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 func (m *Model) View() string {
 	chart := m.viewChart()
 	stats := m.viewStats()
-
-	// // Give them the same height
-	// stats = sStat.Height(lipgloss.Height(chart)).Render(stats)
 
 	// Join them together
 	view := lipgloss.JoinHorizontal(lipgloss.Top, chart, stats)
