@@ -15,11 +15,12 @@ import (
 
 // Model represents the model for the message view
 type Model struct {
-	width         int
-	height        int
 	db            *db.DB
 	lastMessageID int32
 	messages      []message
+
+	width  int
+	height int
 }
 
 type message struct {
