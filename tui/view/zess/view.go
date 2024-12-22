@@ -1,6 +1,7 @@
 package zess
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/NimbleMarkets/ntcharts/barchart"
@@ -8,15 +9,15 @@ import (
 )
 
 func (m *Model) viewChart() string {
-	chart := barchart.New(widthBar, heightBar)
+	chart := barchart.New(sBar.GetWidth(), sBar.GetHeight(), barchart.WithNoAutoBarWidth(), barchart.WithBarGap(0), barchart.WithBarWidth(wBar))
 
 	for _, scan := range m.scans {
 		bar := barchart.BarData{
-			Label: scan.label,
+			Label: sBarLabel.Render(fmt.Sprintf("W%d", scan.time.week)),
 			Values: []barchart.BarValue{{
-				Name:  scan.label,
+				Name:  scan.start,
 				Value: float64(scan.amount),
-				Style: sBar.Foreground(lipgloss.Color(scan.color)),
+				Style: sBarOne.Foreground(lipgloss.Color(scan.color)),
 			}},
 		}
 
@@ -33,13 +34,13 @@ func (m *Model) viewStats() string {
 	rows := make([]string, 0, len(m.scans))
 
 	for _, scan := range m.scans {
-		week := sStatsWeek.Render(scan.label)
+		week := sStatDate.Render(fmt.Sprintf("W%d - %s", scan.time.week, scan.start))
 
 		var amount string
 		if scan.amount == m.maxWeekScans {
-			amount = sStatsAmountMax.Render(strconv.Itoa(int(scan.amount)))
+			amount = sMax.Inherit(sStatAmount).Render(strconv.Itoa(int(scan.amount)))
 		} else {
-			amount = sStatsAmount.Render(strconv.Itoa(int(scan.amount)))
+			amount = sStatAmount.Render(strconv.Itoa(int(scan.amount)))
 		}
 
 		text := lipgloss.JoinHorizontal(lipgloss.Top, week, amount)
@@ -49,15 +50,15 @@ func (m *Model) viewStats() string {
 	view := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
 	// Title
-	title := sStatsTitle.Render("Overview")
+	title := sStatTitle.Render("Overview")
 
 	// Total scans
-	total := sStatsTotalTitle.Render("Total")
-	amount := sStatsTotalAmount.Render(strconv.Itoa(int(m.seasonScans)))
+	total := sStatTotalTitle.Render("Total")
+	amount := sStatTotalAmount.Render(strconv.Itoa(int(m.seasonScans)))
 	total = lipgloss.JoinHorizontal(lipgloss.Top, total, amount)
-	total = sStatsTotal.Render(total)
+	total = sStatTotal.Render(total)
 
 	view = lipgloss.JoinVertical(lipgloss.Left, title, view, total)
 
-	return view
+	return sStat.Render(view)
 }

@@ -29,7 +29,7 @@ var base = lipgloss.NewStyle()
 var (
 	// Widths
 	wStatEnum     = 3
-	wStatAmount   = 4
+	wStatAmount   = 4 // Supports up to 1000
 	wStatEntryMax = 35
 
 	// Styles
