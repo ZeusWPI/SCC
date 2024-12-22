@@ -98,20 +98,20 @@ func (c *Cammie) View() string {
 
 	// Render top
 	// Render tabs
-	var topTabs []string
+	var tabs []string
 	for i, view := range c.top {
 		if i == c.indexTop {
-			topTabs = append(topTabs, sActiveTab.Render(view.Name()))
+			tabs = append(tabs, sActiveTab.Render(view.Name()))
 		} else {
-			topTabs = append(topTabs, sTabNormal.Render(view.Name()))
+			tabs = append(tabs, sTabNormal.Render(view.Name()))
 		}
 	}
-	topTab := lipgloss.JoinHorizontal(lipgloss.Bottom, topTabs...)
-	topTabsLine := sTabNormal.Render(strings.Repeat(" ", max(0, (c.width/2)-lipgloss.Width(topTab)-10)))
-	topTab = lipgloss.JoinHorizontal(lipgloss.Bottom, topTab, topTabsLine)
+	tab := lipgloss.JoinHorizontal(lipgloss.Bottom, tabs...)
+	tabLine := sTabNormal.Render(strings.Repeat(" ", max(0, sTop.GetWidth()-lipgloss.Width(tab)-2))) // -2 comes from sTab padding
+	tab = lipgloss.JoinHorizontal(lipgloss.Bottom, tab, tabLine)
 
 	// Render top view
-	top := lipgloss.JoinVertical(lipgloss.Left, topTab, c.top[c.indexTop].View())
+	top := lipgloss.JoinVertical(lipgloss.Left, tab, c.top[c.indexTop].View())
 	top = sTop.Render(top)
 
 	// Render bottom
@@ -144,18 +144,11 @@ func (c *Cammie) GetUpdateViews() []view.UpdateData {
 func (c *Cammie) GetSizeMsg() tea.Msg {
 	sizes := make(map[string]view.Size)
 
-	msgW := sMsg.GetWidth()
-	msgH := sMsg.GetHeight()
-	sizes[c.messages.Name()] = view.Size{Width: msgW, Height: msgH}
-
-	bottomW := sBottom.GetWidth()
-	bottomH := sBottom.GetHeight()
-	sizes[c.bottom.Name()] = view.Size{Width: bottomW, Height: bottomH}
+	sizes[c.messages.Name()] = view.Size{Width: sMsg.GetWidth(), Height: sMsg.GetHeight()}
+	sizes[c.bottom.Name()] = view.Size{Width: sBottom.GetWidth(), Height: sBottom.GetHeight()}
 
 	for _, top := range c.top {
-		topW := sTop.GetWidth()
-		topH := sTop.GetHeight()
-		sizes[top.Name()] = view.Size{Width: topW, Height: topH}
+		sizes[top.Name()] = view.Size{Width: sTop.GetWidth(), Height: sTop.GetHeight() - view.GetOuterHeight(sTop) - view.GetOuterHeight(sTab)}
 	}
 
 	return view.MsgSize{Sizes: sizes}

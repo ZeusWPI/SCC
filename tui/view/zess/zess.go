@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// yearWeek represents a yearWeek object by keeping the year and week number
+// yearWeek is used to represent a date by it's year and week
 type yearWeek struct {
 	year int
 	week int
@@ -23,7 +23,7 @@ type yearWeek struct {
 type weekScan struct {
 	time   yearWeek
 	amount int64
-	label  string
+	start  string // The date when the week starts
 	color  string
 }
 
@@ -36,6 +36,9 @@ type Model struct {
 	maxWeekScans  int64
 	currentSeason yearWeek // Start week of the season
 	seasonScans   int64
+
+	width  int
+	height int
 }
 
 // Msg is the base message to indicate that something changed in the zess view
@@ -98,6 +101,19 @@ func (m *Model) Name() string {
 // Update updates the zess model
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
+	case view.MsgSize:
+		// Size update!
+		// Check if it's relevant for this view
+		entry, ok := msg.Sizes[m.Name()]
+		if ok {
+			// Update all dependent styles
+			m.width = entry.Width
+			m.height = entry.Height
+
+			m.updateStyles()
+		}
+
+		return m, nil
 	// New scan(s)
 	case scanMsg:
 		m.lastScanID = msg.lastScanID
@@ -164,13 +180,13 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 // View returns the view for the zess model
 func (m *Model) View() string {
 	chart := m.viewChart()
-	overview := m.viewStats()
+	stats := m.viewStats()
 
-	// Give them the same height
-	overview = sStats.Height(lipgloss.Height(chart)).Render(overview)
+	// // Give them the same height
+	// stats = sStat.Height(lipgloss.Height(chart)).Render(stats)
 
 	// Join them together
-	view := lipgloss.JoinHorizontal(lipgloss.Top, chart, overview)
+	view := lipgloss.JoinHorizontal(lipgloss.Top, chart, stats)
 	return view
 }
 
@@ -232,7 +248,7 @@ func updateScans(view view.View) (tea.Msg, error) {
 			zessScanMsg.scans = append(zessScanMsg.scans, weekScan{
 				time:   newTime,
 				amount: 1,
-				label:  newScan.ScanTime.Time.Format("02/01"),
+				start:  newScan.ScanTime.Time.Format("02/01"),
 				color:  randomColor(),
 			})
 		}
