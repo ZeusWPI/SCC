@@ -35,6 +35,9 @@ type Model struct {
 	db          *db.DB
 	lastOrderID int32
 	items       []tapItem
+
+	width  int
+	height int
 }
 
 // Msg represents a tap message
@@ -67,6 +70,20 @@ func (m *Model) Name() string {
 // Update updates the tap model
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
+	case view.MsgSize:
+		// Size update!
+		// Check if it's relevant for this view
+		entry, ok := msg.Sizes[m.Name()]
+		if ok {
+			// Update all dependent styles
+			m.width = entry.Width
+			m.height = entry.Height
+
+			m.updateStyles()
+		}
+
+		return m, nil
+
 	case Msg:
 		m.lastOrderID = msg.lastOrderID
 
@@ -101,9 +118,6 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 func (m *Model) View() string {
 	chart := m.viewChart()
 	stats := m.viewStats()
-
-	// Give them same height
-	stats = sStats.Height(lipgloss.Height(chart)).Render(stats)
 
 	// Join them together
 	view := lipgloss.JoinHorizontal(lipgloss.Top, chart, stats)

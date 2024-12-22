@@ -9,7 +9,7 @@ import (
 )
 
 func (m *Model) viewChart() string {
-	chart := barchart.New(sBar.GetWidth(), sBar.GetHeight(), barchart.WithNoAutoBarWidth(), barchart.WithBarGap(0), barchart.WithBarWidth(wBar))
+	chart := barchart.New(sBar.GetWidth(), sBar.GetHeight(), barchart.WithNoAutoBarWidth(), barchart.WithBarGap(wBarGap), barchart.WithBarWidth(wBar))
 
 	for _, scan := range m.scans {
 		bar := barchart.BarData{
@@ -38,7 +38,7 @@ func (m *Model) viewStats() string {
 
 		var amount string
 		if scan.amount == m.maxWeekScans {
-			amount = sMax.Inherit(sStatAmount).Render(strconv.Itoa(int(scan.amount)))
+			amount = sStatMax.Inherit(sStatAmount).Render(strconv.Itoa(int(scan.amount)))
 		} else {
 			amount = sStatAmount.Render(strconv.Itoa(int(scan.amount)))
 		}
