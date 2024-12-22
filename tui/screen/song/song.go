@@ -11,8 +11,9 @@ import (
 
 // Song represents the song screen
 type Song struct {
-	db     *db.DB
-	song   view.View
+	db   *db.DB
+	song view.View
+
 	width  int
 	height int
 }

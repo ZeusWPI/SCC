@@ -21,6 +21,9 @@ import (
 type Model struct {
 	db          *db.DB
 	leaderboard []gamificationItem
+
+	width  int
+	height int
 }
 
 type gamificationItem struct {
@@ -51,6 +54,20 @@ func (m *Model) Name() string {
 // Update updates the gamification view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
+	case view.MsgSize:
+		// Size update!
+		// Check if it's relevant for this view
+		entry, ok := msg.Sizes[m.Name()]
+		if ok {
+			// Update all dependent styles
+			m.width = entry.Width
+			m.height = entry.Height
+
+			m.updateStyles()
+		}
+
+		return m, nil
+
 	case Msg:
 		m.leaderboard = msg.leaderboard
 	}
@@ -62,21 +79,19 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 func (m *Model) View() string {
 	columns := make([]string, 0, len(m.leaderboard))
 
-	positions := []lipgloss.Style{sFirst, sSecond, sThird, sFourth}
-
 	for i, item := range m.leaderboard {
 		user := lipgloss.JoinVertical(lipgloss.Left,
-			positions[i].Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
+			positions[i].Inherit(sName).Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
 			sScore.Render(strconv.Itoa(int(item.item.Score))),
 		)
 
-		column := lipgloss.JoinVertical(lipgloss.Left, view.ImagetoString(width, item.image), user)
+		column := lipgloss.JoinVertical(lipgloss.Left, view.ImagetoString(wAvatar, item.image), user)
 		columns = append(columns, sColumn.Render(column))
 	}
 
 	list := lipgloss.JoinHorizontal(lipgloss.Top, columns...)
 
-	return list
+	return sAll.Render(list)
 }
 
 // GetUpdateDatas get all update functions for the gamification view
