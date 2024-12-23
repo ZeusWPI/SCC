@@ -10,107 +10,100 @@ import (
 
 func (m *Model) viewToday() string {
 	// Render image
-	im := ""
+	poster := ""
 	if m.today.Poster != nil {
 		i, _, err := image.Decode(bytes.NewReader(m.today.Poster))
 		if err == nil {
-			im = view.ImagetoString(widthImage, i)
+			poster = view.ImagetoString(wTodayPoster, i)
 		}
 	}
 
-	// Render text
-	warningTop := sTodayWarning.MarginBottom(mTodayWarning).Render("🥳 Event Today 🥳")
-	warningBottom := sTodayWarning.MarginTop(mTodayWarning).Render("🥳 Event Today 🥳")
+	name := sTodayText.Render(m.today.Name)
+	date := sTodayDate.Render("🕙 " + m.today.Date.Format("15:04"))
+	location := sTodayeLoc.Render("📍 " + m.today.Location)
 
-	name := sTodayName.Render(m.today.Name)
-	time := sTodayTime.Render("🕙 " + m.today.Date.Format("15:04"))
-	location := sTodayPlace.Render("📍 " + m.today.Location)
+	event := lipgloss.JoinVertical(lipgloss.Left, name, date, location)
+	event = sToday.Render(event)
 
-	text := lipgloss.JoinVertical(lipgloss.Left, warningTop, name, time, location, warningBottom)
-
-	// Resize so it's centered
-	if lipgloss.Height(im) > lipgloss.Height(text) {
-		sToday = sToday.Height(lipgloss.Height(im))
+	if lipgloss.Height(poster) > lipgloss.Height(event) {
+		event = sTodayPoster.Height(lipgloss.Height(poster)).Render(event)
+	} else {
+		poster = sTodayPoster.Height(lipgloss.Height(event)).Render(poster)
 	}
-	text = sToday.Render(text)
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, im, text)
+	view := lipgloss.JoinHorizontal(lipgloss.Top, poster, event)
+
+	return sTodayAll.Render(view)
 }
 
-func (m *Model) viewNormal() string {
+func (m *Model) viewOverview() string {
 	// Poster if present
-	im := ""
+	poster := ""
 	if len(m.upcoming) > 0 && m.upcoming[0].Poster != nil {
 		i, _, err := image.Decode(bytes.NewReader(m.upcoming[0].Poster))
 		if err == nil {
-			im = view.ImagetoString(widthOverviewImage, i)
+			poster = view.ImagetoString(wOvPoster, i)
 		}
 	}
 
 	// Overview
-	events := m.viewGetEvents()
+	events := m.viewGetEventOverview()
 
-	// Filthy hack to avoid the last event being centered by the cammie screen
-	events = append(events, "\n")
-
-	// Render events overview
-	overview := lipgloss.JoinVertical(lipgloss.Left, events...)
-	overview = sOverview.Render(overview)
-
-	title := sOverviewTitle.Render("Events")
-	overview = lipgloss.JoinVertical(lipgloss.Left, title, overview)
-
-	// Center the overview
-	if lipgloss.Height(im) > lipgloss.Height(overview) {
-		overview = sOverviewTotal.Height(lipgloss.Height(im)).Render(overview)
+	if lipgloss.Height(poster) > lipgloss.Height(events) {
+		events = sOv.Height(lipgloss.Height(poster)).Render(events)
+	} else {
+		poster = sOvPoster.Height(lipgloss.Height(events)).Render(poster)
 	}
 
 	// Combine image and overview
-	view := lipgloss.JoinHorizontal(lipgloss.Top, overview, im)
+	view := lipgloss.JoinHorizontal(lipgloss.Top, events, poster)
 
-	return view
+	return sOvAll.Render(view)
 }
 
-func (m *Model) viewGetEvents() []string {
-	events := make([]string, 0, len(m.passed)+len(m.upcoming))
+func (m *Model) viewGetEventOverview() string {
+	events := make([]string, 0, len(m.passed)+len(m.upcoming)+1)
+
+	title := sOvTitle.Render("Events")
+	events = append(events, title)
 
 	// Passed
 	for _, event := range m.passed {
-		time := sPassedTime.Render(event.Date.Format("02/01") + "\t")
-		name := sPassedName.Render(event.Name)
-		text := lipgloss.JoinHorizontal(lipgloss.Top, time, name)
+		date := sOvPassedDate.Render(event.Date.Format("02/01"))
+		name := sOvPassedText.Render(event.Name)
+		text := lipgloss.JoinHorizontal(lipgloss.Top, date, name)
 
 		events = append(events, text)
 	}
 
-	if len(m.upcoming) == 0 {
-		return events
+	if len(m.upcoming) > 0 {
+		// Next
+		date := sOvNextDate.Render(m.upcoming[0].Date.Format("02/01"))
+		name := sOvNextText.Render(m.upcoming[0].Name)
+		location := sOvNextLoc.Render("📍 " + m.upcoming[0].Location)
+
+		text := lipgloss.JoinVertical(lipgloss.Left, name, location)
+		text = lipgloss.JoinHorizontal(lipgloss.Top, date, text)
+
+		events = append(events, text)
 	}
-
-	// Next
-	name := sNextName.Render(m.upcoming[0].Name)
-	time := sNextTime.Render(m.upcoming[0].Date.Format("02/01") + "\t")
-	location := sNextPlace.Render("📍 " + m.upcoming[0].Location)
-
-	text := lipgloss.JoinVertical(lipgloss.Left, name, location)
-	text = lipgloss.JoinHorizontal(lipgloss.Top, time, text)
-
-	events = append(events, text)
 
 	// Upcoming
 	for i := 1; i < len(m.upcoming); i++ {
-		time := sUpcomingTime.Render(m.upcoming[i].Date.Format("02/01") + "\t")
-		name := sUpcomingName.Render(m.upcoming[i].Name)
+		date := sOvUpcomingDate.Render(m.upcoming[i].Date.Format("02/01"))
+		name := sOvUpcomingText.Render(m.upcoming[i].Name)
 		text := name
 		if i < 3 {
-			location := sUpcomingPlace.Render("📍 " + m.upcoming[i].Location)
+			location := sOvNextLoc.Render("📍 " + m.upcoming[i].Location)
 			text = lipgloss.JoinVertical(lipgloss.Left, name, location)
 		}
 
-		text = lipgloss.JoinHorizontal(lipgloss.Top, time, text)
+		text = lipgloss.JoinHorizontal(lipgloss.Top, date, text)
 
 		events = append(events, text)
 	}
 
-	return events
+	view := lipgloss.JoinVertical(lipgloss.Left, events...)
+
+	return sOv.Render(view)
 }
