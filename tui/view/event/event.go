@@ -24,6 +24,9 @@ type Model struct {
 	passed   []dto.Event
 	upcoming []dto.Event
 	today    *dto.Event
+
+	width  int
+	height int
 }
 
 // Msg represents the message to update the event view
@@ -51,6 +54,20 @@ func (m *Model) Name() string {
 // Update updates the event model view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
+	case view.MsgSize:
+		// Size update!
+		// Check if it's relevant for this view
+		entry, ok := msg.Sizes[m.Name()]
+		if ok {
+			// Update all dependent styles
+			m.width = entry.Width
+			m.height = entry.Height
+
+			m.updateStyles()
+		}
+
+		return m, nil
+
 	case Msg:
 		m.passed = msg.passed
 		m.upcoming = msg.upcoming
@@ -66,7 +83,7 @@ func (m *Model) View() string {
 		return m.viewToday()
 	}
 
-	return m.viewNormal()
+	return m.viewOverview()
 }
 
 // GetUpdateDatas returns all the update function for the event model
