@@ -85,7 +85,7 @@ func (m *Model) View() string {
 			sScore.Render(strconv.Itoa(int(item.item.Score))),
 		)
 
-		column := lipgloss.JoinVertical(lipgloss.Left, view.ImagetoString(wAvatar, item.image), user)
+		column := lipgloss.JoinVertical(lipgloss.Left, view.ImageToString(item.image, wAvatar, sAll.GetHeight()-lipgloss.Height(user)), user)
 		columns = append(columns, sColumn.Render(column))
 	}
 
