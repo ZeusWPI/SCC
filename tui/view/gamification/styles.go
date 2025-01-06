@@ -17,16 +17,17 @@ var (
 var base = lipgloss.NewStyle()
 
 // All style
-var sAll = base.Align(lipgloss.Center)
+var sAll = base.Align(lipgloss.Center).AlignVertical(lipgloss.Center)
 
 // Styles
 var (
-	wAvatar = 20 // Width of an avatar
+	wColumn = 20 // Width of an avatar
 	wAmount = 4  // Amount of people that are shown
 
-	sColumn = base.Margin(2)
+	sColumn = base.Margin(0, 1)
 	sName   = base.Align(lipgloss.Center)
 	sScore  = base.Align(lipgloss.Center)
+	sAvatar = base.Align(lipgloss.Center)
 )
 
 // Styles for the positions
@@ -42,8 +43,9 @@ func (m *Model) updateStyles() {
 	sAll = sAll.Width(m.width).Height(m.height).MaxHeight(m.height)
 
 	// Adjust styles
-	wAvatar = (sAll.GetWidth() - view.GetOuterWidth(sAll) - view.GetOuterWidth(sColumn)*wAmount) / wAmount
+	wColumn = (sAll.GetWidth() - view.GetOuterWidth(sAll) - view.GetOuterWidth(sColumn)*wAmount) / wAmount
 
-	sName = sName.Width(wAvatar).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(cBorder)
-	sScore = sScore.Width(wAvatar)
+	sName = sName.Width(wColumn).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(cBorder)
+	sScore = sScore.Width(wColumn)
+	sAvatar = sAvatar.Width(wColumn)
 }

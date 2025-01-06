@@ -84,8 +84,9 @@ func (m *Model) View() string {
 			positions[i].Inherit(sName).Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
 			sScore.Render(strconv.Itoa(int(item.item.Score))),
 		)
+		im := sAvatar.Render(view.ImageToString(item.image, wColumn, sAll.GetHeight()-lipgloss.Height(user)))
 
-		column := lipgloss.JoinVertical(lipgloss.Left, view.ImageToString(item.image, wAvatar, sAll.GetHeight()-lipgloss.Height(user)), user)
+		column := lipgloss.JoinVertical(lipgloss.Left, im, user)
 		columns = append(columns, sColumn.Render(column))
 	}
 
