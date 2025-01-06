@@ -34,7 +34,7 @@ func (m *Model) viewStats() string {
 	rows := make([]string, 0, len(m.scans))
 
 	for _, scan := range m.scans {
-		week := sStatDate.Render(fmt.Sprintf("W%d - %s", scan.time.week, scan.start))
+		week := sStatDate.Render(fmt.Sprintf("W%02d - %s", scan.time.week, scan.start))
 
 		var amount string
 		if scan.amount == m.maxWeekScans {
