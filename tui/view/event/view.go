@@ -14,7 +14,7 @@ func (m *Model) viewToday() string {
 	if m.today.Poster != nil {
 		i, _, err := image.Decode(bytes.NewReader(m.today.Poster))
 		if err == nil {
-			poster = view.ImagetoString(wTodayPoster, i)
+			poster = view.ImageToString(i, wTodayPoster, 0)
 		}
 	}
 
@@ -42,7 +42,7 @@ func (m *Model) viewOverview() string {
 	if len(m.upcoming) > 0 && m.upcoming[0].Poster != nil {
 		i, _, err := image.Decode(bytes.NewReader(m.upcoming[0].Poster))
 		if err == nil {
-			poster = view.ImagetoString(wOvPoster, i)
+			poster = view.ImageToString(i, wOvPoster, 0)
 		}
 	}
 

@@ -9,17 +9,29 @@ import (
 	"github.com/lucasb-eyer/go-colorful"
 )
 
-// ImagetoString converts an image to a
-// The height gets resized according to the aspect ratio
-func ImagetoString(width int, img image.Image) string {
-	img = imaging.Resize(img, width, 0, imaging.Lanczos)
+// ImageToString converts an image to a string
+// If either widht or height is 0 then the aspect ratio is kept
+func ImageToString(img image.Image, width, height int) string {
+	if width == 0 || height == 0 {
+		return imageToString(imaging.Resize(img, width, height, imaging.Lanczos))
+	}
+
+	imgW := imaging.Resize(img, width, 0, imaging.Lanczos)
+	if imgW.Bounds().Dy() <= height {
+		return imageToString(imgW)
+	}
+
+	return imageToString(imaging.Resize(img, 0, height, imaging.Lanczos))
+}
+
+func imageToString(img image.Image) string {
 	b := img.Bounds()
 	imageWidth := b.Max.X
 	h := b.Max.Y
 	str := strings.Builder{}
 
 	for heightCounter := 0; heightCounter < h; heightCounter += 2 {
-		for x := imageWidth; x < width; x += 2 {
+		for x := imageWidth; x < img.Bounds().Dx(); x += 2 {
 			str.WriteString(" ")
 		}
 
