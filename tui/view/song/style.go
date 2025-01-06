@@ -99,5 +99,8 @@ func (m *Model) updateStyles() {
 	sStatusBar = sStatusBar.Width(m.width - view.GetOuterWidth(sStatusBar))
 
 	// Adjust the all styles
-	sAll = sAll.Height(m.height - view.GetOuterHeight(sAll)).Width(m.width - view.GetOuterWidth(sAll))
+	sAll = sAll.Height(m.height - view.GetOuterHeight(sAll)).
+		MaxHeight(m.height - view.GetOuterHeight(sAll)).
+		Width(m.width - view.GetOuterWidth(sAll)).
+		MaxWidth(m.width - view.GetOuterWidth(sAll))
 }
