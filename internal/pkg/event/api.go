@@ -48,7 +48,12 @@ func (e *Event) getEvents() ([]dto.Event, error) {
 		if len(yearParts) == 5 {
 			rangeParts := strings.Split(yearParts[2], "-")
 			if len(rangeParts) == 2 {
-				dateWithYear := fmt.Sprintf("%s 20%s", date, rangeParts[0])
+				partIdx := 0
+				if time.Now().Month() < time.September {
+					partIdx = 1
+				}
+
+				dateWithYear := fmt.Sprintf("%s 20%s", date, rangeParts[partIdx])
 				parsedDate, err := time.Parse(layout, dateWithYear)
 				if err == nil {
 					event.AcademicYear = yearParts[2]
