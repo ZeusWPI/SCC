@@ -3,7 +3,7 @@ package song
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/tui/screen"
 	"github.com/zeusWPI/scc/tui/view"
 	"github.com/zeusWPI/scc/tui/view/song"
@@ -11,7 +11,6 @@ import (
 
 // Song represents the song screen
 type Song struct {
-	db   *db.DB
 	song view.View
 
 	width  int
@@ -19,8 +18,12 @@ type Song struct {
 }
 
 // New creates a new song screen
-func New(db *db.DB) screen.Screen {
-	return &Song{db: db, song: song.New(db), width: 0, height: 0}
+func New(repo repository.Repository) screen.Screen {
+	return &Song{
+		song:   song.New(repo),
+		width:  0,
+		height: 0,
+	}
 }
 
 // Init initializes the song screen

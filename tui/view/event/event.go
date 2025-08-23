@@ -2,6 +2,7 @@
 package event
 
 import (
+	"image"
 	"slices"
 	"time"
 
@@ -28,8 +29,14 @@ type Msg struct {
 	events []event
 }
 
-// Interface compliance
-var _ tea.Msg = (*Msg)(nil)
+// event is the internal representation of a zeus event
+type event struct {
+	ID       int       `json:"id"`
+	Name     string    `json:"name"`
+	Location string    `json:"location"`
+	Start    time.Time `json:"start_time"`
+	poster   image.Image
+}
 
 func NewModel() view.View {
 	return &Model{
@@ -53,8 +60,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	case view.MsgSize:
 		// Size update!
 		// Check if it's relevant for this view
-		entry, ok := msg.Sizes[m.Name()]
-		if ok {
+		if entry, ok := msg.Sizes[m.Name()]; ok {
 			// Update all dependent styles
 			m.width = entry.Width
 			m.height = entry.Height

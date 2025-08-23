@@ -29,9 +29,6 @@ type Msg struct {
 	leaderboard []gamification
 }
 
-// Interface Compliance
-var _ tea.Msg = (*Msg)(nil)
-
 type gamification struct {
 	Name      string `json:"github_name"`
 	Score     int    `json:"score"`
@@ -61,8 +58,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	case view.MsgSize:
 		// Size update!
 		// Check if it's relevant for this view
-		entry, ok := msg.Sizes[m.Name()]
-		if ok {
+		if entry, ok := msg.Sizes[m.Name()]; ok {
 			// Update all dependent styles
 			m.width = entry.Width
 			m.height = entry.Height

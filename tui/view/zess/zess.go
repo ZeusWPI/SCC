@@ -3,6 +3,7 @@ package zess
 
 import (
 	"context"
+	"errors"
 	"math/rand/v2"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -288,6 +289,7 @@ func updateSeason(view view.View) (tea.Msg, error) {
 func (z *yearWeek) equal(z2 yearWeek) bool {
 	return z.week == z2.week && z.year == z2.year
 }
+
 func (z *yearWeek) after(z2 yearWeek) bool {
 	if z.year > z2.year {
 		return true

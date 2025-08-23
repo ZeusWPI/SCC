@@ -19,7 +19,7 @@ type Server struct {
 	Addr string
 }
 
-func NewServer(service service.Service, pool *pgxpool.Pool) *Server {
+func New(service service.Service, pool *pgxpool.Pool) *Server {
 	env := config.GetDefaultString("app.env", "development")
 
 	// Construct app

@@ -37,14 +37,15 @@ func (q *Queries) TapCreate(ctx context.Context, arg TapCreateParams) (int32, er
 }
 
 const tapGetCountByCategory = `-- name: TapGetCountByCategory :many
-SELECT category, COUNT(*)
+SELECT category, COUNT(*), MAX(order_created_at)::TIMESTAMP AS latest_order_created_at
 FROM tap
 GROUP BY category
 `
 
 type TapGetCountByCategoryRow struct {
-	Category TapCategory
-	Count    int64
+	Category             TapCategory
+	Count                int64
+	LatestOrderCreatedAt pgtype.Timestamp
 }
 
 func (q *Queries) TapGetCountByCategory(ctx context.Context) ([]TapGetCountByCategoryRow, error) {
@@ -56,7 +57,7 @@ func (q *Queries) TapGetCountByCategory(ctx context.Context) ([]TapGetCountByCat
 	var items []TapGetCountByCategoryRow
 	for rows.Next() {
 		var i TapGetCountByCategoryRow
-		if err := rows.Scan(&i.Category, &i.Count); err != nil {
+		if err := rows.Scan(&i.Category, &i.Count, &i.LatestOrderCreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

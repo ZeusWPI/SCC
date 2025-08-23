@@ -1,17 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"time"
 
-	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/internal/pkg/zess"
+	"github.com/zeusWPI/scc/internal/database/repository"
+	"github.com/zeusWPI/scc/internal/zess"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
 // Zess starts the zess instance
-func Zess(db *db.DB) (*zess.Zess, chan bool, chan bool) {
-	zess := zess.New(db)
+func Zess(repo repository.Repository) (*zess.Zess, chan bool, chan bool) {
+	zess := zess.New(repo)
 
 	doneSeason := make(chan bool)
 	intervalSeason := config.GetDefaultInt("backend.zess.interval_season_s", 300)
@@ -25,6 +26,8 @@ func Zess(db *db.DB) (*zess.Zess, chan bool, chan bool) {
 	return zess, doneSeason, doneScan
 }
 
+// TODO: Figure out the context situation
+
 func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool, interval int) {
 	zap.S().Info("Zess: Starting periodic season update with an interval of ", interval, " seconds")
 
@@ -33,7 +36,7 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool, interval int) {
 
 	// Run immediatly once
 	zap.S().Info("Zess: Updating seasons")
-	if err := zess.UpdateSeasons(); err != nil {
+	if err := zess.UpdateSeasons(context.Background()); err != nil {
 		zap.S().Error("Zess: Error updating seasons\n", err)
 	}
 
@@ -45,7 +48,7 @@ func zessPeriodicSeasonUpdate(zess *zess.Zess, done chan bool, interval int) {
 		case <-ticker.C:
 			// Update seasons
 			zap.S().Info("Zess: Updating seasons")
-			if err := zess.UpdateSeasons(); err != nil {
+			if err := zess.UpdateSeasons(context.Background()); err != nil {
 				zap.S().Error("Zess: Error updating seasons\n", err)
 			}
 		}
@@ -60,7 +63,7 @@ func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool, interval int) {
 
 	// Run immediatly once
 	zap.S().Info("Zess: Updating scans")
-	if err := zess.UpdateScans(); err != nil {
+	if err := zess.UpdateScans(context.Background()); err != nil {
 		zap.S().Error("Zess: Error updating scans\n", err)
 	}
 
@@ -72,7 +75,7 @@ func zessPeriodicScanUpdate(zess *zess.Zess, done chan bool, interval int) {
 		case <-ticker.C:
 			// Update scans
 			zap.S().Info("Zess: Updating scans")
-			if err := zess.UpdateScans(); err != nil {
+			if err := zess.UpdateScans(context.Background()); err != nil {
 				zap.S().Error("Zess: Error updating scans\n", err)
 			}
 		}

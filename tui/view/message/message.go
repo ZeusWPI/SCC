@@ -7,20 +7,28 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/jackc/pgx/v5"
-	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/tui/view"
 )
 
 // Model represents the model for the message view
 type Model struct {
-	db            *db.DB
-	lastMessageID int32
-	messages      []message
+	repo     repository.Message
+	messages []message
 
-	width  int
-	height int
+	lastMessageID int
+	width         int
+	height        int
+}
+
+// Interface compliance
+var _ view.View = (*Model)(nil)
+
+// Msg represents the message to update the message view
+type Msg struct {
+	lastMessageID int
+	messages      []message
 }
 
 type message struct {
@@ -30,33 +38,31 @@ type message struct {
 	date    time.Time
 }
 
-// Msg represents the message to update the message view
-type Msg struct {
-	lastMessageID int32
-	messages      []message
+func NewModel(repo repository.Repository) view.View {
+	return &Model{
+		repo:          *repo.NewMessage(),
+		messages:      nil,
+		lastMessageID: -1,
+		width:         0,
+		height:        0,
+	}
 }
 
-// NewModel creates a new message model view
-func NewModel(db *db.DB) view.View {
-	return &Model{db: db, lastMessageID: -1, messages: []message{}}
-}
-
-// Init initializes the message model view
 func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
-// Name returns the name of the view
 func (m *Model) Name() string {
 	return "Cammie Messages"
 }
 
-// Update updates the message model view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case view.MsgSize:
-		entry, ok := msg.Sizes[m.Name()]
-		if ok {
+		// Size update!
+		// Check if it's relevant for this view
+		if entry, ok := msg.Sizes[m.Name()]; ok {
+			// Update all dependent styles
 			m.width = entry.Width
 			m.height = entry.Height
 		}
@@ -93,15 +99,12 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 	}
 }
 
-func updateMessages(view view.View) (tea.Msg, error) {
+func updateMessages(ctx context.Context, view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 	lastMessageID := m.lastMessageID
 
-	messagesDB, err := m.db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
+	messagesDB, err := m.repo.GetSinceID(ctx, lastMessageID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = nil
-		}
 		return nil, err
 	}
 
@@ -120,7 +123,7 @@ func updateMessages(view view.View) (tea.Msg, error) {
 			sender:  m.Name,
 			message: m.Message,
 			color:   hashColor(m.Name),
-			date:    m.CreatedAt.Time,
+			date:    m.CreatedAt,
 		})
 	}
 

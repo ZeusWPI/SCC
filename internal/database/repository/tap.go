@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/database/model"
 	"github.com/zeusWPI/scc/pkg/sqlc"
+	"github.com/zeusWPI/scc/pkg/utils"
 )
 
 type Tap struct {
@@ -33,7 +34,7 @@ func (t *Tap) GetLast(ctx context.Context) (*model.Tap, error) {
 	return model.TapModel(tap), nil
 }
 
-func (t *Tap) GetCountByCategory(ctx context.Context) (model.TapCount, error) {
+func (t *Tap) GetCountByCategory(ctx context.Context) ([]*model.TapCount, error) {
 	counts, err := t.repo.queries(ctx).TapGetCountByCategory(ctx)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
@@ -42,12 +43,7 @@ func (t *Tap) GetCountByCategory(ctx context.Context) (model.TapCount, error) {
 		return nil, nil
 	}
 
-	tapCount := model.TapCount{}
-	for _, count := range counts {
-		tapCount[model.TapCategory(count.Category)] = int(count.Count)
-	}
-
-	return tapCount, nil
+	return utils.SliceMap(counts, model.TapCountModel), nil
 }
 
 func (t *Tap) Create(ctx context.Context, tap *model.Tap) error {

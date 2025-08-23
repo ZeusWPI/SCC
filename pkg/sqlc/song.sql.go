@@ -94,7 +94,7 @@ func (q *Queries) CreateSongArtistGenre(ctx context.Context, arg CreateSongArtis
 const createSongArtistSong = `-- name: CreateSongArtistSong :one
 INSERT INTO song_artist_song (artist_id, song_id)
 VALUES ($1, $2)
-RETURNING id, artist_id, song_id
+RETURNING id
 `
 
 type CreateSongArtistSongParams struct {
@@ -102,11 +102,11 @@ type CreateSongArtistSongParams struct {
 	SongID   int32
 }
 
-func (q *Queries) CreateSongArtistSong(ctx context.Context, arg CreateSongArtistSongParams) (SongArtistSong, error) {
+func (q *Queries) CreateSongArtistSong(ctx context.Context, arg CreateSongArtistSongParams) (int32, error) {
 	row := q.db.QueryRow(ctx, createSongArtistSong, arg.ArtistID, arg.SongID)
-	var i SongArtistSong
-	err := row.Scan(&i.ID, &i.ArtistID, &i.SongID)
-	return i, err
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createSongGenre = `-- name: CreateSongGenre :one

@@ -56,22 +56,6 @@ func (ns NullTapCategory) Value() (driver.Value, error) {
 	return string(ns.TapCategory), nil
 }
 
-type Event struct {
-	ID           int32
-	Name         string
-	Date         pgtype.Timestamptz
-	AcademicYear string
-	Location     string
-	Poster       []byte
-}
-
-type Gamification struct {
-	ID     int32
-	Name   string
-	Score  int32
-	Avatar []byte
-}
-
 type Message struct {
 	ID        int32
 	Name      string

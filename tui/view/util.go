@@ -35,7 +35,7 @@ func imageToString(img image.Image) string {
 			str.WriteString(" ")
 		}
 
-		for x := 0; x < imageWidth; x++ {
+		for x := range imageWidth {
 			c1, _ := colorful.MakeColor(img.At(x, heightCounter))
 			color1 := lipgloss.Color(c1.Hex())
 			c2, _ := colorful.MakeColor(img.At(x, heightCounter+1))

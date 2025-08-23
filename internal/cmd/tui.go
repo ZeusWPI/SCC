@@ -2,13 +2,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"os"
+	"maps"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/pkg/util"
 	"github.com/zeusWPI/scc/tui"
 	"github.com/zeusWPI/scc/tui/screen"
 	"github.com/zeusWPI/scc/tui/screen/cammie"
@@ -23,20 +24,13 @@ var screens = map[string]func(*db.DB) screen.Screen{
 }
 
 // TUI starts the terminal user interface
-func TUI(db *db.DB) error {
-	args := os.Args
-	if len(args) < 2 {
-		return fmt.Errorf("No screen specified. Options are %v", util.Keys(screens))
-	}
-
-	selectedScreen := args[1]
-
-	val, ok := screens[selectedScreen]
+func TUI(repo repository.Repository, screenName string) error {
+	val, ok := screens[screenName]
 	if !ok {
-		return fmt.Errorf("Screen %s not found. Options are %v", selectedScreen, util.Keys(screens))
+		return fmt.Errorf("Screen %s not found. Options are %v", screenName, maps.Keys(screens))
 	}
 
-	screen := val(db)
+	screen := val(repo)
 	tui := tui.New(screen)
 	p := tea.NewProgram(tui, tea.WithAltScreen())
 
@@ -63,7 +57,7 @@ func tuiPeriodicUpdates(p *tea.Program, updateData view.UpdateData, done chan bo
 	defer ticker.Stop()
 
 	// Immediatly update once
-	msg, err := updateData.Update(updateData.View)
+	msg, err := updateData.Update(context.Background(), updateData.View)
 	if err != nil {
 		zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
 	}
@@ -79,7 +73,7 @@ func tuiPeriodicUpdates(p *tea.Program, updateData view.UpdateData, done chan bo
 			return
 		case <-ticker.C:
 			// Update
-			msg, err := updateData.Update(updateData.View)
+			msg, err := updateData.Update(context.Background(), updateData.View)
 			if err != nil {
 				zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
 			}

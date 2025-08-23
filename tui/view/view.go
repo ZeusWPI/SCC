@@ -2,6 +2,8 @@
 package view
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -9,7 +11,7 @@ import (
 type UpdateData struct {
 	Name     string
 	View     View
-	Update   func(view View) (tea.Msg, error)
+	Update   func(ctx context.Context, view View) (tea.Msg, error)
 	Interval int
 }
 

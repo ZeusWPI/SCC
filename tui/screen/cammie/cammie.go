@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/tui/screen"
 	"github.com/zeusWPI/scc/tui/view"
@@ -18,33 +18,49 @@ import (
 	"github.com/zeusWPI/scc/tui/view/zess"
 )
 
-// Cammie represents the cammie screen
 type Cammie struct {
-	db       *db.DB
 	messages view.View
 	top      []view.View
 	bottom   view.View
-	indexTop int
-	width    int
-	height   int
+
+	topIdx int // Index of the cycled top views
+	width  int
+	height int
 }
 
-// Message to update the bottomIndex
-type msgIndex struct {
-	indexBottom int
+// Interface compliance
+var _ screen.Screen = (*Cammie)(nil)
+
+// Msg is the message to update the topIndex
+type Msg struct {
+	topIdx int
 }
 
-// New creates a new cammie screen
-func New(db *db.DB) screen.Screen {
-	messages := message.NewModel(db)
-	top := event.NewModel(db)
-	bottom := []view.View{gamification.NewModel(db), tap.NewModel(db), zess.NewModel(db)}
-	return &Cammie{db: db, messages: messages, bottom: top, top: bottom, indexTop: 0, width: 0, height: 0}
+// Interface compliance
+var _ tea.Msg = (*Msg)(nil)
+
+func New(repo repository.Repository) screen.Screen {
+	messages := message.NewModel(repo)
+	bottom := event.NewModel()
+	top := []view.View{
+		gamification.NewModel(),
+		tap.NewModel(repo),
+		zess.NewModel(repo),
+	}
+
+	return &Cammie{
+		messages: messages,
+		top:      top,
+		bottom:   bottom,
+
+		topIdx: 0,
+		width:  0,
+		height: 0,
+	}
 }
 
-// Init initializes the cammie screen
 func (c *Cammie) Init() tea.Cmd {
-	cmds := []tea.Cmd{updateBottomIndex(*c), c.messages.Init(), c.bottom.Init()}
+	cmds := []tea.Cmd{updateTopIndex(*c), c.messages.Init(), c.bottom.Init()}
 	for _, view := range c.top {
 		cmds = append(cmds, view.Init())
 	}
@@ -52,7 +68,6 @@ func (c *Cammie) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// Update updates the cammie screen
 func (c *Cammie) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -64,10 +79,10 @@ func (c *Cammie) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 		sBottom = sBottom.Width(c.width/2 - sBottom.GetHorizontalFrameSize()).Height(c.height/2 - sBottom.GetVerticalFrameSize())
 
 		return c, c.GetSizeMsg
-	case msgIndex:
-		c.indexTop = msg.indexBottom
+	case Msg:
+		c.topIdx = msg.topIdx
 
-		return c, updateBottomIndex(*c)
+		return c, updateTopIndex(*c)
 	}
 
 	cmds := make([]tea.Cmd, 0)
@@ -87,7 +102,6 @@ func (c *Cammie) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 	return c, tea.Batch(cmds...)
 }
 
-// View returns the cammie screen view
 func (c *Cammie) View() string {
 	if c.width == 0 || c.height == 0 {
 		return "Initialzing..."
@@ -100,7 +114,7 @@ func (c *Cammie) View() string {
 	// Render tabs
 	var tabs []string
 	for i, view := range c.top {
-		if i == c.indexTop {
+		if i == c.topIdx {
 			tabs = append(tabs, sActiveTab.Render(view.Name()))
 		} else {
 			tabs = append(tabs, sTabNormal.Render(view.Name()))
@@ -111,7 +125,7 @@ func (c *Cammie) View() string {
 	tab = lipgloss.JoinHorizontal(lipgloss.Bottom, tab, tabLine)
 
 	// Render top view
-	top := lipgloss.JoinVertical(lipgloss.Left, tab, c.top[c.indexTop].View())
+	top := lipgloss.JoinVertical(lipgloss.Left, tab, c.top[c.topIdx].View())
 	top = sTop.Render(top)
 
 	// Render bottom
@@ -154,11 +168,11 @@ func (c *Cammie) GetSizeMsg() tea.Msg {
 	return view.MsgSize{Sizes: sizes}
 }
 
-func updateBottomIndex(cammie Cammie) tea.Cmd {
+func updateTopIndex(cammie Cammie) tea.Cmd {
 	timeout := time.Duration(config.GetDefaultInt("tui.screen.cammie.interval_s", 300) * int(time.Second))
 	return tea.Tick(timeout, func(_ time.Time) tea.Msg {
-		newIndex := (cammie.indexTop + 1) % len(cammie.top)
+		newIndex := (cammie.topIdx + 1) % len(cammie.top)
 
-		return msgIndex{indexBottom: newIndex}
+		return Msg{topIdx: newIndex}
 	})
 }

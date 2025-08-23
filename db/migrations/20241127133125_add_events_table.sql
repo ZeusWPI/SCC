@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF event (
+CREATE TABLE event (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     date TIMESTAMP WITH TIME ZONE NOT NULL,

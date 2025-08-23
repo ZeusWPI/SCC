@@ -1,8 +1,6 @@
 package event
 
 import (
-	"bytes"
-	"image"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -18,11 +16,8 @@ func (m *Model) viewToday() string {
 
 	// Render image
 	poster := ""
-	if today.Poster != nil {
-		i, _, err := image.Decode(bytes.NewReader(today.Poster))
-		if err == nil {
-			poster = view.ImageToString(i, wTodayPoster, 0)
-		}
+	if today.poster != nil {
+		poster = view.ImageToString(today.poster, wTodayPoster, 0)
 	}
 
 	name := sTodayText.Render(today.Name)
@@ -50,11 +45,8 @@ func (m *Model) viewOverview() string {
 
 	// Poster if present
 	poster := ""
-	if len(upcoming) > 0 && upcoming[0].Poster != nil {
-		i, _, err := image.Decode(bytes.NewReader(upcoming[0].Poster))
-		if err == nil {
-			poster = view.ImageToString(i, wOvPoster, 0)
-		}
+	if len(upcoming) > 0 && upcoming[0].poster != nil {
+		poster = view.ImageToString(upcoming[0].poster, wOvPoster, 0)
 	}
 
 	// Overview

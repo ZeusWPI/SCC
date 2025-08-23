@@ -6,26 +6,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
 	"io"
 	"slices"
 	"sync"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/pkg/utils"
 	"github.com/zeusWPI/scc/tui/view"
 )
 
-type event struct {
-	ID       int       `json:"id"`
-	Name     string    `json:"name"`
-	Location string    `json:"location"`
-	Start    time.Time `json:"start_time"`
-	Poster   []byte
-}
-
 func (e event) equal(e2 event) bool {
-	return e.ID == e2.ID && e.Name == e2.Name && e.Location == e2.Location && e.Start.Equal(e2.Start) && bytes.Equal(e.Poster, e2.Poster)
+	return e.ID == e2.ID && e.Name == e2.Name && e.Location == e2.Location && e.Start.Equal(e2.Start) && utils.ImageEqual(e.poster, e2.poster)
 }
 
 func updateEvents(ctx context.Context, view view.View) (tea.Msg, error) {
@@ -35,6 +27,8 @@ func updateEvents(ctx context.Context, view view.View) (tea.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	slices.SortFunc(events, func(a, b event) int { return a.Start.Compare(b.Start) })
 
 	if len(events) != len(m.events) {
 		return Msg{events: events}, nil
@@ -116,12 +110,17 @@ func getPoster(ctx context.Context, url string, event *event) error {
 		return fmt.Errorf("bad response code for event poster %s | %+v", resp.Status, *event)
 	}
 
-	bytes, err := io.ReadAll(resp.Body)
+	posterBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("read poster bytes %+v | %w", *event, err)
 	}
 
-	event.Poster = bytes
+	poster, _, err := image.Decode(bytes.NewReader(posterBytes))
+	if err != nil {
+		return fmt.Errorf("decode poster for event %+v | %w", *event, err)
+	}
+
+	event.poster = poster
 
 	return nil
 }

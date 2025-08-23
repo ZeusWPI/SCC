@@ -1,4 +1,4 @@
-// Package screen provides difference screens for the tui
+// Package screen contains the interface for a screen
 package screen
 
 import (
@@ -6,7 +6,6 @@ import (
 	"github.com/zeusWPI/scc/tui/view"
 )
 
-// Screen represents a screen
 type Screen interface {
 	Init() tea.Cmd
 	Update(tea.Msg) (Screen, tea.Cmd)
