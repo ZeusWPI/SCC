@@ -2,56 +2,52 @@
 package event
 
 import (
-	"context"
+	"slices"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/pkg/util"
+	"github.com/zeusWPI/scc/pkg/utils"
 	"github.com/zeusWPI/scc/tui/view"
 )
 
-var (
-	passedAmount   = 3
-	upcomingAmount = 7
-)
-
-// Model represents the model for the event view
 type Model struct {
-	db       *db.DB
-	passed   []dto.Event
-	upcoming []dto.Event
-	today    *dto.Event
+	events []event
 
 	width  int
 	height int
+
+	url string // Url of the api
 }
+
+// Interface compliance
+var _ view.View = (*Model)(nil)
 
 // Msg represents the message to update the event view
 type Msg struct {
-	upcoming []dto.Event
-	passed   []dto.Event
-	today    *dto.Event
+	events []event
 }
 
-// NewModel creates a new event view
-func NewModel(db *db.DB) view.View {
-	return &Model{db: db}
+// Interface compliance
+var _ tea.Msg = (*Msg)(nil)
+
+func NewModel() view.View {
+	return &Model{
+		events: nil,
+		width:  0,
+		height: 0,
+		url:    config.GetDefaultString("tui.view.event.url", "https://events.zeus.gent/api/v1"),
+	}
 }
 
-// Init initializes the event model view
 func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
-// Name returns the name of the view
 func (m *Model) Name() string {
 	return "Events"
 }
 
-// Update updates the event model view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case view.MsgSize:
@@ -69,24 +65,20 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 		return m, nil
 
 	case Msg:
-		m.passed = msg.passed
-		m.upcoming = msg.upcoming
-		m.today = msg.today
+		m.events = msg.events
 	}
 
 	return m, nil
 }
 
-// View returns the view for the event model
 func (m *Model) View() string {
-	if m.today != nil {
+	if idx := slices.IndexFunc(m.events, func(e event) bool { return utils.SameDay(e.Start, time.Now()) }); idx != -1 {
 		return m.viewToday()
 	}
 
 	return m.viewOverview()
 }
 
-// GetUpdateDatas returns all the update function for the event model
 func (m *Model) GetUpdateDatas() []view.UpdateData {
 	return []view.UpdateData{
 		{
@@ -96,43 +88,4 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Interval: config.GetDefaultInt("tui.view.event.interval_s", 3600),
 		},
 	}
-}
-
-func updateEvents(view view.View) (tea.Msg, error) {
-	m := view.(*Model)
-
-	eventsDB, err := m.db.Queries.GetEventsCurrentAcademicYear(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	events := util.SliceMap(eventsDB, dto.EventDTO)
-
-	passed := make([]dto.Event, 0)
-	upcoming := make([]dto.Event, 0)
-	var today *dto.Event
-
-	now := time.Now()
-	for _, event := range events {
-		if event.Date.Before(now) {
-			passed = append(passed, *event)
-		} else {
-			upcoming = append(upcoming, *event)
-		}
-
-		if event.Date.Year() == now.Year() && event.Date.YearDay() == now.YearDay() {
-			today = event
-		}
-	}
-
-	// Truncate passed and upcoming slices
-	if len(passed) > passedAmount {
-		passed = passed[len(passed)-passedAmount:]
-	}
-
-	if len(upcoming) > upcomingAmount {
-		upcoming = upcoming[:upcomingAmount]
-	}
-
-	return Msg{passed: passed, upcoming: upcoming, today: today}, nil
 }
