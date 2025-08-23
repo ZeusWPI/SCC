@@ -29,8 +29,7 @@ type StartStopMsg struct {
 }
 
 // ResetMsg is a message that resets the stopwatch
-type ResetMsg struct {
-}
+type ResetMsg struct{}
 
 // Model for the stopwatch component
 type Model struct {
@@ -39,7 +38,9 @@ type Model struct {
 	running  bool
 }
 
-// New creates a new stopwatch with a given interval
+// Interface compliance
+var _ tea.Model = (*Model)(nil)
+
 func New() Model {
 	return Model{
 		id:       nextID(),
@@ -48,7 +49,6 @@ func New() Model {
 	}
 }
 
-// Init initializes the stopwatch component
 func (m Model) Init() tea.Cmd {
 	return nil
 }
@@ -75,7 +75,7 @@ func (m Model) Reset() tea.Cmd {
 }
 
 // Update handles the stopwatch tick
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case TickMsg:
 		if msg.id != m.id || !m.running {
@@ -106,7 +106,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, nil
 }
 
-// View of the stopwatch component
 func (m Model) View() string {
 	duration := m.duration.Round(time.Second)
 

@@ -2,7 +2,11 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+
 	"github.com/zeusWPI/scc/internal/cmd"
+	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/pkg/db"
 	"github.com/zeusWPI/scc/pkg/logger"
@@ -16,8 +20,16 @@ func main() {
 		panic(err)
 	}
 
+	screen := flag.String("screen", "", "TUI screen to start")
+	flag.Parse()
+
+	if *screen == "" {
+		flag.PrintDefaults()
+		return
+	}
+
 	// Logger
-	zapLogger, err := logger.New("tui", false)
+	zapLogger, err := logger.New(fmt.Sprintf("%s.log", *screen), false)
 	if err != nil {
 		panic(err)
 	}
@@ -31,8 +43,10 @@ func main() {
 		zap.S().Fatal("DB: Fatal error\n", err)
 	}
 
+	repo := repository.New(db)
+
 	// TUI
-	err = cmd.TUI(db)
+	err = cmd.TUI(*repo, *screen)
 	if err != nil {
 		zap.S().Fatal("TUI: Fatal error\n", err)
 	}

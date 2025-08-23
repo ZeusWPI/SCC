@@ -34,4 +34,17 @@ func TapModel(t sqlc.Tap) *Tap {
 	}
 }
 
-type TapCount map[TapCategory]int
+type TapCount struct {
+	Category  TapCategory
+	LastOrder time.Time
+
+	Count int
+}
+
+func TapCountModel(t sqlc.TapGetCountByCategoryRow) *TapCount {
+	return &TapCount{
+		Category:  TapCategory(t.Category),
+		LastOrder: t.LatestOrderCreatedAt.Time,
+		Count:     int(t.Count),
+	}
+}

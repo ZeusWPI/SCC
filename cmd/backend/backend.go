@@ -3,6 +3,9 @@ package main
 
 import (
 	"github.com/zeusWPI/scc/internal/cmd"
+	"github.com/zeusWPI/scc/internal/database/repository"
+	"github.com/zeusWPI/scc/internal/server"
+	"github.com/zeusWPI/scc/internal/server/service"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/pkg/db"
 	"github.com/zeusWPI/scc/pkg/logger"
@@ -31,17 +34,14 @@ func main() {
 		zap.S().Fatal("DB: Fatal error\n", err)
 	}
 
+	// Repository
+	repo := repository.New(db)
+
 	// Tap
 	_, _ = cmd.Tap(db)
 
 	// Zess
 	_, _, _ = cmd.Zess(db)
-
-	// Gamification
-	_, _ = cmd.Gamification(db)
-
-	// Event
-	_, _ = cmd.Event(db)
 
 	// Spotify
 	spotify, err := cmd.Song(db)
@@ -50,5 +50,11 @@ func main() {
 	}
 
 	// API
-	cmd.API(db, spotify)
+	service := service.New(*repo)
+	api := server.New(*service, db.Pool())
+
+	zap.S().Infof("Server is running on %s", api.Addr)
+	if err := api.Listen(api.Addr); err != nil {
+		zap.S().Fatalf("Failure while running the server %v", err)
+	}
 }

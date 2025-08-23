@@ -2,79 +2,63 @@
 package tap
 
 import (
-	"context"
-	"slices"
-	"time"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/jackc/pgx/v5"
-	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/internal/database/model"
+	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/tui/view"
 )
 
-type category string
-
-const (
-	mate category = "Mate"
-	soft category = "Soft"
-	beer category = "Beer"
-	food category = "Food"
-)
-
-var categoryToStyle = map[category]lipgloss.Style{
-	mate: sMate,
-	soft: sSoft,
-	beer: sBeer,
-	food: sFood,
+var categoryToStyle = map[model.TapCategory]lipgloss.Style{
+	model.Mate: sMate,
+	model.Soft: sSoft,
+	model.Beer: sBeer,
+	model.Food: sFood,
 }
 
-// Model represents the tap model
 type Model struct {
-	db          *db.DB
-	lastOrderID int32
-	items       []tapItem
+	repo        repository.Tap
+	lastOrderID int
+	items       []model.TapCount
 
 	width  int
 	height int
 }
 
+// Interface compliance
+var _ view.View = (*Model)(nil)
+
 // Msg represents a tap message
 type Msg struct {
-	lastOrderID int32
-	items       []tapItem
+	lastOrderID int
+	items       []model.TapCount
 }
 
-type tapItem struct {
-	category category
-	amount   int
-	last     time.Time
+func NewModel(repo repository.Repository) view.View {
+	return &Model{
+		repo:        *repo.NewTap(),
+		lastOrderID: -1,
+		items:       nil,
+		width:       0,
+		height:      0,
+	}
 }
 
-// NewModel creates a new tap model
-func NewModel(db *db.DB) view.View {
-	return &Model{db: db, lastOrderID: -1}
-}
-
-// Init initializes the tap model
 func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
-// Name returns the name of the view
 func (m *Model) Name() string {
 	return "Tap"
 }
 
-// Update updates the tap model
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case view.MsgSize:
 		// Size update!
 		// Check if it's relevant for this view
-		entry, ok := msg.Sizes[m.Name()]
-		if ok {
+		if entry, ok := msg.Sizes[m.Name()]; ok {
 			// Update all dependent styles
 			m.width = entry.Width
 			m.height = entry.Height
@@ -86,29 +70,7 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 
 	case Msg:
 		m.lastOrderID = msg.lastOrderID
-
-		for _, msgItem := range msg.items {
-			found := false
-			for i, item := range m.items {
-				if item.category == msgItem.category {
-					m.items[i].amount += msgItem.amount
-					m.items[i].last = msgItem.last
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				m.items = append(m.items, msgItem)
-			}
-		}
-
-		// Sort to display bars in order
-		slices.SortFunc(m.items, func(i, j tapItem) int {
-			return j.amount - i.amount
-		})
-
-		return m, nil
+		m.items = msg.items
 	}
 
 	return m, nil
@@ -134,50 +96,4 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Interval: config.GetDefaultInt("tui.view.tap.interval_s", 60),
 		},
 	}
-}
-
-func updateOrders(view view.View) (tea.Msg, error) {
-	m := view.(*Model)
-	lastOrderID := m.lastOrderID
-
-	order, err := m.db.Queries.GetLastOrderByOrderID(context.Background())
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = nil
-		}
-		return nil, err
-	}
-
-	if order.OrderID <= lastOrderID {
-		return nil, nil
-	}
-
-	orders, err := m.db.Queries.GetOrderCountByCategorySinceOrderID(context.Background(), lastOrderID)
-	if err != nil {
-		return nil, err
-	}
-
-	counts := make(map[category]tapItem)
-
-	for _, order := range orders {
-		if entry, ok := counts[category(order.Category)]; ok {
-			entry.amount += int(order.Count)
-			counts[category(order.Category)] = entry
-			continue
-		}
-
-		counts[category(order.Category)] = tapItem{
-			category: category(order.Category),
-			amount:   int(order.Count),
-			last:     order.LatestOrderCreatedAt.Time,
-		}
-	}
-
-	items := make([]tapItem, 0, len(counts))
-
-	for _, v := range counts {
-		items = append(items, v)
-	}
-
-	return Msg{lastOrderID: order.OrderID, items: items}, nil
 }

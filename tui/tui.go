@@ -38,7 +38,7 @@ func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyCtrlC:
 			zap.S().Info("Exiting")
-			// cmds = append(cmds, tea.ExitAltScreen)
+			cmds = append(cmds, tea.ExitAltScreen)
 			cmds = append(cmds, tea.Quit)
 		}
 	}

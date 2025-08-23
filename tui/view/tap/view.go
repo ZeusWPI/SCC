@@ -12,16 +12,16 @@ func (m *Model) viewChart() string {
 	bars := make([]barchart.BarData, 0, len(m.items))
 
 	for _, item := range m.items {
-		style, ok := categoryToStyle[item.category]
+		style, ok := categoryToStyle[item.Category]
 		if !ok {
 			continue
 		}
 
 		bars = append(bars, barchart.BarData{
-			Label: sBarLabel.Render(string(item.category)),
+			Label: sBarLabel.Render(string(item.Category)),
 			Values: []barchart.BarValue{{
-				Name:  string(item.category),
-				Value: float64(item.amount),
+				Name:  string(item.Category),
+				Value: float64(item.Count),
 				Style: style.Inherit(sBarOne),
 			}},
 		})
@@ -37,9 +37,9 @@ func (m *Model) viewStats() string {
 	rows := make([]string, 0, len(m.items))
 
 	for _, item := range m.items {
-		amount := sStatAmount.Render(strconv.Itoa(item.amount))
-		category := sStatCategory.Inherit(categoryToStyle[item.category]).Render(string(item.category))
-		last := sStatLast.Render(item.last.Format("15:04 02/01"))
+		amount := sStatAmount.Render(strconv.Itoa(item.Count))
+		category := sStatCategory.Inherit(categoryToStyle[item.Category]).Render(string(item.Category))
+		last := sStatLast.Render(item.LastOrder.Format("15:04 02/01"))
 
 		text := lipgloss.JoinHorizontal(lipgloss.Top, amount, category, last)
 		rows = append(rows, text)

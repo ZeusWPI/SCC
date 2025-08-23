@@ -37,12 +37,13 @@ type Model struct {
 	style       lipgloss.Style
 }
 
-// New creates a new progress
+// Interface compliance
+var _ tea.Model = (*Model)(nil)
+
 func New(style lipgloss.Style) Model {
 	return Model{id: nextID(), style: style}
 }
 
-// Init initializes the progress component
 func (m Model) Init() tea.Cmd {
 	return nil
 }
@@ -61,7 +62,7 @@ func (m Model) Start(width int, runningTime time.Duration, duration time.Duratio
 }
 
 // Update handles the progress frame tick
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case FrameMsg:
 		if msg.id != m.id {
@@ -88,7 +89,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, nil
 }
 
-// View of the progress bar component
 func (m Model) View() string {
 	b := strings.Repeat("▄", m.width/2)
 	if m.width%2 == 1 {

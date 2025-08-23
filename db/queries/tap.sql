@@ -5,7 +5,7 @@ ORDER BY order_id DESC
 LIMIT 1;
 
 -- name: TapGetCountByCategory :many
-SELECT category, COUNT(*)
+SELECT category, COUNT(*), MAX(order_created_at)::TIMESTAMP AS latest_order_created_at
 FROM tap
 GROUP BY category;
 
