@@ -7,6 +7,7 @@ db:
   port: 5432
   user: "postgres"
   password: "postgres"
+  database: "scc"
 
 backend:
   buzzer:
@@ -48,14 +49,6 @@ backend:
       - "-l100"
       - "-d0"
 
-  event:
-    url: "https://events.zeus.gent/api/v1"
-    interval_s: 3600
-
-  gamification:
-    url: "https://gamification.zeus.gent"
-    interval_s: 3600
-
   song:
     spotify_url: "https://api.spotify.com/v1"
     spotify_url_account: "https://accounts.spotify.com/api/token"
@@ -89,9 +82,11 @@ tui:
 
   view:
     event:
-      interval_s: 3600
+      url: "https://events.zeus.gent/api/v1"
+      interval_s: 86400
 
     gamification:
+      url: "https://gamification.zeus.gent"
       interval_s: 3600
 
     message:

@@ -2,57 +2,60 @@
 package gamification
 
 import (
-	"bytes"
-	"context"
-	"errors"
 	"fmt"
 	"image"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/jackc/pgx/v5"
-	"github.com/zeusWPI/scc/internal/pkg/db"
-	"github.com/zeusWPI/scc/internal/pkg/db/dto"
 	"github.com/zeusWPI/scc/pkg/config"
 	"github.com/zeusWPI/scc/tui/view"
 )
 
-// Model represents the view model for gamification
 type Model struct {
-	db          *db.DB
-	leaderboard []gamificationItem
+	leaderboard []gamification
 
 	width  int
 	height int
+
+	url string // API url for gamification
 }
 
-type gamificationItem struct {
-	image image.Image
-	item  dto.Gamification
-}
+// Interface compliance
+var _ view.View = (*Model)(nil)
 
 // Msg contains the data to update the gamification model
 type Msg struct {
-	leaderboard []gamificationItem
+	leaderboard []gamification
 }
 
-// NewModel initializes a new gamification model
-func NewModel(db *db.DB) view.View {
-	return &Model{db: db, leaderboard: []gamificationItem{}}
+// Interface Compliance
+var _ tea.Msg = (*Msg)(nil)
+
+type gamification struct {
+	Name      string `json:"github_name"`
+	Score     int    `json:"score"`
+	AvatarURL string `json:"avartar_url"`
+	avatar    image.Image
 }
 
-// Init starts the gamification view
+func NewModel() view.View {
+	return &Model{
+		leaderboard: nil,
+		width:       0,
+		height:      0,
+		url:         config.GetDefaultString("tui.view.gamification.url", "https://gamification.zeus.gent"),
+	}
+}
+
 func (m *Model) Init() tea.Cmd {
 	return nil
 }
 
-// Name returns the name of the view
 func (m *Model) Name() string {
 	return "Gamification"
 }
 
-// Update updates the gamification view
 func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case view.MsgSize:
@@ -76,16 +79,15 @@ func (m *Model) Update(msg tea.Msg) (view.View, tea.Cmd) {
 	return m, nil
 }
 
-// View draws the gamification view
 func (m *Model) View() string {
 	columns := make([]string, 0, len(m.leaderboard))
 
 	for i, item := range m.leaderboard {
 		user := lipgloss.JoinVertical(lipgloss.Left,
-			positions[i].Inherit(sName).Render(fmt.Sprintf("%d. %s", i+1, item.item.Name)),
-			sScore.Render(strconv.Itoa(int(item.item.Score))),
+			positions[i].Inherit(sName).Render(fmt.Sprintf("%d. %s", i+1, item.Name)),
+			sScore.Render(strconv.Itoa(int(item.Score))),
 		)
-		im := sAvatar.Render(view.ImageToString(item.image, wColumn, sAll.GetHeight()-lipgloss.Height(user)))
+		im := sAvatar.Render(view.ImageToString(item.avatar, wColumn, sAll.GetHeight()-lipgloss.Height(user)))
 
 		column := lipgloss.JoinVertical(lipgloss.Left, im, user)
 		columns = append(columns, sColumn.Render(column))
@@ -106,44 +108,4 @@ func (m *Model) GetUpdateDatas() []view.UpdateData {
 			Interval: config.GetDefaultInt("tui.view.gamification.interval_s", 3600),
 		},
 	}
-}
-
-func updateLeaderboard(view view.View) (tea.Msg, error) {
-	m := view.(*Model)
-
-	gams, err := m.db.Queries.GetAllGamificationByScore(context.Background())
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = nil
-		}
-		return nil, err
-	}
-
-	// Check if both leaderboards are equal
-	equal := false
-	if len(m.leaderboard) == len(gams) {
-		equal = true
-		for i, l := range m.leaderboard {
-			if !l.item.Equal(*dto.GamificationDTO(gams[i])) {
-				equal = false
-				break
-			}
-		}
-	}
-
-	if equal {
-		return nil, nil
-	}
-
-	msg := Msg{leaderboard: []gamificationItem{}}
-	for _, gam := range gams {
-		im, _, err := image.Decode(bytes.NewReader(gam.Avatar))
-		if err != nil {
-			return nil, err
-		}
-
-		msg.leaderboard = append(msg.leaderboard, gamificationItem{image: im, item: *dto.GamificationDTO(gam)})
-	}
-
-	return msg, nil
 }

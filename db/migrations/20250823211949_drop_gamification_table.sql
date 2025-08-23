@@ -1,14 +1,15 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE gamification (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    score INTEGER NOT NULL,
-    avatar VARCHAR(255) NOT NULL
-);
+DROP TABLE gamification;
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE gamification;
+CREATE TABLE gamification (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    score INTEGER NOT NULL,
+    avatar BYTEA
+);
+
 -- +goose StatementEnd
