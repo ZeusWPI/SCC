@@ -8,13 +8,11 @@ DB_USER := postgres
 DB_PASSWORD := postgres
 DB_NAME := scc
 
-# Phony targets
-.PHONY: all build build-backed build-tui clean run run-backend run-tui db sqlc create-migration goose migrate watch
-
-# Default target: build everything
 all: build
 
-# Build targets
+setup:
+	@go get tool
+
 build: clean build-backend build-tui
 
 build-backend: clean-backend
@@ -25,48 +23,40 @@ build-tui: clean-tui
 	@echo "Building $(TUI_BIN)..."
 	@go build -o $(TUI_BIN) $(TUI_SRC)
 
-# Run targets
-run: run-backend run-tui
-
 run-backend:
+	@docker compose up -d
 	@[ -f $(BACKEND_BIN) ] || $(MAKE) build-backend
 	@./$(BACKEND_BIN)
+	@docker compose down
 
 run-tui:
 	@[ -f $(TUI_BIN) ] || $(MAKE) build-tui
 	@read -p "Enter screen name: " screen; \
 	./$(TUI_BIN) $$screen
 
-# Run db
-db:
-	@docker compose up
+goose:
+	@docker compose down
+	@docker compose up db -d
+	@docker compose exec db bash -c 'until pg_isready -U postgres; do sleep 1; done'
+	@read -p "Action: " action; \
+	go tool goose -dir ./db/migrations postgres "user=postgres password=postgres host=localhost port=5431 dbname=website sslmode=disable" $$action
+	@docker compose down db
 
-# Clean targets
-clean: clean-backend clean-tui
-
-clean-backend:
-	@if [ -f "$(BACKEND_BIN)" ]; then \
-		echo "Cleaning $(BACKEND_BIN)..."; \
-		rm -f "$(BACKEND_BIN)"; \
-	fi
-
-clean-tui:
-	@if [ -f "$(TUI_BIN)" ]; then \
-		echo "Cleaning $(TUI_BIN)..."; \
-		rm -f "$(TUI_BIN)"; \
-	fi
-
-# SQL and migration targets
-sqlc:
-	sqlc generate
+migrate:
+	@docker compose down
+	@docker compose up db -d
+	@docker compose exec db bash -c 'until pg_isready -U postgres; do sleep 1; done'
+	@go tool goose -dir ./db/migrations postgres "user=postgres password=postgres host=localhost port=5431 dbname=website sslmode=disable" up
+	@docker compose down db
 
 create-migration:
 	@read -p "Enter migration name: " name; \
-	goose -dir $(DB_DIR) create $$name sql
+	go tool goose -dir ./db/migrations create $$name sql
 
-migrate:
-	@goose -dir $(DB_DIR) postgres "user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) host=localhost sslmode=disable" up
+query:
+	@go tool sqlc generate
 
-goose:
-	@read -p "Action: " action; \
-	goose -dir $(DB_DIR) postgres "user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) host=localhost sslmode=disable" $$action
+dead:
+	@go tool deadcode ./...
+
+.PHONY: all setup build build-backed build-tui run-backend run-tui sqlc create-migration goose migrate dead

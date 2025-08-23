@@ -3,8 +3,8 @@ package main
 
 import (
 	"github.com/zeusWPI/scc/internal/cmd"
-	"github.com/zeusWPI/scc/internal/pkg/db"
 	"github.com/zeusWPI/scc/pkg/config"
+	"github.com/zeusWPI/scc/pkg/db"
 	"github.com/zeusWPI/scc/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -26,7 +26,7 @@ func main() {
 	zap.S().Info("Initializing backend")
 
 	// Database
-	db, err := db.New()
+	db, err := db.NewPSQL()
 	if err != nil {
 		zap.S().Fatal("DB: Fatal error\n", err)
 	}

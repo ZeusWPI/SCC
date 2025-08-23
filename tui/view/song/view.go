@@ -122,7 +122,7 @@ func (m *Model) viewNotPlaying() string {
 	for i, entry := range m.history.entries {
 		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
 		body := sStatEntry.Render(entry.name)
-		amount := sStatAmount.Render(fmt.Sprintf("%d", entry.amount))
+		amount := sStatAmount.Render(strconv.Itoa(entry.amount))
 		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, enum, body, amount))
 	}
 	items = append(items, "") // HACK: Avoid the last item shifting to the right
@@ -149,7 +149,7 @@ func (m *Model) viewStatPlaying(stat stat, titleOpt ...string) string {
 
 		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
 		body := sStatEntry.Render(stat.entries[i].name)
-		amount := sStatAmount.Render(fmt.Sprintf("%d", stat.entries[i].amount))
+		amount := sStatAmount.Render(strconv.Itoa(stat.entries[i].amount))
 
 		items = append(items, lipgloss.JoinHorizontal(lipgloss.Top, enum, body, amount))
 	}

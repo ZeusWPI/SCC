@@ -99,7 +99,7 @@ func updateMessages(view view.View) (tea.Msg, error) {
 
 	messagesDB, err := m.db.Queries.GetMessageSinceID(context.Background(), lastMessageID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = nil
 		}
 		return nil, err

@@ -4,6 +4,7 @@ package gamification
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"strconv"
@@ -112,7 +113,7 @@ func updateLeaderboard(view view.View) (tea.Msg, error) {
 
 	gams, err := m.db.Queries.GetAllGamificationByScore(context.Background())
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = nil
 		}
 		return nil, err

@@ -264,7 +264,7 @@ func updateCurrentSong(view view.View) (tea.Msg, error) {
 
 	songs, err := m.db.Queries.GetLastSongFull(context.Background())
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = nil
 		}
 		return nil, err
@@ -295,7 +295,7 @@ func updateHistory(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 
 	history, err := m.db.Queries.GetSongHistory(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
@@ -312,17 +312,17 @@ func updateMonthlyStats(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 
 	songs, err := m.db.Queries.GetTopMonthlySongs(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
 	genres, err := m.db.Queries.GetTopMonthlyGenres(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
 	artists, err := m.db.Queries.GetTopMonthlyArtists(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
@@ -357,17 +357,17 @@ func updateStats(view view.View) (tea.Msg, error) {
 	m := view.(*Model)
 
 	songs, err := m.db.Queries.GetTopSongs(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
 	genres, err := m.db.Queries.GetTopGenres(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
 	artists, err := m.db.Queries.GetTopArtists(context.Background())
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 

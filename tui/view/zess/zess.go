@@ -214,7 +214,7 @@ func updateScans(view view.View) (tea.Msg, error) {
 	// Get new scans
 	scans, err := m.db.Queries.GetAllScansSinceID(context.Background(), lastScanID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			// No rows shouldn't be considered an error
 			err = nil
 		}
@@ -267,7 +267,7 @@ func updateSeason(view view.View) (tea.Msg, error) {
 
 	season, err := m.db.Queries.GetSeasonCurrent(context.Background())
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			// No rows shouldn't be considered an error
 			err = nil
 		}

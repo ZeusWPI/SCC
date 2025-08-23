@@ -1,114 +1,112 @@
 server:
-    host: "0.0.0.0"
-    port: 3000
+  host: "0.0.0.0"
+  port: 3000
 
 db:
-    host: "localhost"
-    port: 5432
-    user: "postgres"
-    password: "postgres"
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
 
 backend:
-    buzzer:
-        song:
-            - "-n"
-            - "-f880"
-            - "-l100"
-            - "-d0"
-            - "-n"
-            - "-f988"
-            - "-l100"
-            - "-d0"
-            - "-n"
-            - "-f588"
-            - "-l100"
-            - "-d0"
-            - "-n"
-            - "-f989"
-            - "-l100"
-            - "-d0"
-            - "-n"
-            - "-f660"
-            - "-l200"
-            - "-d0"
-            - "-n"
-            - "-f660"
-            - "-l200"
-            - "-d0"
-            - "-n"
-            - "-f588"
-            - "-l100"
-            - "-d0"
-            - "-n"
-            - "-f555"
-            - "-l100"
-            - "-d0"
-            - "-n"
-            - "-f495"
-            - "-l100"
-            - "-d0"
-
-    event:
-        website: "https://zeus.gent/events/"
-        website_poster: "https://git.zeus.gent/ZeusWPI/visueel/raw/branch/master"
-        interval_s: 3600
-
-    gamification:
-        api: "https://gamification.zeus.gent"
-        interval_s: 3600
-
+  buzzer:
     song:
-        spotify_api: "https://api.spotify.com/v1"
-        spotify_api_account: "https://accounts.spotify.com/api/token"
-        lrclib_api: "https://lrclib.net/api"
+      - "-n"
+      - "-f880"
+      - "-l100"
+      - "-d0"
+      - "-n"
+      - "-f988"
+      - "-l100"
+      - "-d0"
+      - "-n"
+      - "-f588"
+      - "-l100"
+      - "-d0"
+      - "-n"
+      - "-f989"
+      - "-l100"
+      - "-d0"
+      - "-n"
+      - "-f660"
+      - "-l200"
+      - "-d0"
+      - "-n"
+      - "-f660"
+      - "-l200"
+      - "-d0"
+      - "-n"
+      - "-f588"
+      - "-l100"
+      - "-d0"
+      - "-n"
+      - "-f555"
+      - "-l100"
+      - "-d0"
+      - "-n"
+      - "-f495"
+      - "-l100"
+      - "-d0"
 
-    tap:
-        api: "https://tap.zeus.gent"
-        beers:
-            - "Schelfaut"
-            - "Duvel"
-            - "Fourchette"
-            - "Jupiler"
-            - "Karmeliet"
-            - "Kriek"
-            - "Chouffe"
-            - "Maes"
-            - "Somersby"
-            - "Sportzot"
-            - "Stella"
-        interval_s: 60
+  event:
+    url: "https://events.zeus.gent/api/v1"
+    interval_s: 3600
 
-    zess:
-        api: "https://zess.zeus.gent/api"
-        interval_season_s: 300
-        interval_scan_s: 60
+  gamification:
+    url: "https://gamification.zeus.gent"
+    interval_s: 3600
 
+  song:
+    spotify_url: "https://api.spotify.com/v1"
+    spotify_url_account: "https://accounts.spotify.com/api/token"
+    lrclib_url: "https://lrclib.net/api"
+
+  tap:
+    url: "https://tap.zeus.gent"
+    beers:
+      - "Schelfaut"
+      - "Duvel"
+      - "Fourchette"
+      - "Jupiler"
+      - "Karmeliet"
+      - "Kriek"
+      - "Chouffe"
+      - "Maes"
+      - "Somersby"
+      - "Sportzot"
+      - "Stella"
+    interval_s: 60
+
+  zess:
+    url: "https://zess.zeus.gent/api"
+    interval_season_s: 3600
+    interval_scan_s: 60
 
 tui:
-    screen:
-        cammie:
-            interval_s: 300
+  screen:
+    cammie:
+      interval_s: 300
 
-    view:
-        event:
-            interval_s: 3600
+  view:
+    event:
+      interval_s: 3600
 
-        gamification:
-            interval_s: 3600
+    gamification:
+      interval_s: 3600
 
-        message:
-            interval_s: 1
+    message:
+      interval_s: 1
 
-        song:
-            interval_current_s: 5
-            interval_history_s: 5
-            interval_monthly_stats_s: 300
-            interval_stats_s: 3600
+    song:
+      interval_current_s: 5
+      interval_history_s: 5
+      interval_monthly_stats_s: 300
+      interval_stats_s: 3600
 
-        tap:
-            interval_s: 60
+    tap:
+      interval_s: 60
 
-        zess:
-            weeks: 10
-            interval_scan_s: 60
-            interval_season_s: 3600
+    zess:
+      weeks: 10
+      interval_scan_s: 60
+      interval_season_s: 3600
