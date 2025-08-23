@@ -1,38 +1,22 @@
--- CRUD
-
--- name: GetAllSeasons :many
+-- name: SeasonGetAll :many
 SELECT *
 FROM season;
 
--- name: GetSeasonByID :one
+-- name: SeasonGetCurrent :one
 SELECT *
 FROM season
-WHERE id = $1;
+WHERE current = true;
 
--- name: CreateSeason :one
+-- name: SeasonCreate :one
 INSERT INTO season (name, start, "end", current)
 VALUES ($1, $2, $3, $4)
-RETURNING *;
+RETURNING id;
 
--- name: UpdateSeason :one
+-- name: SeasonUpdate :exec
 UPDATE season
 SET name = $1, start = $2, "end" = $3, current = $4
 WHERE id = $5
 RETURNING *;
 
--- name: DeleteSeason :execrows
-DELETE FROM season
-WHERE id = $1;
-
--- name: DeleteSeasonAll :execrows
+-- name: SeasonDeleteAll :exec
 DELETE FROM season;
-
-
-
--- Other
-
-
--- name: GetSeasonCurrent :one
-SELECT *
-FROM season
-WHERE current = true;

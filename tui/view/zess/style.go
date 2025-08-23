@@ -35,7 +35,7 @@ var (
 	wStatAmount = 4  // Supports up to 9999
 	wStatGapMin = 3  // Minimum gap size between the date and amount
 
-	sStat            = base.BorderStyle(lipgloss.ThickBorder()).BorderForeground(cBorder).BorderLeft(true).Margin(0, 1, 1, 1).PaddingLeft(1) //.Align(lipgloss.Center)
+	sStat            = base.BorderStyle(lipgloss.ThickBorder()).BorderForeground(cBorder).BorderLeft(true).Margin(0, 1, 1, 1).PaddingLeft(1) // .Align(lipgloss.Center)
 	sStatTitle       = base.Foreground(cStatsTitle).Bold(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(cBorder).BorderBottom(true).Align(lipgloss.Center).MarginBottom(1)
 	sStatDate        = base.Width(wStatDate)
 	sStatAmount      = base.Width(wStatAmount).Align(lipgloss.Right)

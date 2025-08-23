@@ -3,7 +3,7 @@
 -- name: CreateSong :one
 INSERT INTO song (title, album, spotify_id, duration_ms, lyrics_type, lyrics)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING *;
+RETURNING id;
 
 -- name: CreateSongHistory :one
 INSERT INTO song_history (song_id)
@@ -23,7 +23,7 @@ RETURNING *;
 -- name: CreateSongArtistSong :one
 INSERT INTO song_artist_song (artist_id, song_id)
 VALUES ($1, $2)
-RETURNING *;
+RETURNING id;
 
 -- name: CreateSongArtistGenre :one
 INSERT INTO song_artist_genre (artist_id, genre_id)
@@ -53,11 +53,6 @@ LIMIT 1;
 SELECT *
 FROM song_genre
 WHERE genre = $1;
-
--- name: GetSongArtistByName :one
-SELECT *
-FROM song_artist
-WHERE name = $1;
 
 -- name: GetLastSongFull :many
 SELECT s.id, s.title AS song_title, s.spotify_id, s.album, s.duration_ms, s.lyrics_type, s.lyrics, sh.created_at, a.id AS artist_id, a.name AS artist_name, a.spotify_id AS artist_spotify_id, a.followers AS artist_followers, a.popularity AS artist_popularity, g.id AS genre_id, g.genre AS genre, sh.created_at

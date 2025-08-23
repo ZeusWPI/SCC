@@ -142,7 +142,7 @@ func updateOrders(view view.View) (tea.Msg, error) {
 
 	order, err := m.db.Queries.GetLastOrderByOrderID(context.Background())
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			err = nil
 		}
 		return nil, err
