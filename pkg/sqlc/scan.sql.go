@@ -56,6 +56,34 @@ func (q *Queries) ScanGetAllSinceID(ctx context.Context, id int32) ([]Scan, erro
 	return items, nil
 }
 
+const scanGetInSeason = `-- name: ScanGetInSeason :many
+SELECT sc.id, sc.scan_time, sc.scan_id
+FROM scan sc
+LEFT JOIN season se ON se.start <= sc.scan_time AND sc.scan_time < se.end
+WHERE se.id = $1
+ORDER BY sc.scan_time ASC
+`
+
+func (q *Queries) ScanGetInSeason(ctx context.Context, id int32) ([]Scan, error) {
+	rows, err := q.db.Query(ctx, scanGetInSeason, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Scan
+	for rows.Next() {
+		var i Scan
+		if err := rows.Scan(&i.ID, &i.ScanTime, &i.ScanID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const scanGetLast = `-- name: ScanGetLast :one
 SELECT id, scan_time, scan_id
 FROM scan

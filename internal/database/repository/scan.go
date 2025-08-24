@@ -22,6 +22,7 @@ func (r *Repository) NewScan() *Scan {
 	}
 }
 
+// TODO: I think unused. Veryify with g + r and make dead
 func (s *Scan) GetLast(ctx context.Context) (*model.Scan, error) {
 	scan, err := s.repo.queries(ctx).ScanGetLast(ctx)
 	if err != nil {
@@ -39,6 +40,18 @@ func (s *Scan) GetAllSinceID(ctx context.Context, id int) ([]*model.Scan, error)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("get scans since id %d | %w", id, err)
+		}
+		return nil, nil
+	}
+
+	return utils.SliceMap(scans, model.ScanModel), nil
+}
+
+func (s *Scan) GetInSeason(ctx context.Context, season model.Season) ([]*model.Scan, error) {
+	scans, err := s.repo.queries(ctx).ScanGetInSeason(ctx, int32(season.ID))
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("get scans in season %+v | %w", season, err)
 		}
 		return nil, nil
 	}

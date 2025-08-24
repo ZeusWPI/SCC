@@ -129,3 +129,13 @@ func SliceSanitize[T comparable](slice []T) []T {
 
 	return sanitized
 }
+
+// Reduce applies a combining function to each element of a slice,
+// accumulating a single result.
+func Reduce[T any, U any](slice []T, combine func(U, T) U) U {
+	var accum U
+	for _, v := range slice {
+		accum = combine(accum, v)
+	}
+	return accum
+}
