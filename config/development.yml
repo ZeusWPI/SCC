@@ -103,5 +103,4 @@ tui:
 
     zess:
       weeks: 10
-      interval_scan_s: 60
-      interval_season_s: 3600
+      interval_s: 60

@@ -2,22 +2,26 @@ package zess
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/NimbleMarkets/ntcharts/barchart"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zeusWPI/scc/pkg/utils"
 )
 
 func (m *Model) viewChart() string {
 	chart := barchart.New(sBar.GetWidth(), sBar.GetHeight(), barchart.WithNoAutoBarWidth(), barchart.WithBarGap(wBarGap), barchart.WithBarWidth(wBar))
 
-	for _, scan := range m.scans {
+	for _, week := range m.weeks {
+		weekNumber, _ := week.start.ISOWeek()
+
 		bar := barchart.BarData{
-			Label: sBarLabel.Render(fmt.Sprintf("W%d", scan.time.week)),
+			Label: sBarLabel.Render(fmt.Sprintf("W%02d", weekNumber)),
 			Values: []barchart.BarValue{{
-				Name:  scan.start,
-				Value: float64(scan.amount),
-				Style: sBarOne.Foreground(lipgloss.Color(scan.color)),
+				Name:  week.start.String(),
+				Value: float64(week.scans),
+				Style: sBarOne.Foreground(lipgloss.Color(randomColor())),
 			}},
 		}
 
@@ -31,19 +35,22 @@ func (m *Model) viewChart() string {
 
 func (m *Model) viewStats() string {
 	// Overview of each week
-	rows := make([]string, 0, len(m.scans))
+	rows := make([]string, 0, len(m.weeks))
 
-	for _, scan := range m.scans {
-		week := sStatDate.Render(fmt.Sprintf("W%02d - %s", scan.time.week, scan.start))
+	maxScans := slices.MaxFunc(m.weeks, func(a, b week) int { return a.scans - b.scans })
+
+	for _, week := range m.weeks {
+		weekNumber, _ := week.start.ISOWeek()
+		weekStr := sStatDate.Render(fmt.Sprintf("W%02d - %s", weekNumber, week.start.Format("01/02")))
 
 		var amount string
-		if scan.amount == m.maxWeekScans {
-			amount = sStatMax.Inherit(sStatAmount).Render(strconv.Itoa(int(scan.amount)))
+		if week.scans == maxScans.scans {
+			amount = sStatMax.Inherit(sStatAmount).Render(strconv.Itoa(int(week.scans)))
 		} else {
-			amount = sStatAmount.Render(strconv.Itoa(int(scan.amount)))
+			amount = sStatAmount.Render(strconv.Itoa(int(week.scans)))
 		}
 
-		text := lipgloss.JoinHorizontal(lipgloss.Top, week, amount)
+		text := lipgloss.JoinHorizontal(lipgloss.Top, weekStr, amount)
 		rows = append(rows, text)
 	}
 
@@ -54,7 +61,7 @@ func (m *Model) viewStats() string {
 
 	// Total scans
 	total := sStatTotalTitle.Render("Total")
-	amount := sStatTotalAmount.Render(strconv.Itoa(int(m.seasonScans)))
+	amount := sStatTotalAmount.Render(strconv.Itoa(utils.Reduce(m.weeks, func(accum int, w week) int { return accum + w.scans })))
 	total = lipgloss.JoinHorizontal(lipgloss.Top, total, amount)
 	total = sStatTotal.Render(total)
 
