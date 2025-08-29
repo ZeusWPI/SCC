@@ -4,8 +4,8 @@ package repository
 import (
 	"context"
 
+	"github.com/zeusWPI/scc/internal/database/sqlc"
 	"github.com/zeusWPI/scc/pkg/db"
-	"github.com/zeusWPI/scc/pkg/sqlc"
 )
 
 type Repository struct {

@@ -1,8 +1,8 @@
 package model
 
 import (
+	"github.com/zeusWPI/scc/internal/database/sqlc"
 	"github.com/zeusWPI/scc/pkg/date"
-	"github.com/zeusWPI/scc/pkg/sqlc"
 )
 
 type Season struct {

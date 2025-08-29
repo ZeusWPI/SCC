@@ -12,7 +12,7 @@ func (s *Service) NewSong() *Song {
 	return &Song{}
 }
 
-// TODO: Fill in
-func (s *Song) New(ctx context.Context, song dto.Song) error {
+func (s *Song) New(_ context.Context, _ dto.Song) error {
+	// TODO: Fill in
 	return nil
 }

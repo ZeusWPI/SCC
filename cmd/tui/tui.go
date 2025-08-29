@@ -3,7 +3,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/zeusWPI/scc/internal/cmd"
 	"github.com/zeusWPI/scc/internal/database/repository"
@@ -29,7 +28,7 @@ func main() {
 	}
 
 	// Logger
-	zapLogger, err := logger.New(fmt.Sprintf("%s.log", *screen), false)
+	zapLogger, err := logger.New(*screen+".log", false)
 	if err != nil {
 		panic(err)
 	}

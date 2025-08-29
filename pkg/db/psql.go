@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/zeusWPI/scc/internal/database/sqlc"
 	"github.com/zeusWPI/scc/pkg/config"
-	"github.com/zeusWPI/scc/pkg/sqlc"
 )
 
 type psql struct {

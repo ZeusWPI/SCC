@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/zeusWPI/scc/internal/database/model"
-	"github.com/zeusWPI/scc/pkg/sqlc"
+	"github.com/zeusWPI/scc/internal/database/sqlc"
 	"github.com/zeusWPI/scc/pkg/utils"
 )
 

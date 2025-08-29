@@ -12,7 +12,7 @@ func (s *Service) NewMessage() *Message {
 	return &Message{}
 }
 
-// TODO: fill in
-func (m *Message) Create(ctx context.Context, message dto.Message) (dto.Message, error) {
+func (m *Message) Create(_ context.Context, _ dto.Message) (dto.Message, error) {
+	// TODO: fill in
 	return dto.Message{}, nil
 }

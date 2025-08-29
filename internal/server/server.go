@@ -7,7 +7,6 @@ import (
 	"github.com/gofiber/contrib/fiberzap"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/jackc/pgx/v5/pgxpool"
 	routers "github.com/zeusWPI/scc/internal/server/api"
 	"github.com/zeusWPI/scc/internal/server/service"
 	"github.com/zeusWPI/scc/pkg/config"
@@ -19,7 +18,7 @@ type Server struct {
 	Addr string
 }
 
-func New(service service.Service, pool *pgxpool.Pool) *Server {
+func New(service service.Service) *Server {
 	env := config.GetDefaultString("app.env", "development")
 
 	// Construct app

@@ -18,9 +18,9 @@ type Song struct {
 }
 
 // New creates a new song screen
-func New(repo repository.Repository) screen.Screen {
+func New(_ repository.Repository) screen.Screen {
 	return &Song{
-		song:   song.New(repo),
+		song:   song.New(),
 		width:  0,
 		height: 0,
 	}
@@ -41,6 +41,9 @@ func (s *Song) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 		sSong = sSong.Width(s.width - view.GetOuterWidth(sSong)).Height(s.height - sSong.GetVerticalFrameSize() - sSong.GetVerticalPadding())
 
 		return s, s.GetSizeMsg
+
+	default:
+		break
 	}
 
 	cmds := make([]tea.Cmd, 0)

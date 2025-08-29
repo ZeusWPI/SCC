@@ -78,47 +78,6 @@ type Season struct {
 	Current bool
 }
 
-type Song struct {
-	ID         int32
-	Title      string
-	SpotifyID  string
-	DurationMs int32
-	Album      string
-	LyricsType pgtype.Text
-	Lyrics     pgtype.Text
-}
-
-type SongArtist struct {
-	ID         int32
-	Name       string
-	SpotifyID  string
-	Followers  int32
-	Popularity int32
-}
-
-type SongArtistGenre struct {
-	ID       int32
-	ArtistID int32
-	GenreID  int32
-}
-
-type SongArtistSong struct {
-	ID       int32
-	ArtistID int32
-	SongID   int32
-}
-
-type SongGenre struct {
-	ID    int32
-	Genre string
-}
-
-type SongHistory struct {
-	ID        int32
-	SongID    int32
-	CreatedAt pgtype.Timestamptz
-}
-
 type Tap struct {
 	ID             int32
 	OrderID        int32
