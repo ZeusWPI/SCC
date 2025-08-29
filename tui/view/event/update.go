@@ -46,7 +46,7 @@ func updateEvents(ctx context.Context, view view.View) (tea.Msg, error) {
 func getEvents(ctx context.Context, url string) ([]event, error) {
 	resp, err := utils.DoRequest(ctx, utils.DoRequestValues{
 		Method: "GET",
-		URL:    fmt.Sprintf("%s/event", url),
+		URL:    url + "/event",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("get events %w", err)

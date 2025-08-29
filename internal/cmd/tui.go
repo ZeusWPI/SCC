@@ -9,25 +9,23 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/database/repository"
-	"github.com/zeusWPI/scc/internal/pkg/db"
+	"github.com/zeusWPI/scc/pkg/utils"
 	"github.com/zeusWPI/scc/tui"
 	"github.com/zeusWPI/scc/tui/screen"
 	"github.com/zeusWPI/scc/tui/screen/cammie"
 	songScreen "github.com/zeusWPI/scc/tui/screen/song"
 	"github.com/zeusWPI/scc/tui/view"
-	"go.uber.org/zap"
 )
 
-var screens = map[string]func(*db.DB) screen.Screen{
+var screens = map[string]func(repo repository.Repository) screen.Screen{
 	"cammie": cammie.New,
 	"song":   songScreen.New,
 }
 
-// TUI starts the terminal user interface
 func TUI(repo repository.Repository, screenName string) error {
 	val, ok := screens[screenName]
 	if !ok {
-		return fmt.Errorf("Screen %s not found. Options are %v", screenName, maps.Keys(screens))
+		return fmt.Errorf("screen %s not found. Options are %v", screenName, maps.Keys(screens))
 	}
 
 	screen := val(repo)
@@ -35,10 +33,8 @@ func TUI(repo repository.Repository, screenName string) error {
 	p := tea.NewProgram(tui, tea.WithAltScreen())
 
 	dones := make([]chan bool, 0, len(screen.GetUpdateViews()))
-	for _, updateData := range screen.GetUpdateViews() {
-		done := make(chan bool)
-		dones = append(dones, done)
-		go tuiPeriodicUpdates(p, updateData, done)
+	for _, data := range screen.GetUpdateViews() {
+		dones = append(dones, periodicUpdate(p, data))
 	}
 
 	_, err := p.Run()
@@ -50,37 +46,28 @@ func TUI(repo repository.Repository, screenName string) error {
 	return err
 }
 
-func tuiPeriodicUpdates(p *tea.Program, updateData view.UpdateData, done chan bool) {
-	zap.S().Info("TUI: Starting periodic update for ", updateData.Name, " with an interval of ", updateData.Interval, " seconds")
+func periodicUpdate(p *tea.Program, data view.UpdateData) chan bool {
+	done := make(chan bool)
 
-	ticker := time.NewTicker(time.Duration(updateData.Interval) * time.Second)
-	defer ticker.Stop()
-
-	// Immediatly update once
-	msg, err := updateData.Update(context.Background(), updateData.View)
-	if err != nil {
-		zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
-	}
-
-	if msg != nil {
-		p.Send(msg)
-	}
-
-	for {
-		select {
-		case <-done:
-			zap.S().Info("TUI: Stopping periodic update for ", updateData.Name)
-			return
-		case <-ticker.C:
-			// Update
-			msg, err := updateData.Update(context.Background(), updateData.View)
-			if err != nil {
-				zap.S().Error("TUI: Error updating ", updateData.Name, "\n", err)
-			}
-
-			if msg != nil {
-				p.Send(msg)
-			}
+	update := func(ctx context.Context) error {
+		msg, err := data.Update(ctx, data.View)
+		if err != nil {
+			return err
 		}
+
+		if msg != nil {
+			p.Send(msg)
+		}
+
+		return nil
 	}
+
+	go utils.Periodic(
+		data.Name,
+		time.Duration(data.Interval)*time.Second,
+		update,
+		done,
+	)
+
+	return done
 }

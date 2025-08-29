@@ -81,7 +81,7 @@ func (m *Model) View() string {
 	for i, item := range m.leaderboard {
 		user := lipgloss.JoinVertical(lipgloss.Left,
 			positions[i].Inherit(sName).Render(fmt.Sprintf("%d. %s", i+1, item.Name)),
-			sScore.Render(strconv.Itoa(int(item.Score))),
+			sScore.Render(strconv.Itoa(item.Score)),
 		)
 		im := sAvatar.Render(view.ImageToString(item.avatar, wColumn, sAll.GetHeight()-lipgloss.Height(user)))
 

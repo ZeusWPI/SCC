@@ -22,7 +22,8 @@ type orderResponse struct {
 }
 
 func (o orderResponse) ToModel() []model.Tap {
-	var taps []model.Tap
+	taps := make([]model.Tap, 0, len(o.Orders))
+
 	for _, order := range o.Orders {
 		var category model.TapCategory = "unknown"
 		switch order.ProductCategory {
@@ -50,7 +51,7 @@ func (o orderResponse) ToModel() []model.Tap {
 func (t *Tap) getOrders(ctx context.Context) ([]model.Tap, error) {
 	resp, err := utils.DoRequest(ctx, utils.DoRequestValues{
 		Method: "GET",
-		URL:    fmt.Sprintf("%s/recent", t.url),
+		URL:    t.url + "/recent",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("get all tap orders %w", err)

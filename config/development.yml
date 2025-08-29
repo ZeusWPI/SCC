@@ -49,11 +49,6 @@ backend:
       - "-l100"
       - "-d0"
 
-  song:
-    spotify_url: "https://api.spotify.com/v1"
-    spotify_url_account: "https://accounts.spotify.com/api/token"
-    lrclib_url: "https://lrclib.net/api"
-
   tap:
     url: "https://tap.zeus.gent"
     beers:

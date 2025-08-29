@@ -45,9 +45,9 @@ func (m *Model) viewStats() string {
 
 		var amount string
 		if week.scans == maxScans.scans {
-			amount = sStatMax.Inherit(sStatAmount).Render(strconv.Itoa(int(week.scans)))
+			amount = sStatMax.Inherit(sStatAmount).Render(strconv.Itoa(week.scans))
 		} else {
-			amount = sStatAmount.Render(strconv.Itoa(int(week.scans)))
+			amount = sStatAmount.Render(strconv.Itoa(week.scans))
 		}
 
 		text := lipgloss.JoinHorizontal(lipgloss.Top, weekStr, amount)

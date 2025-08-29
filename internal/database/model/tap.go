@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/zeusWPI/scc/pkg/sqlc"
+	"github.com/zeusWPI/scc/internal/database/sqlc"
 )
 
 type TapCategory string

@@ -109,10 +109,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	duration := m.duration.Round(time.Second)
 
-	min := int(duration / time.Minute)
-	sec := int((duration % time.Minute) / time.Second)
+	minutes := int(duration / time.Minute)
+	seconds := int((duration % time.Minute) / time.Second)
 
-	return fmt.Sprintf("%02d:%02d", min, sec)
+	return fmt.Sprintf("%02d:%02d", minutes, seconds)
 }
 
 func tick(id int64) tea.Cmd {

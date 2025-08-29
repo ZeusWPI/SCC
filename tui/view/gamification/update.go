@@ -46,7 +46,7 @@ func updateLeaderboard(ctx context.Context, view view.View) (tea.Msg, error) {
 func getLeaderboard(ctx context.Context, url string) ([]gamification, error) {
 	resp, err := utils.DoRequest(ctx, utils.DoRequestValues{
 		Method: "GET",
-		URL:    fmt.Sprintf("%s/top4", url),
+		URL:    url + "/top4",
 		Headers: map[string]string{
 			"Accept": "application/json",
 		},

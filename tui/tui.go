@@ -40,7 +40,12 @@ func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			zap.S().Info("Exiting")
 			cmds = append(cmds, tea.ExitAltScreen)
 			cmds = append(cmds, tea.Quit)
+
+		default:
+			break
 		}
+	default:
+		break
 	}
 
 	return t, tea.Batch(cmds...)

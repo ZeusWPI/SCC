@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/zeusWPI/scc/pkg/sqlc"
+	"github.com/zeusWPI/scc/internal/database/sqlc"
 )
 
 type DB interface {

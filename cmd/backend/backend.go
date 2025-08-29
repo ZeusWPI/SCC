@@ -37,24 +37,26 @@ func main() {
 	// Repository
 	repo := repository.New(db)
 
+	var dones []chan bool
+
 	// Tap
-	_, _ = cmd.Tap(db)
+	_, done := cmd.Tap(*repo)
+	dones = append(dones, done)
 
 	// Zess
-	_, _, _ = cmd.Zess(db)
-
-	// Spotify
-	spotify, err := cmd.Song(db)
-	if err != nil {
-		zap.S().Error("Spotify: Initiating error, integration will not work.\n", err)
-	}
+	_, done = cmd.Zess(*repo)
+	dones = append(dones, done)
 
 	// API
 	service := service.New(*repo)
-	api := server.New(*service, db.Pool())
+	api := server.New(*service)
 
 	zap.S().Infof("Server is running on %s", api.Addr)
 	if err := api.Listen(api.Addr); err != nil {
 		zap.S().Fatalf("Failure while running the server %v", err)
+	}
+
+	for _, done := range dones {
+		done <- true
 	}
 }

@@ -30,7 +30,7 @@ func (s seasonAPI) toModel() model.Season {
 func (z *Zess) getSeasons(ctx context.Context) ([]model.Season, error) {
 	resp, err := utils.DoRequest(ctx, utils.DoRequestValues{
 		Method: "GET",
-		URL:    fmt.Sprintf("%s/seasons", z.url),
+		URL:    z.url + "/seasons",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("http get all zess seasons %w", err)
@@ -63,7 +63,7 @@ func (s scanAPI) toModel() model.Scan {
 func (z *Zess) getScans(ctx context.Context) ([]model.Scan, error) {
 	resp, err := utils.DoRequest(ctx, utils.DoRequestValues{
 		Method: "GET",
-		URL:    fmt.Sprintf("%s/recent_scans", z.url),
+		URL:    z.url + "/recent_scans",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("http get recent zess scans %w", err)
