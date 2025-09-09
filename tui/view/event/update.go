@@ -70,9 +70,9 @@ func getEvents(ctx context.Context, url string) ([]event, error) {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for _, event := range events {
+	for i := range events {
 		wg.Go(func() {
-			if err := getPoster(ctx, url, &event); err != nil {
+			if err := getPoster(ctx, url, &events[i]); err != nil {
 				mu.Lock()
 				errs = append(errs, err)
 				mu.Unlock()

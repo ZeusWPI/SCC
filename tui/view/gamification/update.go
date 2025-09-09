@@ -1,13 +1,11 @@
 package gamification
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
-	"io"
 	"slices"
 	"sync"
 
@@ -28,7 +26,7 @@ func updateLeaderboard(ctx context.Context, view view.View) (tea.Msg, error) {
 		return nil, err
 	}
 
-	slices.SortFunc(leaderboard, func(a, b gamification) int { return a.Score - b.Score })
+	slices.SortFunc(leaderboard, func(a, b gamification) int { return b.Score - a.Score })
 
 	if len(leaderboard) != len(m.leaderboard) {
 		return Msg{leaderboard: leaderboard}, nil
@@ -69,9 +67,9 @@ func getLeaderboard(ctx context.Context, url string) ([]gamification, error) {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for _, gam := range gams {
+	for i := range gams {
 		wg.Go(func() {
-			if err := getAvatar(ctx, &gam); err != nil {
+			if err := getAvatar(ctx, &gams[i]); err != nil {
 				mu.Lock()
 				errs = append(errs, err)
 				mu.Unlock()
@@ -89,6 +87,10 @@ func getLeaderboard(ctx context.Context, url string) ([]gamification, error) {
 }
 
 func getAvatar(ctx context.Context, gam *gamification) error {
+	if gam.AvatarURL == "" {
+		return nil
+	}
+
 	resp, err := utils.DoRequest(ctx, utils.DoRequestValues{
 		Method: "GET",
 		URL:    gam.AvatarURL,
@@ -101,12 +103,7 @@ func getAvatar(ctx context.Context, gam *gamification) error {
 		_ = resp.Body.Close()
 	}()
 
-	avatarBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("read avatar bytes %+v | %w", *gam, err)
-	}
-
-	img, _, err := image.Decode(bytes.NewReader(avatarBytes))
+	img, _, err := image.Decode(resp.Body)
 	if err != nil {
 		return fmt.Errorf("decode gamification avatar %+v | %w", *gam, err)
 	}

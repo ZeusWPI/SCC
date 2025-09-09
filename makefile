@@ -39,14 +39,12 @@ clean-tui:
 
 backend:
 	@docker compose up -d
-	@[ -f $(BACKEND_BIN) ] || $(MAKE) build-backend
-	@./$(BACKEND_BIN)
+	@go run $(BACKEND_SRC)
 	@docker compose down
 
 tui:
-	@[ -f $(TUI_BIN) ] || $(MAKE) build-tui
 	@read -p "Enter screen name: " screen; \
-	./$(TUI_BIN) $$screen
+	go run $(TUI_SRC) -screen $$screen
 
 goose:
 	@docker compose down

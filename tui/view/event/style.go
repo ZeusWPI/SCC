@@ -2,15 +2,8 @@ package event
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zeusWPI/scc/tui/theme"
 	"github.com/zeusWPI/scc/tui/view"
-)
-
-// Color
-var (
-	cZeus     = lipgloss.Color("#FF7F00")
-	cWarning  = lipgloss.Color("#EE4B2B")
-	cBorder   = lipgloss.Color("#383838")
-	cUpcoming = lipgloss.Color("#FFBF00")
 )
 
 // Base style
@@ -26,20 +19,20 @@ var (
 	sOvAll    = base.Padding(0, 1) // Style for the overview and the poster
 	sOvPoster = base.AlignVertical(lipgloss.Center)
 	sOv       = base.AlignVertical(lipgloss.Center).MarginRight(wOvGap) // Style for the overview of the events
-	sOvTitle  = base.Bold(true).Foreground(cWarning).Align(lipgloss.Center).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(cBorder)
+	sOvTitle  = base.Bold(true).Foreground(theme.Red).Align(lipgloss.Center).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(theme.Border)
 
 	// Styles for passed events
 	sOvPassedDate = base.Width(wOvDate).Faint(true)
-	sOvPassedText = base.Foreground(cZeus).Faint(true)
+	sOvPassedText = base.Foreground(theme.Zeus).Faint(true)
 
 	// Styles for next event
 	sOvNextDate = base.Width(wOvDate).Bold(true)
-	sOvNextText = base.Bold(true).Foreground(cZeus)
+	sOvNextText = base.Bold(true).Foreground(theme.Zeus)
 	sOvNextLoc  = base.Italic(true)
 
 	// Styles for the upcoming envets
 	sOvUpcomingDate = base.Width(wOvDate).Faint(true)
-	sOvUpcomingText = base.Foreground(cUpcoming)
+	sOvUpcomingText = base.Foreground(theme.Gold)
 	sOvUpcomingLoc  = base.Italic(true).Faint(true)
 )
 
@@ -54,8 +47,14 @@ var (
 	sToday       = base.AlignVertical(lipgloss.Center).MarginLeft(wOvGap).Padding(1, 0).Border(lipgloss.DoubleBorder(), true, false) // Style for the event
 
 	sTodayDate = base.Align(lipgloss.Center)
-	sTodayText = base.Align(lipgloss.Center).Bold(true).Foreground(cZeus).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(cBorder)
+	sTodayText = base.Align(lipgloss.Center).Bold(true).Foreground(theme.Zeus).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(theme.Border)
 	sTodayeLoc = base.Align(lipgloss.Center).Italic(true).Faint(true)
+)
+
+// Styles for no events
+var (
+	sNoTitle  = base.Bold(true).Foreground(theme.Red).Align(lipgloss.Center).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(theme.Border)
+	sNoEvents = base.Align(lipgloss.Center)
 )
 
 func (m *Model) updateStyles() {
@@ -89,4 +88,6 @@ func (m *Model) updateStyles() {
 	sTodayDate = sTodayDate.Width(wTodayEv)
 	sTodayText = sTodayText.Width(wTodayEv)
 	sTodayeLoc = sTodayeLoc.Width(wTodayEv)
-}
+
+	// Adjust the styles for no events
+	

@@ -2,15 +2,8 @@ package gamification
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zeusWPI/scc/tui/theme"
 	"github.com/zeusWPI/scc/tui/view"
-)
-
-// Colors
-var (
-	cGold   = lipgloss.Color("#FFD700")
-	cZeus   = lipgloss.Color("#FF7F00")
-	cBronze = lipgloss.Color("#CD7F32")
-	cBorder = lipgloss.Color("#383838")
 )
 
 // Base style
@@ -32,9 +25,9 @@ var (
 
 // Styles for the positions
 var positions = []lipgloss.Style{
-	base.Foreground(cGold),
-	base.Foreground(cZeus),
-	base.Foreground(cBronze),
+	base.Foreground(theme.Gold),
+	base.Foreground(theme.Zeus),
+	base.Foreground(theme.Bronze),
 	base,
 }
 
@@ -45,7 +38,7 @@ func (m *Model) updateStyles() {
 	// Adjust styles
 	wColumn = (sAll.GetWidth() - view.GetOuterWidth(sAll) - view.GetOuterWidth(sColumn)*wAmount) / wAmount
 
-	sName = sName.Width(wColumn).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(cBorder)
+	sName = sName.Width(wColumn).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(theme.Border)
 	sScore = sScore.Width(wColumn)
 	sAvatar = sAvatar.Width(wColumn)
 }

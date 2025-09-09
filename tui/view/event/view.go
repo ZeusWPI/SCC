@@ -110,3 +110,8 @@ func (m *Model) viewGetEventOverview(passed, upcoming []event) string {
 
 	return sOv.Render(view)
 }
+
+func (m *Model) viewNoEvents() string {
+	title := sOvTitle.Render("Events")
+	noEvents := 
+}
