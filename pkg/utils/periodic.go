@@ -19,7 +19,7 @@ func Periodic(name string, interval time.Duration, fn func(ctx context.Context) 
 	update := func() {
 		zap.S().Infof("Running %s", name)
 		if err := fn(ctx); err != nil {
-			zap.S().Errorf("Error %s | %w", name, err)
+			zap.S().Errorf("Error %s | %v", name, err)
 		}
 	}
 

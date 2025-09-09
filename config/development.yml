@@ -85,7 +85,8 @@ tui:
       interval_s: 3600
 
     message:
-      interval_s: 1
+      # TODO: Change back to 1
+      interval_s: 300
 
     song:
       interval_current_s: 5

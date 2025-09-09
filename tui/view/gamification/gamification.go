@@ -32,7 +32,7 @@ type Msg struct {
 type gamification struct {
 	Name      string `json:"github_name"`
 	Score     int    `json:"score"`
-	AvatarURL string `json:"avartar_url"`
+	AvatarURL string `json:"avatar_url"`
 	avatar    image.Image
 }
 

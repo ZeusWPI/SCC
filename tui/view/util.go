@@ -12,6 +12,10 @@ import (
 // ImageToString converts an image to a string
 // If either widht or height is 0 then the aspect ratio is kept
 func ImageToString(img image.Image, width, height int) string {
+	if img == nil {
+		return ""
+	}
+
 	if width == 0 || height == 0 {
 		return imageToString(imaging.Resize(img, width, height, imaging.Lanczos))
 	}

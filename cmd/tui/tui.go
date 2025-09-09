@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// Logger
-	zapLogger, err := logger.New(*screen+".log", false)
+	zapLogger, err := logger.New(*screen, false)
 	if err != nil {
 		panic(err)
 	}
