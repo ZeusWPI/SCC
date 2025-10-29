@@ -51,12 +51,6 @@ var (
 	sTodayeLoc = base.Align(lipgloss.Center).Italic(true).Faint(true)
 )
 
-// Styles for no events
-var (
-	sNoTitle  = base.Bold(true).Foreground(theme.Red).Align(lipgloss.Center).BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).BorderForeground(theme.Border)
-	sNoEvents = base.Align(lipgloss.Center)
-)
-
 func (m *Model) updateStyles() {
 	// Adjust the styles for the overview
 	wOvPoster = (m.width - wOvGap - view.GetOuterWidth(sOvAll)) / 2
@@ -90,4 +84,4 @@ func (m *Model) updateStyles() {
 	sTodayeLoc = sTodayeLoc.Width(wTodayEv)
 
 	// Adjust the styles for no events
-	
+}

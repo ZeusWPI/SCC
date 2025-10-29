@@ -139,3 +139,15 @@ func Reduce[T any, U any](slice []T, combine func(U, T) U) U {
 	}
 	return accum
 }
+
+// SliceGet returns the first x items
+// If the slice doesn't have enough items then it returns
+// all items
+func SliceGet[T any](slice []T, amount int) []T {
+	result := make([]T, 0, amount)
+	for i := range min(amount, len(slice)) {
+		result = append(result, slice[i])
+	}
+
+	return result
+}
