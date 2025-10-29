@@ -61,6 +61,10 @@ func (t *Tap) getOrders(ctx context.Context) ([]model.Tap, error) {
 		_ = resp.Body.Close()
 	}()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
+	}
+
 	var orders orderResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&orders); err != nil {

@@ -22,7 +22,6 @@ func (r *Repository) NewScan() *Scan {
 	}
 }
 
-// TODO: I think unused. Veryify with g + r and make dead
 func (s *Scan) GetLast(ctx context.Context) (*model.Scan, error) {
 	scan, err := s.repo.queries(ctx).ScanGetLast(ctx)
 	if err != nil {
