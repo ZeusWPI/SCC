@@ -40,6 +40,10 @@ func (z *Zess) getSeasons(ctx context.Context) ([]model.Season, error) {
 		_ = resp.Body.Close()
 	}()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
+	}
+
 	var seasons []seasonAPI
 	if err := json.NewDecoder(resp.Body).Decode(&seasons); err != nil {
 		return nil, fmt.Errorf("decode http zess seasons %w", err)
@@ -72,6 +76,10 @@ func (z *Zess) getScans(ctx context.Context) ([]model.Scan, error) {
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
+	}
 
 	var scans []scanAPI
 	if err := json.NewDecoder(resp.Body).Decode(&scans); err != nil {

@@ -57,6 +57,10 @@ func getLeaderboard(ctx context.Context, url string) ([]gamification, error) {
 		_ = resp.Body.Close()
 	}()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
+	}
+
 	var gams []gamification
 	if err := json.NewDecoder(resp.Body).Decode(&gams); err != nil {
 		return nil, fmt.Errorf("decode gamification response %w", err)
@@ -102,6 +106,10 @@ func getAvatar(ctx context.Context, gam *gamification) error {
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("unexpected status code %s", resp.Status)
+	}
 
 	img, _, err := image.Decode(resp.Body)
 	if err != nil {

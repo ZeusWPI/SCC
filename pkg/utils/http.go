@@ -29,6 +29,5 @@ func DoRequest(ctx context.Context, values DoRequestValues) (*http.Response, err
 		return nil, fmt.Errorf("do http request %+v | %w", values, err)
 	}
 
-	// TODO: Update all references now it doesnt check the response code
 	return resp, nil
 }
