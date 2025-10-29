@@ -10,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/database/model"
 	"github.com/zeusWPI/scc/internal/database/sqlc"
-	"github.com/zeusWPI/scc/pkg/utils"
 )
 
 type Season struct {
@@ -21,19 +20,6 @@ func (r *Repository) NewSeason() *Season {
 	return &Season{
 		repo: *r,
 	}
-}
-
-// TODO: Check still used
-func (s *Season) GetAll(ctx context.Context) ([]*model.Season, error) {
-	seasons, err := s.repo.queries(ctx).SeasonGetAll(ctx)
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("season get all %w", err)
-		}
-		return nil, nil
-	}
-
-	return utils.SliceMap(seasons, model.SeasonModel), nil
 }
 
 func (s *Season) GetCurrent(ctx context.Context) (*model.Season, error) {

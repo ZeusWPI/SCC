@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// Buzzer represents a buzzer
-type Buzzer struct {
+// Client represents a buzzer
+type Client struct {
 	Song []string
 }
 
@@ -26,19 +26,18 @@ var defaultSong = []string{
 }
 
 // New returns a new buzzer instance
-func New() *Buzzer {
-	return &Buzzer{
+func New() *Client {
+	return &Client{
 		Song: config.GetDefaultStringSlice("backend.buzzer.song", defaultSong),
 	}
 }
 
 // Play plays the buzzer
-func (b *Buzzer) Play() {
+func (c *Client) Play() {
 	// See `man beep` for more information
-	cmd := exec.Command("beep", b.Song...)
+	cmd := exec.Command("beep", c.Song...)
 	err := cmd.Run()
-
 	if err != nil {
-		zap.L().Error("Error running command 'beep'", zap.Error(err))
+		zap.S().Error("Error running command 'beep' %v", err)
 	}
 }

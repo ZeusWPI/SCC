@@ -8,6 +8,11 @@ import (
 	"github.com/zeusWPI/scc/tui/view"
 )
 
+const (
+	amountOfPassed = 1
+	amountOfFuture = 3
+)
+
 func (m *Model) viewToday() string {
 	today, ok := utils.SliceFind(m.events, func(e event) bool { return utils.SameDay(e.Start, time.Now()) })
 	if !ok {
@@ -38,10 +43,9 @@ func (m *Model) viewToday() string {
 	return sTodayAll.Render(view)
 }
 
-// TODO: update rendering
 func (m *Model) viewOverview() string {
-	passed := utils.SliceFilter(m.events, func(e event) bool { return e.Start.Before(time.Now()) })
-	upcoming := utils.SliceFilter(m.events, func(e event) bool { return e.Start.After(time.Now()) })
+	passed := utils.SliceGet(utils.SliceFilter(m.events, func(e event) bool { return e.Start.Before(time.Now()) }), amountOfPassed)
+	upcoming := utils.SliceGet(utils.SliceFilter(m.events, func(e event) bool { return e.Start.After(time.Now()) }), amountOfFuture)
 
 	// Poster if present
 	poster := ""
@@ -109,9 +113,4 @@ func (m *Model) viewGetEventOverview(passed, upcoming []event) string {
 	view := lipgloss.JoinVertical(lipgloss.Left, events...)
 
 	return sOv.Render(view)
-}
-
-func (m *Model) viewNoEvents() string {
-	title := sOvTitle.Render("Events")
-	noEvents := 
 }
