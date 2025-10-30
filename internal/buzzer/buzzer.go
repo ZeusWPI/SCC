@@ -10,7 +10,8 @@ import (
 
 // Client represents a buzzer
 type Client struct {
-	Song []string
+	hasBuzzer bool
+	song      []string
 }
 
 var defaultSong = []string{
@@ -27,15 +28,30 @@ var defaultSong = []string{
 
 // New returns a new buzzer instance
 func New() *Client {
+	hasBuzzer := false
+	if _, err := exec.LookPath("beep"); err == nil {
+		hasBuzzer = true
+	}
+
+	if !hasBuzzer {
+		zap.S().Debug("No beep executable found.\nMock messages will be used instead")
+	}
+
 	return &Client{
-		Song: config.GetDefaultStringSlice("backend.buzzer.song", defaultSong),
+		hasBuzzer: hasBuzzer,
+		song:      config.GetDefaultStringSlice("backend.buzzer.song", defaultSong),
 	}
 }
 
 // Play plays the buzzer
 func (c *Client) Play() {
+	if !c.hasBuzzer {
+		zap.S().Info("BEEEEEEEP")
+		return
+	}
+
 	// See `man beep` for more information
-	cmd := exec.Command("beep", c.Song...)
+	cmd := exec.Command("beep", c.song...)
 	err := cmd.Run()
 	if err != nil {
 		zap.S().Error("Error running command 'beep' %v", err)

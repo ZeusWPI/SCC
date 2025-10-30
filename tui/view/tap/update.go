@@ -2,6 +2,7 @@ package tap
 
 import (
 	"context"
+	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/internal/database/model"
@@ -28,6 +29,9 @@ func updateOrders(ctx context.Context, view view.View) (tea.Msg, error) {
 	if err != nil {
 		return nil, nil
 	}
+
+	slices.SortFunc(counts, func(a, b *model.TapCount) int { return b.Count - a.Count })
+	counts = utils.SliceFilter(counts, func(c *model.TapCount) bool { return c.Category != model.Unknown })
 
 	return Msg{items: utils.SliceDereference(counts)}, nil
 }

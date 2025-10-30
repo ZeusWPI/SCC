@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/zeusWPI/scc/internal/database/model"
@@ -21,20 +23,23 @@ type orderResponse struct {
 	Orders []orderResponseItem `json:"orders"`
 }
 
-func (o orderResponse) ToModel() []model.Tap {
+func (o orderResponse) ToModel(beers []string) []model.Tap {
 	taps := make([]model.Tap, 0, len(o.Orders))
 
 	for _, order := range o.Orders {
 		var category model.TapCategory = "unknown"
 		switch order.ProductCategory {
-		case "soft":
-			category = model.Soft
-		case "mate":
-			category = model.Mate
-		case "beer":
-			category = model.Beer
 		case "food":
 			category = model.Food
+		case "beverages":
+			switch {
+			case strings.Contains(order.ProductName, "Mate") || strings.Contains(order.ProductName, "Mio Mio"):
+				category = model.Mate
+			case slices.ContainsFunc(beers, func(beer string) bool { return strings.Contains(order.ProductName, beer) }):
+				category = model.Beer
+			default:
+				category = model.Soft
+			}
 		}
 
 		taps = append(taps, model.Tap{
@@ -71,5 +76,5 @@ func (t *Tap) getOrders(ctx context.Context) ([]model.Tap, error) {
 		return nil, fmt.Errorf("decode tap order response %w", err)
 	}
 
-	return orders.ToModel(), nil
+	return orders.ToModel(t.beers), nil
 }
