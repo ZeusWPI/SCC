@@ -11,6 +11,50 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type LyricsTypeEnum string
+
+const (
+	LyricsTypeEnumPlain        LyricsTypeEnum = "plain"
+	LyricsTypeEnumSynced       LyricsTypeEnum = "synced"
+	LyricsTypeEnumInstrumental LyricsTypeEnum = "instrumental"
+	LyricsTypeEnumMissing      LyricsTypeEnum = "missing"
+)
+
+func (e *LyricsTypeEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LyricsTypeEnum(s)
+	case string:
+		*e = LyricsTypeEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LyricsTypeEnum: %T", src)
+	}
+	return nil
+}
+
+type NullLyricsTypeEnum struct {
+	LyricsTypeEnum LyricsTypeEnum
+	Valid          bool // Valid is true if LyricsTypeEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLyricsTypeEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.LyricsTypeEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LyricsTypeEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLyricsTypeEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LyricsTypeEnum), nil
+}
+
 type TapCategory string
 
 const (
@@ -76,6 +120,45 @@ type Season struct {
 	Start   pgtype.Timestamp
 	End     pgtype.Timestamp
 	Current bool
+}
+
+type Song struct {
+	ID         int32
+	Title      string
+	SpotifyID  string
+	DurationMs int32
+	Album      string
+	Lyrics     pgtype.Text
+	LyricsType LyricsTypeEnum
+}
+
+type SongArtist struct {
+	ID        int32
+	Name      string
+	SpotifyID string
+}
+
+type SongArtistGenre struct {
+	ID       int32
+	ArtistID int32
+	GenreID  int32
+}
+
+type SongArtistSong struct {
+	ID       int32
+	ArtistID int32
+	SongID   int32
+}
+
+type SongGenre struct {
+	ID    int32
+	Genre string
+}
+
+type SongHistory struct {
+	ID        int32
+	SongID    int32
+	CreatedAt pgtype.Timestamptz
 }
 
 type Tap struct {
