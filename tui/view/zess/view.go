@@ -37,14 +37,17 @@ func (m *Model) viewStats() string {
 	// Overview of each week
 	rows := make([]string, 0, len(m.weeks))
 
-	maxScans := slices.MaxFunc(m.weeks, func(a, b week) int { return a.scans - b.scans })
+	maxScans := 0
+	if len(m.weeks) != 0 {
+		maxScans = slices.MaxFunc(m.weeks, func(a, b week) int { return a.scans - b.scans }).scans
+	}
 
 	for _, week := range m.weeks {
-		weekNumber, _ := week.start.ISOWeek()
+		_, weekNumber := week.start.ISOWeek()
 		weekStr := sStatDate.Render(fmt.Sprintf("W%02d - %s", weekNumber, week.start.Format("01/02")))
 
 		var amount string
-		if week.scans == maxScans.scans {
+		if week.scans == maxScans {
 			amount = sStatMax.Inherit(sStatAmount).Render(strconv.Itoa(week.scans))
 		} else {
 			amount = sStatAmount.Render(strconv.Itoa(week.scans))
