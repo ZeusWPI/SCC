@@ -23,8 +23,11 @@ type Song struct {
 	DurationMS int
 	LyricsType LyricsType
 	Lyrics     string
-	PlayedAt   time.Time
 	Artists    []Artist
+
+	// History fields
+	PlayedAt  time.Time
+	PlayCount int
 }
 
 type Artist struct {
@@ -32,11 +35,17 @@ type Artist struct {
 	Name      string
 	SpotifyID string
 	Genres    []Genre
+
+	// History fields
+	PlayCount int
 }
 
 type Genre struct {
 	ID    int
 	Genre string
+
+	// History fields
+	PlayCount int
 }
 
 func SongModel(s sqlc.Song) *Song {
