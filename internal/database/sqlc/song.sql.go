@@ -60,33 +60,78 @@ func (q *Queries) SongArtistGetBySpotify(ctx context.Context, spotifyID string) 
 	return i, err
 }
 
-const songArtistGetBySpotifyIds = `-- name: SongArtistGetBySpotifyIds :many
-SELECT a.id, a.name, a.spotify_id, g.id, g.genre
-FROM song_artist a
-LEFT JOIN song_genre g ON a.id = g.artist_id
-WHERE a.spotify_id = ANY($1::text[])
+const songArtistGetTop50 = `-- name: SongArtistGetTop50 :many
+SELECT a.id, a.name, a.spotify_id, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist a ON sas.artist_id = a.id
+GROUP BY a.id, a.name
+ORDER BY play_count DESC
+LIMIT 50
 `
 
-type SongArtistGetBySpotifyIdsRow struct {
+type SongArtistGetTop50Row struct {
 	SongArtist SongArtist
-	SongGenre  SongGenre
+	PlayCount  int64
 }
 
-func (q *Queries) SongArtistGetBySpotifyIds(ctx context.Context, dollar_1 []string) ([]SongArtistGetBySpotifyIdsRow, error) {
-	rows, err := q.db.Query(ctx, songArtistGetBySpotifyIds, dollar_1)
+func (q *Queries) SongArtistGetTop50(ctx context.Context) ([]SongArtistGetTop50Row, error) {
+	rows, err := q.db.Query(ctx, songArtistGetTop50)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SongArtistGetBySpotifyIdsRow
+	var items []SongArtistGetTop50Row
 	for rows.Next() {
-		var i SongArtistGetBySpotifyIdsRow
+		var i SongArtistGetTop50Row
 		if err := rows.Scan(
 			&i.SongArtist.ID,
 			&i.SongArtist.Name,
 			&i.SongArtist.SpotifyID,
-			&i.SongGenre.ID,
-			&i.SongGenre.Genre,
+			&i.PlayCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const songArtistGetTop50Monthly = `-- name: SongArtistGetTop50Monthly :many
+SELECT a.id, a.name, a.spotify_id, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist a ON sas.artist_id = a.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY a.id, a.name
+ORDER BY play_count DESC
+LIMIT 50
+`
+
+type SongArtistGetTop50MonthlyRow struct {
+	SongArtist SongArtist
+	PlayCount  int64
+}
+
+func (q *Queries) SongArtistGetTop50Monthly(ctx context.Context) ([]SongArtistGetTop50MonthlyRow, error) {
+	rows, err := q.db.Query(ctx, songArtistGetTop50Monthly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongArtistGetTop50MonthlyRow
+	for rows.Next() {
+		var i SongArtistGetTop50MonthlyRow
+		if err := rows.Scan(
+			&i.SongArtist.ID,
+			&i.SongArtist.Name,
+			&i.SongArtist.SpotifyID,
+			&i.PlayCount,
 		); err != nil {
 			return nil, err
 		}
@@ -171,6 +216,83 @@ func (q *Queries) SongGenreGetByGenre(ctx context.Context, genre string) (SongGe
 	return i, err
 }
 
+const songGenreGetTop50 = `-- name: SongGenreGetTop50 :many
+SELECT g.id, g.genre, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+JOIN song_artist_genre sag ON sa.id = sag.artist_id
+JOIN song_genre g ON sag.genre_id = g.id
+GROUP BY g.genre, g.id
+ORDER BY play_count DESC
+LIMIT 50
+`
+
+type SongGenreGetTop50Row struct {
+	SongGenre SongGenre
+	PlayCount int64
+}
+
+func (q *Queries) SongGenreGetTop50(ctx context.Context) ([]SongGenreGetTop50Row, error) {
+	rows, err := q.db.Query(ctx, songGenreGetTop50)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongGenreGetTop50Row
+	for rows.Next() {
+		var i SongGenreGetTop50Row
+		if err := rows.Scan(&i.SongGenre.ID, &i.SongGenre.Genre, &i.PlayCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const songGenreGetTop50Monthly = `-- name: SongGenreGetTop50Monthly :many
+SELECT g.id, g.genre, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+JOIN song_artist_song sas ON s.id = sas.song_id
+JOIN song_artist sa ON sas.artist_id = sa.id
+JOIN song_artist_genre sag ON sa.id = sag.artist_id
+JOIN song_genre g ON sag.genre_id = g.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY g.genre, g.id
+ORDER BY play_count DESC
+LIMIT 50
+`
+
+type SongGenreGetTop50MonthlyRow struct {
+	SongGenre SongGenre
+	PlayCount int64
+}
+
+func (q *Queries) SongGenreGetTop50Monthly(ctx context.Context) ([]SongGenreGetTop50MonthlyRow, error) {
+	rows, err := q.db.Query(ctx, songGenreGetTop50Monthly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongGenreGetTop50MonthlyRow
+	for rows.Next() {
+		var i SongGenreGetTop50MonthlyRow
+		if err := rows.Scan(&i.SongGenre.ID, &i.SongGenre.Genre, &i.PlayCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const songGetBySpotify = `-- name: SongGetBySpotify :one
 SELECT id, title, spotify_id, duration_ms, album, lyrics, lyrics_type
 FROM song
@@ -190,6 +312,189 @@ func (q *Queries) SongGetBySpotify(ctx context.Context, spotifyID string) (Song,
 		&i.LyricsType,
 	)
 	return i, err
+}
+
+const songGetLast50 = `-- name: SongGetLast50 :many
+SELECT s.id, s.title, s.spotify_id, s.duration_ms, s.album, s.lyrics, s.lyrics_type, play_count
+FROM (
+    SELECT sh.song_id, MAX(sh.created_at) AS created_at, COUNT(sh.song_id) AS play_count
+    FROM song_history sh
+    GROUP BY sh.song_id
+) aggregated
+JOIN song s ON s.id = aggregated.song_id
+ORDER BY aggregated.created_at DESC
+LIMIT 50
+`
+
+type SongGetLast50Row struct {
+	Song      Song
+	PlayCount int64
+}
+
+func (q *Queries) SongGetLast50(ctx context.Context) ([]SongGetLast50Row, error) {
+	rows, err := q.db.Query(ctx, songGetLast50)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongGetLast50Row
+	for rows.Next() {
+		var i SongGetLast50Row
+		if err := rows.Scan(
+			&i.Song.ID,
+			&i.Song.Title,
+			&i.Song.SpotifyID,
+			&i.Song.DurationMs,
+			&i.Song.Album,
+			&i.Song.Lyrics,
+			&i.Song.LyricsType,
+			&i.PlayCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const songGetLastPopulated = `-- name: SongGetLastPopulated :many
+SELECT h.id, h.song_id, h.created_at, s.id, s.title, s.spotify_id, s.duration_ms, s.album, s.lyrics, s.lyrics_type, a.id, a.name, a.spotify_id
+FROM song_history h
+JOIN song s ON s.id = h.song_id
+LEFT JOIN song_artist_song sa ON sa.song_id = s.id
+LEFT JOIN song_artist a ON a.id = sa.artist_id
+WHERE h.created_at = (SELECT MAX(created_at) FROM song_history)
+ORDER BY a.name
+`
+
+type SongGetLastPopulatedRow struct {
+	SongHistory SongHistory
+	Song        Song
+	SongArtist  SongArtist
+}
+
+func (q *Queries) SongGetLastPopulated(ctx context.Context) ([]SongGetLastPopulatedRow, error) {
+	rows, err := q.db.Query(ctx, songGetLastPopulated)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongGetLastPopulatedRow
+	for rows.Next() {
+		var i SongGetLastPopulatedRow
+		if err := rows.Scan(
+			&i.SongHistory.ID,
+			&i.SongHistory.SongID,
+			&i.SongHistory.CreatedAt,
+			&i.Song.ID,
+			&i.Song.Title,
+			&i.Song.SpotifyID,
+			&i.Song.DurationMs,
+			&i.Song.Album,
+			&i.Song.Lyrics,
+			&i.Song.LyricsType,
+			&i.SongArtist.ID,
+			&i.SongArtist.Name,
+			&i.SongArtist.SpotifyID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const songGetTop50 = `-- name: SongGetTop50 :many
+SELECT s.id, s.title, s.spotify_id, s.duration_ms, s.album, s.lyrics, s.lyrics_type, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+GROUP BY s.id, s.title
+ORDER BY play_count DESC
+LIMIT 50
+`
+
+type SongGetTop50Row struct {
+	Song      Song
+	PlayCount int64
+}
+
+func (q *Queries) SongGetTop50(ctx context.Context) ([]SongGetTop50Row, error) {
+	rows, err := q.db.Query(ctx, songGetTop50)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongGetTop50Row
+	for rows.Next() {
+		var i SongGetTop50Row
+		if err := rows.Scan(
+			&i.Song.ID,
+			&i.Song.Title,
+			&i.Song.SpotifyID,
+			&i.Song.DurationMs,
+			&i.Song.Album,
+			&i.Song.Lyrics,
+			&i.Song.LyricsType,
+			&i.PlayCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const songGetTop50Monthly = `-- name: SongGetTop50Monthly :many
+SELECT s.id, s.title, s.spotify_id, s.duration_ms, s.album, s.lyrics, s.lyrics_type, COUNT(sh.id) AS play_count
+FROM song_history sh
+JOIN song s ON sh.song_id = s.id
+WHERE sh.created_at > CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY s.id, s.title
+ORDER BY play_count DESC
+LIMIT 50
+`
+
+type SongGetTop50MonthlyRow struct {
+	Song      Song
+	PlayCount int64
+}
+
+func (q *Queries) SongGetTop50Monthly(ctx context.Context) ([]SongGetTop50MonthlyRow, error) {
+	rows, err := q.db.Query(ctx, songGetTop50Monthly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SongGetTop50MonthlyRow
+	for rows.Next() {
+		var i SongGetTop50MonthlyRow
+		if err := rows.Scan(
+			&i.Song.ID,
+			&i.Song.Title,
+			&i.Song.SpotifyID,
+			&i.Song.DurationMs,
+			&i.Song.Album,
+			&i.Song.Lyrics,
+			&i.Song.LyricsType,
+			&i.PlayCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const songHistoryCreate = `-- name: SongHistoryCreate :one

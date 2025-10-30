@@ -18,9 +18,9 @@ type Song struct {
 }
 
 // New creates a new song screen
-func New(_ repository.Repository) screen.Screen {
+func New(repo repository.Repository) screen.Screen {
 	return &Song{
-		song:   song.New(),
+		song:   song.New(repo),
 		width:  0,
 		height: 0,
 	}

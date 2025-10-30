@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zeusWPI/scc/internal/database/model"
 	"github.com/zeusWPI/scc/internal/database/sqlc"
-	"github.com/zeusWPI/scc/pkg/utils"
 )
 
 type Song struct {
@@ -20,6 +19,165 @@ func (r *Repository) NewSong() *Song {
 	return &Song{
 		repo: *r,
 	}
+}
+
+func (s *Song) GetLastPopulated(ctx context.Context) (*model.Song, error) {
+	last, err := s.repo.queries(ctx).SongGetLastPopulated(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get last song populated %w", err)
+	}
+
+	song := model.SongModel(last[0].Song)
+	song.PlayedAt = last[0].SongHistory.CreatedAt.Time
+
+	for _, s := range last {
+		song.Artists = append(song.Artists, *model.ArtistModel(s.SongArtist))
+	}
+
+	return song, nil
+}
+
+func (s *Song) GetLast50(ctx context.Context) ([]*model.Song, error) {
+	lasts, err := s.repo.queries(ctx).SongGetLast50(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get last 50 songs %w", err)
+	}
+
+	songs := make([]*model.Song, 0, len(lasts))
+	for _, last := range lasts {
+		song := model.SongModel(last.Song)
+		song.PlayCount = int(last.PlayCount)
+
+		songs = append(songs, song)
+	}
+
+	return songs, nil
+}
+
+func (s *Song) GetTopSongs(ctx context.Context) ([]*model.Song, error) {
+	tops, err := s.repo.queries(ctx).SongGetTop50(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get top songs %w", err)
+	}
+
+	songs := make([]*model.Song, 0, len(tops))
+	for _, top := range tops {
+		song := model.SongModel(top.Song)
+		song.PlayCount = int(top.PlayCount)
+
+		songs = append(songs, song)
+	}
+
+	return songs, nil
+}
+
+func (s *Song) GetTopArtists(ctx context.Context) ([]*model.Artist, error) {
+	tops, err := s.repo.queries(ctx).SongArtistGetTop50(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get top artists %w", err)
+	}
+
+	artists := make([]*model.Artist, 0, len(tops))
+	for _, top := range tops {
+		artist := model.ArtistModel(top.SongArtist)
+		artist.PlayCount = int(top.PlayCount)
+
+		artists = append(artists, artist)
+	}
+
+	return artists, nil
+}
+
+func (s *Song) GetTopGenres(ctx context.Context) ([]*model.Genre, error) {
+	tops, err := s.repo.queries(ctx).SongGenreGetTop50(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get top genres %w", err)
+	}
+
+	genres := make([]*model.Genre, 0, len(tops))
+	for _, top := range tops {
+		genre := model.GenreModel(top.SongGenre)
+		genre.PlayCount = int(top.PlayCount)
+
+		genres = append(genres, genre)
+	}
+
+	return genres, nil
+}
+
+func (s *Song) GetTopSongsMonthly(ctx context.Context) ([]*model.Song, error) {
+	tops, err := s.repo.queries(ctx).SongGetTop50Monthly(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get top songs monthly %w", err)
+	}
+
+	songs := make([]*model.Song, 0, len(tops))
+	for _, top := range tops {
+		song := model.SongModel(top.Song)
+		song.PlayCount = int(top.PlayCount)
+
+		songs = append(songs, song)
+	}
+
+	return songs, nil
+}
+
+func (s *Song) GetTopArtistsMonthly(ctx context.Context) ([]*model.Artist, error) {
+	tops, err := s.repo.queries(ctx).SongArtistGetTop50Monthly(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get top artists montlhy %w", err)
+	}
+
+	artists := make([]*model.Artist, 0, len(tops))
+	for _, top := range tops {
+		artist := model.ArtistModel(top.SongArtist)
+		artist.PlayCount = int(top.PlayCount)
+
+		artists = append(artists, artist)
+	}
+
+	return artists, nil
+}
+
+func (s *Song) GetTopGenresMonthly(ctx context.Context) ([]*model.Genre, error) {
+	tops, err := s.repo.queries(ctx).SongGenreGetTop50Monthly(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get top genres monthly %w", err)
+	}
+
+	genres := make([]*model.Genre, 0, len(tops))
+	for _, top := range tops {
+		genre := model.GenreModel(top.SongGenre)
+		genre.PlayCount = int(top.PlayCount)
+
+		genres = append(genres, genre)
+	}
+
+	return genres, nil
 }
 
 func (s *Song) GetBySpotify(ctx context.Context, spotifyID string) (*model.Song, error) {
@@ -56,29 +214,6 @@ func (s *Song) GetGenreByGenre(ctx context.Context, genre string) (*model.Genre,
 	}
 
 	return model.GenreModel(genreDB), nil
-}
-
-func (s *Song) GetArtistsBySpotify(ctx context.Context, artists []model.Artist) ([]*model.Artist, error) {
-	artistsDB, err := s.repo.queries(ctx).SongArtistGetBySpotifyIds(ctx, utils.SliceMap(artists, func(a model.Artist) string { return a.SpotifyID }))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("get artists by ids %+v | %w", artists, err)
-	}
-
-	artistMap := make(map[int]*model.Artist)
-	for _, artist := range artistsDB {
-		a, ok := artistMap[int(artist.SongArtist.ID)]
-		if !ok {
-			a = model.ArtistModel(artist.SongArtist)
-			artistMap[a.ID] = a
-		}
-
-		a.Genres = append(a.Genres, *model.GenreModel(artist.SongGenre))
-	}
-
-	return utils.MapValues(artistMap), nil
 }
 
 func (s *Song) Create(ctx context.Context, song *model.Song) error {
