@@ -31,7 +31,7 @@ func main() {
 	// Database
 	db, err := db.NewPSQL()
 	if err != nil {
-		zap.S().Fatal("DB: Fatal error\n", err)
+		zap.S().Fatalf("DB: Fatal error %v", err)
 	}
 
 	// Repository
@@ -46,6 +46,11 @@ func main() {
 	// Zess
 	_, done = cmd.Zess(*repo)
 	dones = append(dones, done)
+
+	// Song
+	if err := cmd.Song(); err != nil {
+		zap.S().Fatalf("Initialize song %v", err)
+	}
 
 	// API
 	service := service.New(*repo)
