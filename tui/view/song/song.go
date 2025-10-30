@@ -18,8 +18,6 @@ import (
 const (
 	previousAmount = 2
 	upcomingAmount = 4
-
-	statsAmount = 3
 )
 
 type stat struct {
@@ -54,6 +52,7 @@ type Model struct {
 	history      stat
 	stats        []stat
 	statsMonthly []stat
+	statAmount   int
 
 	width  int
 	height int
@@ -98,6 +97,7 @@ func New(repo repository.Repository) view.View {
 		},
 		stats:        make([]stat, 4),
 		statsMonthly: make([]stat, 4),
+		statAmount:   config.GetDefaultInt("tui.view.song.stat_amount", 3),
 		width:        0,
 		height:       0,
 	}
