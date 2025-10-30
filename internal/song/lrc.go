@@ -43,6 +43,7 @@ func (c *client) getLyrics(song *model.Song) error {
 	if status != fiber.StatusOK {
 		if status == fiber.StatusNotFound {
 			// Lyrics not found
+			song.LyricsType = model.LyricsMissing
 			return nil
 		}
 

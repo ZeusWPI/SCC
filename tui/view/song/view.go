@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zeusWPI/scc/pkg/utils"
 )
 
 func (m *Model) viewPlaying() string {
@@ -79,7 +80,10 @@ func (m *Model) viewPlayingLyrics() string {
 func (m *Model) viewPlayingStats() string {
 	columns := make([]string, 0, 4)
 
-	columns = append(columns, m.viewStatPlaying(m.history))
+	history := m.history
+	history.entries = utils.SliceGet(history.entries, m.statAmount)
+
+	columns = append(columns, m.viewStatPlaying(history))
 	columns = append(columns, m.viewStatPlaying(m.statsMonthly[0]))
 	columns = append(columns, m.viewStatPlaying(m.statsMonthly[1]))
 	columns = append(columns, m.viewStatPlaying(m.statsMonthly[2]))
@@ -120,7 +124,7 @@ func (m *Model) viewNotPlaying() string {
 	}
 	items = append(items, sStatTitle.Render(m.history.title))
 
-	for i, entry := range m.history.entries {
+	for i, entry := range utils.SliceGet(m.history.entries, m.statAmount*3+(4*2)) {
 		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
 		body := sStatEntry.Render(entry.name)
 		amount := sStatAmount.Render(strconv.Itoa(entry.amount))
