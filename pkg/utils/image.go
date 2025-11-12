@@ -6,6 +6,10 @@ import (
 )
 
 func ImageEqual(img1, img2 image.Image) bool {
+	if img1 == nil || img2 == nil {
+		return img1 == img2
+	}
+
 	if !img1.Bounds().Eq(img2.Bounds()) {
 		return false
 	}
