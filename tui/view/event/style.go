@@ -13,7 +13,7 @@ var base = lipgloss.NewStyle()
 var (
 	wOvDate    = 8  // Width of the date, for example '13/11' (with some padding after)
 	wOvTextMin = 20 // Minimum width of the event name
-	wOvPoster  = 20 // Width of the poster
+	wOvPoster  = 5  // Width of the poster
 	wOvGap     = 2  // Width of the gap between the overview and the poster
 
 	sOvAll    = base.Padding(0, 1) // Style for the overview and the poster
@@ -39,7 +39,7 @@ var (
 // Styles for today
 var (
 	wTodayEvMin  = 20 // Minimum width of the event
-	wTodayPoster = 20 // Width of the poster
+	wTodayPoster = 5  // Width of the poster
 	wTodayGap    = 2  // Width of the gap between the text and the poster
 
 	sTodayAll    = base.Padding(0, 1) // Style for the text and the poster

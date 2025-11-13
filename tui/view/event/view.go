@@ -10,7 +10,7 @@ import (
 
 const (
 	amountOfPassed = 1
-	amountOfFuture = 3
+	amountOfFuture = 2
 )
 
 func (m *Model) viewToday() string {
@@ -22,7 +22,7 @@ func (m *Model) viewToday() string {
 	// Render image
 	poster := ""
 	if today.poster != nil {
-		poster = view.ImageToString(today.poster, wTodayPoster, 0)
+		poster = view.ImageToString(today.poster, 0, 30)
 	}
 
 	name := sTodayText.Render(today.Name)
@@ -50,7 +50,7 @@ func (m *Model) viewOverview() string {
 	// Poster if present
 	poster := ""
 	if len(upcoming) > 0 && upcoming[0].poster != nil {
-		poster = view.ImageToString(upcoming[0].poster, wOvPoster, 0)
+		poster = view.ImageToString(upcoming[0].poster, 0, 30)
 	}
 
 	// Overview
