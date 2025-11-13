@@ -6,7 +6,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zeusWPI/scc/pkg/lyrics"
-	"github.com/zeusWPI/scc/pkg/utils"
 	"github.com/zeusWPI/scc/tui/view"
 )
 
@@ -61,19 +60,16 @@ func updateMonthlyStats(ctx context.Context, view view.View) (tea.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-	songs = utils.SliceGet(songs, m.statAmount)
 
 	genres, err := m.repo.GetTopGenresMonthly(ctx)
 	if err != nil {
 		return nil, err
 	}
-	genres = utils.SliceGet(genres, m.statAmount)
 
 	artists, err := m.repo.GetTopArtistsMonthly(ctx)
 	if err != nil {
 		return nil, err
 	}
-	artists = utils.SliceGet(artists, m.statAmount)
 
 	msg := msgStats{monthly: true, stats: []stat{}}
 
@@ -109,19 +105,16 @@ func updateStats(ctx context.Context, view view.View) (tea.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-	songs = utils.SliceGet(songs, m.statAmount)
 
 	genres, err := m.repo.GetTopGenres(ctx)
 	if err != nil {
 		return nil, err
 	}
-	genres = utils.SliceGet(genres, m.statAmount)
 
 	artists, err := m.repo.GetTopArtists(ctx)
 	if err != nil {
 		return nil, err
 	}
-	artists = utils.SliceGet(artists, m.statAmount)
 
 	// Don't bother checking if anything has changed
 	// A single extra refresh won't matter

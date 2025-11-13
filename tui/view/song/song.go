@@ -49,10 +49,11 @@ type Model struct {
 	current  playing
 	progress progression
 
-	history      stat
-	stats        []stat
-	statsMonthly []stat
-	statAmount   int
+	history           stat
+	stats             []stat
+	statsMonthly      []stat
+	statAmount        int
+	statAmountPlaying int
 
 	width  int
 	height int
@@ -95,11 +96,12 @@ func New(repo repository.Repository) view.View {
 			stopwatch: stopwatch.New(),
 			bar:       bar.New(sStatusBar),
 		},
-		stats:        make([]stat, 4),
-		statsMonthly: make([]stat, 4),
-		statAmount:   config.GetDefaultInt("tui.view.song.stat_amount", 3),
-		width:        0,
-		height:       0,
+		stats:             make([]stat, 4),
+		statsMonthly:      make([]stat, 4),
+		statAmount:        config.GetDefaultInt("tui.view.song.stat_amount", 3),
+		statAmountPlaying: config.GetDefaultInt("tui.view.song.stat_amount_playing", 5),
+		width:             0,
+		height:            0,
 	}
 }
 

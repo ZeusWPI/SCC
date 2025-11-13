@@ -80,13 +80,10 @@ func (m *Model) viewPlayingLyrics() string {
 func (m *Model) viewPlayingStats() string {
 	columns := make([]string, 0, 4)
 
-	history := m.history
-	history.entries = utils.SliceGet(history.entries, m.statAmount)
-
-	columns = append(columns, m.viewStatPlaying(history))
-	columns = append(columns, m.viewStatPlaying(m.statsMonthly[0]))
-	columns = append(columns, m.viewStatPlaying(m.statsMonthly[1]))
-	columns = append(columns, m.viewStatPlaying(m.statsMonthly[2]))
+	columns = append(columns, m.viewStat(m.history, m.statAmountPlaying))
+	columns = append(columns, m.viewStat(m.statsMonthly[0], m.statAmountPlaying))
+	columns = append(columns, m.viewStat(m.statsMonthly[1], m.statAmountPlaying))
+	columns = append(columns, m.viewStat(m.statsMonthly[2], m.statAmountPlaying))
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, columns...)
 }
@@ -98,12 +95,12 @@ func (m *Model) viewNotPlaying() string {
 		rows = append(rows, make([]string, 0, 2))
 	}
 
-	rows[0] = append(rows[0], m.viewStatPlaying(m.statsMonthly[0], "Monthly"))
-	rows[0] = append(rows[0], m.viewStatPlaying(m.stats[0], "All Time"))
-	rows[1] = append(rows[1], m.viewStatPlaying(m.statsMonthly[1], "Monthly"))
-	rows[1] = append(rows[1], m.viewStatPlaying(m.stats[1], "All Time"))
-	rows[2] = append(rows[2], m.viewStatPlaying(m.statsMonthly[2], "Monthly"))
-	rows[2] = append(rows[2], m.viewStatPlaying(m.stats[2], "All Time"))
+	rows[0] = append(rows[0], m.viewStat(m.statsMonthly[0], m.statAmount, "Monthly"))
+	rows[0] = append(rows[0], m.viewStat(m.stats[0], m.statAmount, "All Time"))
+	rows[1] = append(rows[1], m.viewStat(m.statsMonthly[1], m.statAmount, "Monthly"))
+	rows[1] = append(rows[1], m.viewStat(m.stats[1], m.statAmount, "All Time"))
+	rows[2] = append(rows[2], m.viewStat(m.statsMonthly[2], m.statAmount, "Monthly"))
+	rows[2] = append(rows[2], m.viewStat(m.stats[2], m.statAmount, "All Time"))
 
 	renderedRows := make([]string, 0, 3)
 	var title string
@@ -140,18 +137,16 @@ func (m *Model) viewNotPlaying() string {
 	return sAll.Render(v)
 }
 
-func (m *Model) viewStatPlaying(stat stat, titleOpt ...string) string {
+func (m *Model) viewStat(stat stat, amount int, titleOpt ...string) string {
+	entries := utils.SliceGet(stat.entries, amount)
+
 	title := stat.title
 	if len(titleOpt) > 0 {
 		title = titleOpt[0]
 	}
 
-	items := make([]string, 0, len(stat.entries))
-	for i := range stat.entries {
-		if i >= 10 {
-			break
-		}
-
+	items := make([]string, 0, len(entries))
+	for i := range entries {
 		enum := sStatEnum.Render(fmt.Sprintf("%d.", i+1))
 		body := sStatEntry.Render(stat.entries[i].name)
 		amount := sStatAmount.Render(strconv.Itoa(stat.entries[i].amount))

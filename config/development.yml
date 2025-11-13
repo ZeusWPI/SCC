@@ -93,6 +93,7 @@ tui:
       interval_monthly_stats_s: 300
       interval_stats_s: 3600
       stat_amount: 3
+      stat_amount_playing: 5
 
     tap:
       interval_s: 60
