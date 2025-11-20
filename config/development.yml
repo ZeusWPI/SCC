@@ -9,6 +9,9 @@ db:
   password: "postgres"
   database: "scc"
 
+cammie:
+  blacklist: []
+
 backend:
   buzzer:
     song:

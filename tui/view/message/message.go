@@ -4,6 +4,7 @@ package message
 import (
 	"context"
 	"hash/fnv"
+	"slices"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,8 +15,9 @@ import (
 
 // Model represents the model for the message view
 type Model struct {
-	repo     repository.Message
-	messages []message
+	repo      repository.Message
+	messages  []message
+	blacklist []string
 
 	lastMessageID int
 	width         int
@@ -42,6 +44,7 @@ func NewModel(repo repository.Repository) view.View {
 	return &Model{
 		repo:          *repo.NewMessage(),
 		messages:      nil,
+		blacklist:     config.GetDefaultStringSlice("cammie.blacklist", []string{}),
 		lastMessageID: -1,
 		width:         0,
 		height:        0,
@@ -114,16 +117,20 @@ func updateMessages(ctx context.Context, view view.View) (tea.Msg, error) {
 
 	messages := make([]message, 0, len(messagesDB))
 	lastID := m.lastMessageID
-	for _, m := range messagesDB {
-		if m.ID > lastID {
-			lastID = m.ID
+	for _, msg := range messagesDB {
+		if slices.Contains(m.blacklist, msg.Name) {
+			continue
+		}
+
+		if msg.ID > lastID {
+			lastID = msg.ID
 		}
 
 		messages = append(messages, message{
-			sender:  m.Name,
-			message: m.Message,
-			color:   hashColor(m.Name),
-			date:    m.CreatedAt,
+			sender:  msg.Name,
+			message: msg.Message,
+			color:   hashColor(msg.Name),
+			date:    msg.CreatedAt,
 		})
 	}
 

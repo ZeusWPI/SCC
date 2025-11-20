@@ -2,24 +2,28 @@ package service
 
 import (
 	"context"
+	"slices"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/buzzer"
 	"github.com/zeusWPI/scc/internal/database/repository"
 	"github.com/zeusWPI/scc/internal/server/dto"
+	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
 
 type Message struct {
 	message repository.Message
 
-	buzzer buzzer.Client
+	buzzer    buzzer.Client
+	blacklist []string
 }
 
 func (s *Service) NewMessage() *Message {
 	return &Message{
-		message: *s.repo.NewMessage(),
-		buzzer:  *buzzer.New(),
+		message:   *s.repo.NewMessage(),
+		buzzer:    *buzzer.New(),
+		blacklist: config.GetDefaultStringSlice("cammie.blacklist", []string{}),
 	}
 }
 
@@ -30,7 +34,9 @@ func (m *Message) Create(ctx context.Context, msgSave dto.Message) (dto.Message,
 		return dto.Message{}, fiber.ErrInternalServerError
 	}
 
-	m.buzzer.Play()
+	if !slices.Contains(m.blacklist, msg.Name) {
+		m.buzzer.Play()
+	}
 
 	return dto.MessageDTO(msg), nil
 }
