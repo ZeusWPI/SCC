@@ -3,6 +3,7 @@ package lyrics
 import (
 	"fmt"
 	"math/rand/v2"
+	"strings"
 	"time"
 
 	"github.com/zeusWPI/scc/internal/database/model"
@@ -125,9 +126,11 @@ func (i instrument) generate(dur time.Duration) []Lyric {
 		// Get a random text
 		textLength := rand.IntN(5) + 1
 		var text string
+		var textSb128 strings.Builder
 		for range textLength {
-			text += i.sounds[rand.IntN(len(i.sounds))] + " "
+			textSb128.WriteString(i.sounds[rand.IntN(len(i.sounds))] + " ")
 		}
+		text += textSb128.String()
 
 		// Get a random duration
 		randomDur := time.Duration(rand.IntN(3)+1) * time.Second

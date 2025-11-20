@@ -88,7 +88,7 @@ func parseLRC(text string, totalDuration time.Duration) []Lyric {
 	lyrics = append(lyrics, Lyric{Text: ""})
 	previousTimestamp = time.Duration(0)
 
-	for i, line := range lines {
+	for _, line := range lines {
 		parts := strings.SplitN(line, " ", 2)
 		if len(parts) != 2 {
 			continue
@@ -104,10 +104,13 @@ func parseLRC(text string, totalDuration time.Duration) []Lyric {
 			time.Duration(hundredths)*10*time.Millisecond
 
 		// Actual lyric
-		lyric := parts[1]
+		text := parts[1]
+		lyric := Lyric{
+			Text:     text,
+			Duration: timestamp - previousTimestamp,
+		}
 
-		lyrics = append(lyrics, Lyric{Text: lyric})
-		lyrics[i].Duration = timestamp - previousTimestamp
+		lyrics = append(lyrics, lyric)
 		previousTimestamp = timestamp
 	}
 
