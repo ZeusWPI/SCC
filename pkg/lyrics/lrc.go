@@ -59,7 +59,7 @@ func (l *LRC) Next() (Lyric, bool) {
 func (l *LRC) Upcoming(amount int) []Lyric {
 	lyrics := make([]Lyric, 0, amount)
 
-	for i := 0; i < amount; i++ {
+	for i := range amount {
 		if l.i+i >= len(l.lyrics) {
 			break
 		}
@@ -96,6 +96,11 @@ func parseLRC(text string, totalDuration time.Duration) []Lyric {
 
 		// Duration part
 		timeParts := re.FindStringSubmatch(parts[0])
+
+		if len(timeParts) < 4 {
+			continue
+		}
+
 		minutes, _ := strconv.Atoi(timeParts[1])
 		seconds, _ := strconv.Atoi(timeParts[2])
 		hundredths, _ := strconv.Atoi(timeParts[3])
