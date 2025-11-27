@@ -1,6 +1,7 @@
 package event
 
 import (
+	"slices"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -44,7 +45,9 @@ func (m *Model) viewToday() string {
 }
 
 func (m *Model) viewOverview() string {
-	passed := utils.SliceGet(utils.SliceFilter(m.events, func(e event) bool { return e.Start.Before(time.Now()) }), amountOfPassed)
+	passed := utils.SliceFilter(m.events, func(e event) bool { return e.Start.Before(time.Now()) })
+	slices.Reverse(passed)
+	passed = utils.SliceGet(passed, amountOfPassed)
 	upcoming := utils.SliceGet(utils.SliceFilter(m.events, func(e event) bool { return e.Start.After(time.Now()) }), amountOfFuture)
 
 	// Poster if present
