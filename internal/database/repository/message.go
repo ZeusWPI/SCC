@@ -21,6 +21,30 @@ func (r *Repository) NewMessage() *Message {
 	}
 }
 
+func (m *Message) Get(ctx context.Context, id int) (*model.Message, error) {
+	message, err := m.repo.queries(ctx).MessageGetByID(ctx, int32(id))
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("get message by id %d | %w", id, err)
+		}
+		return nil, nil
+	}
+
+	return model.MessageModel(message), nil
+}
+
+func (m *Message) GetLast(ctx context.Context) (*model.Message, error) {
+	message, err := m.repo.queries(ctx).MessageGetLast(ctx)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("get last message %w", err)
+		}
+		return nil, nil
+	}
+
+	return model.MessageModel(message), nil
+}
+
 func (m *Message) GetSinceID(ctx context.Context, id int) ([]*model.Message, error) {
 	messages, err := m.repo.queries(ctx).MessageGetSinceID(ctx, int32(id))
 	if err != nil {

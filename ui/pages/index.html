@@ -1,0 +1,51 @@
+<div class="min-h-screen bg-orange-100">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-4xl font-extrabold tracking-tight text-center">Cammie Messages</h1>
+
+    <div id="message-log" class="mt-8 space-y-5" data-last-id="{{.LastID}}">
+      {{template "days" .}}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".js-toggle-reply");
+    if (!btn) return;
+
+    const id = btn.getAttribute("data-target");
+    const form = document.getElementById(id);
+    if (!form) return;
+
+    form.classList.toggle("hidden");
+    if (!form.classList.contains("hidden")) {
+      const input = form.querySelector('input[name="name"]');
+      if (input) input.focus();
+    }
+  });
+</script>
+
+<script>
+  const logEl = document.getElementById("message-log");
+  let lastID = parseInt(logEl?.getAttribute("data-last-id") || "0", 10);
+
+  async function pollNewMessages() {
+    try {
+      const res = await fetch(`/api/messages/last`, {
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const serverLastID = parseInt(data.id || "0", 10);
+
+      if (serverLastID > lastID) {
+        location.reload();
+      }
+    } catch (_) {}
+  }
+
+  setInterval(pollNewMessages, 2000);
+</script>

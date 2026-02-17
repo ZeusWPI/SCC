@@ -7,8 +7,11 @@ import (
 	"github.com/gofiber/contrib/fiberzap"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/template/html/v2"
 	routers "github.com/zeusWPI/scc/internal/server/api"
+	"github.com/zeusWPI/scc/internal/server/dto"
 	"github.com/zeusWPI/scc/internal/server/service"
+	web "github.com/zeusWPI/scc/internal/server/web"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
@@ -21,10 +24,30 @@ type Server struct {
 func New(service service.Service) *Server {
 	env := config.GetDefaultString("app.env", "development")
 
+	engine := html.New("./ui", ".html")
+	engine.AddFunc("lastMessage", func(msgs []dto.Message) dto.Message {
+		return msgs[len(msgs)-1]
+	})
+	engine.AddFunc("maxMessageID", func(days []dto.MessageDayGroup) int {
+		maxID := 0
+		for _, d := range days {
+			for _, c := range d.Clusters {
+				for _, m := range c.Messages {
+					if m.ID > maxID {
+						maxID = m.ID
+					}
+				}
+			}
+		}
+		return maxID
+	})
+	engine.Reload(env != "production")
+
 	// Construct app
 	app := fiber.New(fiber.Config{
 		BodyLimit:      16 * 1024 * 1024,
 		ReadBufferSize: 8096,
+		Views:          engine,
 	})
 
 	app.Use(fiberzap.New(fiberzap.Config{
@@ -38,7 +61,10 @@ func New(service service.Service) *Server {
 		}))
 	}
 
-	// Register routes
+	// Register web routes
+	web.NewMessage(app, service)
+
+	// Register api routes
 	api := app.Group("/api")
 
 	routers.NewMessage(api, service)

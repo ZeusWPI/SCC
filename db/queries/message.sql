@@ -1,3 +1,14 @@
+-- name: MessageGetLast :one
+SELECT *
+FROM message
+ORDER BY id DESC
+LIMIT 1;
+
+-- name: MessageGetByID :one
+SELECT *
+FROM message
+WHERE id = $1;
+
 -- name: MessageGetSinceID :many
 SELECT *
 FROM message
