@@ -4,8 +4,10 @@ import (
 	"context"
 	"math"
 	"slices"
+	"sync"
 	"time"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/buzzer"
 	"github.com/zeusWPI/scc/internal/database/repository"
@@ -15,23 +17,37 @@ import (
 )
 
 type Message struct {
+	service Service
+
 	message repository.Message
 	reply   repository.Reply
+
+	mu         sync.RWMutex
+	idToClient map[int]*websocket.Conn
 
 	buzzer    buzzer.Client
 	blacklist []string
 }
 
+var messageSingleton *Message
+
 func (s *Service) NewMessage() *Message {
-	return &Message{
-		message:   *s.repo.NewMessage(),
-		reply:     *s.repo.NewReply(),
-		buzzer:    *buzzer.New(),
-		blacklist: config.GetDefaultStringSlice("cammie.blacklist", []string{}),
+	if messageSingleton == nil {
+		messageSingleton = &Message{
+			service:    *s,
+			message:    *s.repo.NewMessage(),
+			reply:      *s.repo.NewReply(),
+			idToClient: map[int]*websocket.Conn{},
+			buzzer:     *buzzer.New(),
+			blacklist:  config.GetDefaultStringSlice("cammie.blacklist", []string{}),
+		}
 	}
+
+	return messageSingleton
 }
 
 func (m *Message) Get(ctx context.Context, sinceID int, dayLimit int) ([]dto.MessageDayGroup, error) {
+	zap.S().Debugf("%+v\n", m.idToClient)
 	messagesDB, err := m.message.GetSinceID(ctx, sinceID)
 	if err != nil {
 		zap.S().Error(err)
@@ -43,11 +59,11 @@ func (m *Message) Get(ctx context.Context, sinceID int, dayLimit int) ([]dto.Mes
 
 	minMsgID := math.MaxInt
 	messages := make([]dto.Message, 0, len(messagesDB))
-	for _, m := range messagesDB {
-		if m.ID < minMsgID {
-			minMsgID = m.ID
+	for _, msg := range messagesDB {
+		if msg.ID < minMsgID {
+			minMsgID = msg.ID
 		}
-		messages = append(messages, dto.MessageDTO(m))
+		messages = append(messages, dto.MessageDTO(msg))
 	}
 
 	repliesDB, err := m.reply.GetSinceMessageID(ctx, minMsgID)
@@ -73,23 +89,34 @@ func (m *Message) Get(ctx context.Context, sinceID int, dayLimit int) ([]dto.Mes
 	clusters := []dto.MessageCluster{}
 	lastClusterIdxByAuthor := map[string]int{}
 
-	for _, m := range messages {
+	for _, msg := range messages {
 		// Already a cluster?
-		if idx, ok := lastClusterIdxByAuthor[m.Name]; ok {
+		if idx, ok := lastClusterIdxByAuthor[msg.Name]; ok {
 			c := clusters[idx]
 			lastMsg := c.Messages[len(c.Messages)-1]
 
-			delta := m.SendAt.Sub(lastMsg.SendAt)
+			delta := msg.SendAt.Sub(lastMsg.SendAt)
 			if delta >= 0 && delta <= gap {
-				c.Messages = append(c.Messages, m)
+				c.Messages = append(c.Messages, msg)
+				if _, ok := m.idToClient[msg.ID]; ok {
+					c.Connected = true
+				}
+
 				clusters[idx] = c
 				continue
 			}
 		}
 
 		// New cluster
-		clusters = append(clusters, dto.MessageCluster{Messages: []dto.Message{m}})
-		lastClusterIdxByAuthor[m.Name] = len(clusters) - 1
+		cluster := dto.MessageCluster{
+			Messages: []dto.Message{msg},
+		}
+		if _, ok := m.idToClient[msg.ID]; ok {
+			cluster.Connected = true
+		}
+
+		clusters = append(clusters, cluster)
+		lastClusterIdxByAuthor[msg.Name] = len(clusters) - 1
 	}
 
 	days := []dto.MessageDayGroup{}
@@ -116,7 +143,12 @@ func (m *Message) Get(ctx context.Context, sinceID int, dayLimit int) ([]dto.Mes
 		days = days[len(days)-dayLimit:]
 	}
 
+	// Reverse the days
 	slices.Reverse(days)
+	// Reverse the clusters in days
+	for idx := range days {
+		slices.Reverse(days[idx].Clusters)
+	}
 
 	return days, nil
 }
@@ -134,16 +166,73 @@ func (m *Message) GetLast(ctx context.Context) (dto.Message, error) {
 	return dto.MessageDTO(msg), nil
 }
 
-func (m *Message) Create(ctx context.Context, msgSave dto.MessageSave) (dto.Message, error) {
+func (m *Message) Create(ctx context.Context, conn *websocket.Conn, msgSave dto.MessageSave) (dto.Message, error) {
 	msg := msgSave.ToModel()
 	if err := m.message.Create(ctx, msg); err != nil {
 		zap.S().Error(err)
 		return dto.Message{}, fiber.ErrInternalServerError
 	}
 
+	zap.S().Debugf("Map before %+v", m.idToClient)
+
+	m.mu.Lock()
+	m.idToClient[msg.ID] = conn
+	m.mu.Unlock()
+
+	zap.S().Debugf("Map after %+v", m.idToClient)
+
 	if !slices.Contains(m.blacklist, msg.Name) {
-		m.buzzer.Play()
+		go m.buzzer.Play()
 	}
 
 	return dto.MessageDTO(msg), nil
+}
+
+func (m *Message) Reply(ctx context.Context, replySave dto.ReplySave) (dto.Reply, error) {
+	msg, err := m.message.Get(ctx, replySave.MessageID)
+	if err != nil {
+		zap.S().Error(err)
+		return dto.Reply{}, fiber.ErrInternalServerError
+	}
+	if msg == nil {
+		return dto.Reply{}, fiber.ErrNotFound
+	}
+
+	m.mu.Lock()
+	conn, ok := m.idToClient[msg.ID]
+	m.mu.Unlock()
+	if !ok {
+		return dto.Reply{}, fiber.ErrGone
+	}
+
+	reply := replySave.ToModel()
+	if err := m.reply.Create(ctx, reply); err != nil {
+		zap.S().Error(err)
+		return dto.Reply{}, fiber.ErrInternalServerError
+	}
+
+	if conn != nil {
+		_ = conn.WriteJSON(dto.WSFrame{
+			Event: "replymessage",
+			Data: map[string]any{
+				"name":       reply.Name,
+				"message":    reply.Message,
+				"id":         reply.ID,
+				"message_id": msg.ID,
+			},
+		})
+	}
+
+	return dto.ReplyDTO(reply), nil
+}
+
+func (m *Message) ListenerRemove(conn *websocket.Conn) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for k, v := range m.idToClient {
+		if v == conn {
+			delete(m.idToClient, k)
+		}
+	}
 }

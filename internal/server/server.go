@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/contrib/fiberzap"
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
@@ -12,6 +13,7 @@ import (
 	"github.com/zeusWPI/scc/internal/server/dto"
 	"github.com/zeusWPI/scc/internal/server/service"
 	web "github.com/zeusWPI/scc/internal/server/web"
+	"github.com/zeusWPI/scc/internal/server/ws"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
 )
@@ -23,7 +25,10 @@ type Server struct {
 
 func New(service service.Service) *Server {
 	env := config.GetDefaultString("app.env", "development")
+	port := config.GetDefaultInt("server.port", 4000)
+	host := config.GetDefaultString("server.host", "0.0.0.0")
 
+	// Web template engine
 	engine := html.New("./ui", ".html")
 	engine.AddFunc("lastMessage", func(msgs []dto.Message) dto.Message {
 		return msgs[len(msgs)-1]
@@ -55,7 +60,7 @@ func New(service service.Service) *Server {
 	}))
 	if env != "production" {
 		app.Use(cors.New(cors.Config{
-			AllowOrigins:     "http://localhost:3000",
+			AllowOrigins:     fmt.Sprintf("http://localhost:%d", port),
 			AllowHeaders:     "Origin, Content-Type, Accept, Access-Control-Allow-Origin",
 			AllowCredentials: true,
 		}))
@@ -63,6 +68,17 @@ func New(service service.Service) *Server {
 
 	// Register web routes
 	web.NewMessage(app, service)
+
+	// Register web socket routes
+	socket := app.Group("/ws")
+	socket.Use(func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	ws.NewMessage(socket, service)
 
 	// Register api routes
 	api := app.Group("/api")
@@ -74,9 +90,6 @@ func New(service service.Service) *Server {
 	app.All("/api*", func(c *fiber.Ctx) error {
 		return c.SendStatus(404)
 	})
-
-	port := config.GetDefaultInt("server.port", 4000)
-	host := config.GetDefaultString("server.host", "0.0.0.0")
 
 	srv := &Server{
 		Addr: fmt.Sprintf("%s:%d", host, port),

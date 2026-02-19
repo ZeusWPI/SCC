@@ -42,8 +42,20 @@ func (m *Message) index(c *fiber.Ctx) error {
 		}
 	}
 
+	wsGone := c.Cookies("flash_ws_gone") == "1"
+
+	if wsGone {
+		c.Cookie(&fiber.Cookie{
+			Name:   "flash_ws_gone",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+	}
+
 	return c.Render("pages/index", fiber.Map{
 		"Days":   groups,
 		"LastID": lastID,
+		"WSGone": wsGone,
 	}, "layout/main")
 }

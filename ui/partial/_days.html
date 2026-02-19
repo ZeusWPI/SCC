@@ -2,10 +2,10 @@
   {{range .Days}}
     <section class="space-y-4">
       <div class="flex items-center gap-3">
-        <span class="inline-flex items-center rounded-full bg-orange-300 px-3 py-1 text-sm font-semibold">
+        <span class="inline-flex items-center rounded-full bg-[#b89c83] px-3 py-1 text-sm font-semibold">
           {{.DateLabel}}
         </span>
-        <div class="h-px flex-1 bg-orange-300"></div>
+        <div class="h-px flex-1 bg-[#3f2614]"></div>
       </div>
 
       <div class="space-y-2">
@@ -13,37 +13,39 @@
           {{$first := index .Messages 0}}
           {{$last := lastMessage .Messages}}
 
-          <div class="rounded-lg border border-orange-300 bg-white p-4">
+          <div class="rounded-lg border border-[#3f2614] bg-[#15100c] p-4 space-y-2">
             <div class="flex items-center justify-between">
-              <div class="font-bold">{{$first.Name}}</div>
-              <button
-                type="button"
-                class="js-toggle-reply rounded-lg bg-orange-500 px-3 py-1.5 text-sm cursor-pointer hover:bg-orange-300"
-                data-target="reply-{{$last.ID}}"
-              >
-                Reply
-              </button>
+              <div class="font-bold text-[#e6ddd2]">{{$first.Name}}</div>
+              {{if .Connected}}
+                <button
+                  type="button"
+                  class="js-toggle-reply rounded-lg bg-orange-500 px-3 py-1.5 text-sm cursor-pointer hover:bg-orange-700"
+                  data-target="reply-{{$last.ID}}"
+                >
+                  Reply
+                </button>
+              {{end}}
             </div>
 
             <div class="space-y-2">
               {{range .Messages}}
-                <div class="rounded-lg bg-orange-300 p-3 w-3/4 flex flex-col gap-2">
-                  <div class="flex items-center gap-2 text-neutral-500 text-sm font-semibold">
+                <div class="rounded-lg bg-[#1e140d] p-3 w-3/4 flex flex-col gap-2">
+                  <div class="flex items-center gap-2 text-[#b89c83] text-sm font-semibold">
                     <p>{{.SendAt.Format "15:04"}}</p>
                   </div>
-                  <p>{{.Message}}</p>
+                  <p class="text-[#e6ddd2]">{{.Message}}</p>
                 </div>
 
                 {{if .Replies}}
                   {{range .Replies}}
-                    <div class="rounded-lg bg-orange-400 p-3 w-3/4 ml-auto flex flex-col gap-2">
-                      <div class="flex items-center gap-2 text-neutral-500 text-sm font-semibold">
+                    <div class="rounded-lg bg-[#ff7a1a] p-3 w-3/4 ml-auto flex flex-col gap-2">
+                      <div class="flex items-center gap-2 text-[#120701] text-sm font-bold">
                         {{if .Name}}
                           <p>{{.Name}}</p>
                         {{end}}
                         <p>{{.SendAt.Format "15:04"}}</p>
                       </div>
-                      <p>{{.Message}}</p>
+                      <p class="text-[#120701]">{{.Message}}</p>
                     </div>
                   {{end}}
                 {{end}}
@@ -54,23 +56,23 @@
               id="reply-{{$last.ID}}"
               action="/api/messages/{{$last.ID}}/reply"
               method="post"
-              class="mt-4 hidden"
+              class="mt-4 hidden text-white"
             >
               <div class="flex gap-2">
                 <input
                   name="name"
                   placeholder="Name"
-                  class="rounded-lg p-2 text-sm border-1 border-dashed border-orange-300 focus:border-orange-300/0"
+                  class="rounded-lg p-2 text-sm border-1 border-dashed focus:outline-none focus:border-orange-700 border-orange-400"
                 />
                 <input
                   name="message"
                   placeholder="Message"
                   minlength="1"
-                  class="rounded-lg flex-1 p-2 text-sm border-1 border-dashed border-orange-300 focus:border-orange-300/0"
+                  class="rounded-lg flex-1 p-2 text-sm border-1 border-dashed focus:outline-none focus:border-orange-700 border-orange-400"
                 />
                 <button
                   type="submit"
-                  class="rounded-lg bg-orange-500 px-3 py-1.5 cursor-pointer hover:bg-orange-300"
+                  class="rounded-lg bg-orange-500 text-black px-3 py-1.5 cursor-pointer hover:bg-orange-700"
                 >
                   Send
                 </button>

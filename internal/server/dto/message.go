@@ -27,7 +27,8 @@ func MessageDTO(msg *model.Message) Message {
 }
 
 type MessageCluster struct {
-	Messages []Message `json:"messages"`
+	Messages  []Message `json:"messages"`
+	Connected bool      `json:"connected"`
 }
 
 type MessageDayGroup struct {
