@@ -1,11 +1,11 @@
 {{define "days"}}
   {{range .Days}}
     <section class="space-y-4">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex items-center rounded-full bg-[#b89c83] px-3 py-1 text-sm font-semibold">
+      <div class="flex items-center gap-3 mb-9">
+        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold text-[#8c929f]">
           {{.DateLabel}}
         </span>
-        <div class="h-px flex-1 bg-[#3f2614]"></div>
+        <div class="h-px flex-1 bg-[#1f2937]"></div>
       </div>
 
       <div class="space-y-2">
@@ -13,13 +13,13 @@
           {{$first := index .Messages 0}}
           {{$last := lastMessage .Messages}}
 
-          <div class="rounded-lg border border-[#3f2614] bg-[#15100c] p-4 space-y-2">
+          <div class="rounded-lg border border-[#1f2937] bg-[#020617] p-4 space-y-2">
             <div class="flex items-center justify-between">
-              <div class="font-bold text-[#e6ddd2]">{{$first.Name}}</div>
+              <div class="font-extrabold text-[#dddee1]">{{$first.Name}}</div>
               {{if .Connected}}
                 <button
                   type="button"
-                  class="js-toggle-reply rounded-lg bg-orange-500 px-3 py-1.5 text-sm cursor-pointer hover:bg-orange-700"
+                  class="js-toggle-reply rounded-lg bg-[#f97316] px-3 py-1.5 text-sm cursor-pointer hover:bg-[#f97316]/85"
                   data-target="reply-{{$last.ID}}"
                 >
                   Reply
@@ -29,23 +29,23 @@
 
             <div class="space-y-2">
               {{range .Messages}}
-                <div class="rounded-lg bg-[#1e140d] p-3 w-3/4 flex flex-col gap-2">
-                  <div class="flex items-center gap-2 text-[#b89c83] text-sm font-semibold">
+                <div class="rounded-lg bg-[#111827] p-3 w-3/4 flex flex-col gap-2">
+                  <div class="flex items-center gap-2 text-[#707784] text-sm font-semibold">
                     <p>{{.SendAt.Format "15:04"}}</p>
                   </div>
-                  <p class="text-[#e6ddd2]">{{.Message}}</p>
+                  <p class="text-[#cfd1d4] font-bold">{{.Message}}</p>
                 </div>
 
                 {{if .Replies}}
                   {{range .Replies}}
-                    <div class="rounded-lg bg-[#ff7a1a] p-3 w-3/4 ml-auto flex flex-col gap-2">
-                      <div class="flex items-center gap-2 text-[#120701] text-sm font-bold">
+                    <div class="rounded-lg bg-[#f97316] p-3 w-3/4 ml-auto flex flex-col gap-2">
+                      <div class="flex items-center gap-2 text-[#120701] text-sm font-semibold">
                         {{if .Name}}
                           <p>{{.Name}}</p>
                         {{end}}
                         <p>{{.SendAt.Format "15:04"}}</p>
                       </div>
-                      <p class="text-[#120701]">{{.Message}}</p>
+                      <p class="text-[#120701] font-bold">{{.Message}}</p>
                     </div>
                   {{end}}
                 {{end}}
@@ -62,17 +62,17 @@
                 <input
                   name="name"
                   placeholder="Name"
-                  class="rounded-lg p-2 text-sm border-1 border-dashed focus:outline-none focus:border-orange-700 border-orange-400"
+                  class="rounded-lg p-2 text-sm bg-[#0f172a] focus:outline-none"
                 />
                 <input
                   name="message"
                   placeholder="Message"
                   minlength="1"
-                  class="rounded-lg flex-1 p-2 text-sm border-1 border-dashed focus:outline-none focus:border-orange-700 border-orange-400"
+                  class="rounded-lg flex-1 p-2 text-sm bg-[#0f172a] focus:outline-none"
                 />
                 <button
                   type="submit"
-                  class="rounded-lg bg-orange-500 text-black px-3 py-1.5 cursor-pointer hover:bg-orange-700"
+                  class="rounded-lg bg-[#f97316] text-black px-3 py-1.5 cursor-pointer hover:bg-[#f97316]/85"
                 >
                   Send
                 </button>
