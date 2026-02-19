@@ -52,6 +52,9 @@ backend:
       - "-l100"
       - "-d0"
 
+  ledstrip:
+    url: ""
+
   tap:
     url: "https://tap.zeus.gent"
     beers:

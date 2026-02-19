@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/zeusWPI/scc/internal/buzzer"
 	"github.com/zeusWPI/scc/internal/database/repository"
+	"github.com/zeusWPI/scc/internal/ledstrip"
 	"github.com/zeusWPI/scc/internal/server/dto"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
@@ -27,6 +28,7 @@ type Message struct {
 
 	buzzer    buzzer.Client
 	blacklist []string
+	ledstrip  ledstrip.Client
 }
 
 var messageSingleton *Message
@@ -40,6 +42,7 @@ func (s *Service) NewMessage() *Message {
 			idToClient: map[int]*websocket.Conn{},
 			buzzer:     *buzzer.New(),
 			blacklist:  config.GetDefaultStringSlice("cammie.blacklist", []string{}),
+			ledstrip:   *ledstrip.New(),
 		}
 	}
 
@@ -47,7 +50,6 @@ func (s *Service) NewMessage() *Message {
 }
 
 func (m *Message) Get(ctx context.Context, sinceID int, dayLimit int) ([]dto.MessageDayGroup, error) {
-	zap.S().Debugf("%+v\n", m.idToClient)
 	messagesDB, err := m.message.GetSinceID(ctx, sinceID)
 	if err != nil {
 		zap.S().Error(err)
@@ -173,17 +175,15 @@ func (m *Message) Create(ctx context.Context, conn *websocket.Conn, msgSave dto.
 		return dto.Message{}, fiber.ErrInternalServerError
 	}
 
-	zap.S().Debugf("Map before %+v", m.idToClient)
-
 	m.mu.Lock()
 	m.idToClient[msg.ID] = conn
 	m.mu.Unlock()
 
-	zap.S().Debugf("Map after %+v", m.idToClient)
-
 	if !slices.Contains(m.blacklist, msg.Name) {
 		go m.buzzer.Play()
 	}
+
+	_ = m.ledstrip.Flash(*msg)
 
 	return dto.MessageDTO(msg), nil
 }

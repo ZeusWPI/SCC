@@ -34,7 +34,7 @@ func New() *Client {
 	}
 
 	if !hasBuzzer {
-		zap.S().Debug("No beep executable found.\nMock messages will be used instead")
+		zap.S().Info("No beep executable found.\nMock messages will be used instead")
 	}
 
 	return &Client{
