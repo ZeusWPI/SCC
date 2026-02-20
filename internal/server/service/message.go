@@ -168,7 +168,7 @@ func (m *Message) GetLast(ctx context.Context) (dto.Message, error) {
 	return dto.MessageDTO(msg), nil
 }
 
-func (m *Message) Create(ctx context.Context, conn *websocket.Conn, msgSave dto.MessageSave) (dto.Message, error) {
+func (m *Message) Create(ctx context.Context, msgSave dto.MessageSave, conn *websocket.Conn) (dto.Message, error) {
 	msg := msgSave.ToModel()
 	if err := m.message.Create(ctx, msg); err != nil {
 		zap.S().Error(err)

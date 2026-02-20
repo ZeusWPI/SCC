@@ -77,7 +77,7 @@ func (m *Message) create(c *websocket.Conn) {
 				})
 			}
 
-			created, err := m.message.Create(ctx, c, messageSave)
+			created, err := m.message.Create(ctx, messageSave, c)
 			if err != nil {
 				_ = c.WriteJSON(dto.WSFrame{
 					Event: "error",
