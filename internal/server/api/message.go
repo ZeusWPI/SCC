@@ -82,8 +82,10 @@ func (m *Message) create(c *fiber.Ctx) error {
 	// /cammiechat uses text/plain
 	var message dto.MessageSave
 
-	switch {
-	case c.Is("application/json"):
+	contentType := c.Get("Content-Type")
+
+	switch contentType {
+	case "application/json":
 		if err := c.BodyParser(&message); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
