@@ -37,7 +37,7 @@
 
   async function pollNewMessages() {
     try {
-      const res = await fetch(`/api/messages/last`, {
+      const res = await fetch(`/messages/last`, {
         credentials: "same-origin",
         headers: { "Accept": "application/json" },
         cache: "no-store",

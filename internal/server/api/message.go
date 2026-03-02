@@ -26,9 +26,45 @@ func NewMessage(router fiber.Router, service service.Service) *Message {
 }
 
 func (m *Message) createRoutes() {
+	m.router.Get("/", m.index)
 	m.router.Get("/last", m.getLast)
 	m.router.Post("/", m.create)
 	m.router.Post("/:id/reply", m.replyMsg)
+}
+
+func (m *Message) index(c *fiber.Ctx) error {
+	groups, err := m.message.Get(c.Context(), -1, 100)
+	if err != nil {
+		return err
+	}
+
+	lastID := 0
+	for _, g := range groups {
+		for _, cl := range g.Clusters {
+			for _, msg := range cl.Messages {
+				if msg.ID > lastID {
+					lastID = msg.ID
+				}
+			}
+		}
+	}
+
+	wsGone := c.Cookies("flash_ws_gone") == "1"
+
+	if wsGone {
+		c.Cookie(&fiber.Cookie{
+			Name:   "flash_ws_gone",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+	}
+
+	return c.Render("pages/index", fiber.Map{
+		"Days":   groups,
+		"LastID": lastID,
+		"WSGone": wsGone,
+	}, "layout/main")
 }
 
 func (m *Message) getLast(c *fiber.Ctx) error {

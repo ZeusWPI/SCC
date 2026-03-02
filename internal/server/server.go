@@ -12,7 +12,6 @@ import (
 	routers "github.com/zeusWPI/scc/internal/server/api"
 	"github.com/zeusWPI/scc/internal/server/dto"
 	"github.com/zeusWPI/scc/internal/server/service"
-	web "github.com/zeusWPI/scc/internal/server/web"
 	"github.com/zeusWPI/scc/internal/server/ws"
 	"github.com/zeusWPI/scc/pkg/config"
 	"go.uber.org/zap"
@@ -66,9 +65,6 @@ func New(service service.Service) *Server {
 		}))
 	}
 
-	// Register web routes
-	web.NewMessage(app, service)
-
 	// Register web socket routes
 	socket := app.Group("/ws")
 	socket.Use(func(c *fiber.Ctx) error {
@@ -81,13 +77,13 @@ func New(service service.Service) *Server {
 	ws.NewMessage(socket, service)
 
 	// Register api routes
-	api := app.Group("/api")
+	api := app.Group("/")
 
 	routers.NewMessage(api, service)
 	routers.NewSong(api, service)
 
 	// Fallback
-	app.All("/api*", func(c *fiber.Ctx) error {
+	app.All("/*", func(c *fiber.Ctx) error {
 		return c.SendStatus(404)
 	})
 
