@@ -77,11 +77,27 @@ func (m *Message) getLast(c *fiber.Ctx) error {
 }
 
 func (m *Message) create(c *fiber.Ctx) error {
-	// Used by hydra and /cammiechat in mattermost
-	// It just sends plain text
-	msg := string(c.Body())
+	// Used by Hydra and /cammiechat in mattermost
+	// Hydra uses application/json
+	// /cammiechat uses text/plain
+	var message dto.MessageSave
 
-	newMessage, err := m.message.Create(c.Context(), dto.MessageSave{Message: msg}, nil)
+	switch {
+	case c.Is("application/json"):
+		if err := c.BodyParser(&message); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+		if err := dto.Validate.Struct(message); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+
+	default:
+		message = dto.MessageSave{
+			Message: string(c.Body()),
+		}
+	}
+
+	newMessage, err := m.message.Create(c.Context(), message, nil)
 	if err != nil {
 		return err
 	}
