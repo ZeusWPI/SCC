@@ -33,7 +33,7 @@ func (m *Message) createRoutes() {
 }
 
 func (m *Message) index(c *fiber.Ctx) error {
-	groups, err := m.message.Get(c.Context(), -1, 100)
+	groups, err := m.message.Get(c.Context(), -1, 20)
 	if err != nil {
 		return err
 	}
