@@ -38,14 +38,19 @@ type MessageDayGroup struct {
 }
 
 type MessageSave struct {
-	Name    string `json:"name" validate:"required"`
-	IP      string `json:"ip" validate:"required"`
+	Name    string `json:"name"`
+	IP      string `json:"ip"`
 	Message string `json:"message" validate:"required"`
 }
 
 func (m *MessageSave) ToModel() *model.Message {
+	name := m.Name
+	if name == "" {
+		name = "-"
+	}
+
 	return &model.Message{
-		Name:    m.Name,
+		Name:    name,
 		IP:      m.IP,
 		Message: m.Message,
 	}
