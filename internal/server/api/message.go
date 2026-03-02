@@ -77,16 +77,11 @@ func (m *Message) getLast(c *fiber.Ctx) error {
 }
 
 func (m *Message) create(c *fiber.Ctx) error {
-	var message dto.MessageSave
+	// Used by hydra and /cammiechat in mattermost
+	// It just sends plain text
+	msg := string(c.Body())
 
-	if err := c.BodyParser(&message); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	if err := dto.Validate.Struct(message); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-
-	newMessage, err := m.message.Create(c.Context(), message, nil)
+	newMessage, err := m.message.Create(c.Context(), dto.MessageSave{Message: msg}, nil)
 	if err != nil {
 		return err
 	}
