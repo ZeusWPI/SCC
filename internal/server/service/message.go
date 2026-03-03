@@ -175,9 +175,11 @@ func (m *Message) Create(ctx context.Context, msgSave dto.MessageSave, conn *web
 		return dto.Message{}, fiber.ErrInternalServerError
 	}
 
-	m.mu.Lock()
-	m.idToClient[msg.ID] = conn
-	m.mu.Unlock()
+	if conn != nil {
+		m.mu.Lock()
+		m.idToClient[msg.ID] = conn
+		m.mu.Unlock()
+	}
 
 	if !slices.Contains(m.blacklist, msg.Name) {
 		go m.buzzer.Play()
