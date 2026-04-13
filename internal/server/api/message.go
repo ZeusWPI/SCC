@@ -99,6 +99,8 @@ func (m *Message) create(c *fiber.Ctx) error {
 		}
 	}
 
+	message.IP = c.Get("X-Real-IP")
+
 	newMessage, err := m.message.Create(c.Context(), message, nil)
 	if err != nil {
 		return err

@@ -28,7 +28,7 @@ func NewMessage(router fiber.Router, service service.Service) *Message {
 
 func (m *Message) createRoutes() {
 	m.router.Get("", func(c *fiber.Ctx) error {
-		ip := c.IP()
+		ip := c.Get("X-Real-IP")
 		c.Locals("ip", ip)
 
 		return websocket.New(m.create)(c)
