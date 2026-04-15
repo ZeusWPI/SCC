@@ -33,7 +33,7 @@
                   <div class="flex items-center gap-2 text-[#707784] text-sm font-semibold">
                     <p>{{.SendAt.Format "15:04"}}</p>
                   </div>
-                  <p class="text-[#cfd1d4] font-bold">{{.Message}}</p>
+                  <p class="text-[#cfd1d4] font-bold break-all">{{.Message}}</p>
                 </div>
 
                 {{if .Replies}}
@@ -45,7 +45,7 @@
                         {{end}}
                         <p>{{.SendAt.Format "15:04"}}</p>
                       </div>
-                      <p class="text-[#120701] font-bold">{{.Message}}</p>
+                      <p class="text-[#120701] font-bold break-all">{{.Message}}</p>
                     </div>
                   {{end}}
                 {{end}}
