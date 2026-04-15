@@ -58,7 +58,8 @@ To use a custom database, update the config and edit the makefile.
 
 1. Migrate the database `make migrate`.
 2. Start the backend `make backend`.
-3. Start a TUI `make tui` and enter the desired screen name (if you're not using the makefile use the `-screen` flag to specify the screen).
+3. You can view the messages UI on `http://localhost:3001/messages`.
+4. Start a TUI `make tui` and enter the desired screen name (if you're not using the makefile use the `-screen` flag to specify the screen).
 
 ### Logs
 
