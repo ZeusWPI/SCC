@@ -13,7 +13,7 @@
           {{$first := index .Messages 0}}
           {{$last := lastMessage .Messages}}
 
-          <div class="rounded-lg border border-[#D1D3D8] bg-[#F4F5FE] dark:bg-[#020617] p-4 space-y-2">
+          <div class="rounded-lg border border-[#D1D3D8] dark:border-[#1F2937] bg-[#F4F5FE] dark:bg-[#020617] p-4 space-y-2">
             <div class="flex items-center justify-between">
               <div class="font-extrabold text-[#020617] dark:text-[#DDDEE1]">{{$first.Name}}</div>
               {{if .Connected}}
