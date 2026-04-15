@@ -1,7 +1,6 @@
 package song
 
 import (
-	"errors"
 	"time"
 
 	"github.com/zeusWPI/scc/internal/database/model"
@@ -25,14 +24,14 @@ type client struct {
 
 var C *client
 
-func Init() error {
+func Init() {
 	clientID := config.GetDefaultString("backend.song.spotify_client_id", "")
 	clientSecret := config.GetDefaultString("backend.song.spotify_client_secret", "")
 
 	zap.S().Info(clientID)
 
 	if clientID == "" || clientSecret == "" {
-		return errors.New("spotify client id or secret not set")
+		zap.S().Warn("No spotify client id or secret set.\nThe spotify integration is turned off")
 	}
 
 	C = &client{
@@ -40,11 +39,13 @@ func Init() error {
 		clientSecret: clientSecret,
 		expiresTime:  0,
 	}
-
-	return nil
 }
 
 func (c *client) Populate(song *model.Song) error {
+	if c.clientID == "" || c.clientSecret == "" {
+		return nil
+	}
+
 	zap.S().Info("Populating song")
 
 	if c.expiresTime <= time.Now().Unix() {

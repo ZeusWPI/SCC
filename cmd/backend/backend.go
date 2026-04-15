@@ -48,9 +48,7 @@ func main() {
 	dones = append(dones, done)
 
 	// Song
-	if err := cmd.Song(); err != nil {
-		zap.S().Fatalf("Initialize song %v", err)
-	}
+	cmd.Song()
 
 	// API
 	service := service.New(*repo)
