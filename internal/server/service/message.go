@@ -183,9 +183,8 @@ func (m *Message) Create(ctx context.Context, msgSave dto.MessageSave, conn *web
 
 	if !slices.Contains(m.blacklist, msg.Name) {
 		go m.buzzer.Play()
+		_ = m.ledstrip.Flash(*msg)
 	}
-
-	_ = m.ledstrip.Flash(*msg)
 
 	return dto.MessageDTO(msg), nil
 }
