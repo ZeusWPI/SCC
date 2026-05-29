@@ -3,13 +3,11 @@ package server
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/gofiber/contrib/fiberzap"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/template/html/v2"
 	routers "github.com/zeusWPI/scc/internal/server/api"
 	"github.com/zeusWPI/scc/internal/server/dto"
@@ -58,10 +56,6 @@ func New(service service.Service) *Server {
 
 	app.Use(fiberzap.New(fiberzap.Config{
 		Logger: zap.L(),
-	}))
-	app.Use(limiter.New(limiter.Config{
-		Max:        1,
-		Expiration: 1 * time.Second,
 	}))
 	if env != "production" {
 		app.Use(cors.New(cors.Config{
