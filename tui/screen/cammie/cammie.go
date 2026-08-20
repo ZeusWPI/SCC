@@ -60,7 +60,7 @@ func New(repo repository.Repository) screen.Screen {
 }
 
 func (c *Cammie) Init() tea.Cmd {
-	cmds := make([]tea.Cmd, 0, 3 + len(c.top))
+	cmds := make([]tea.Cmd, 3, 3 + len(c.top))
 	cmds[0] = updateTopIndex(*c)
 	cmds[1] = c.messages.Init()
 	cmds[2] = c.bottom.Init()
