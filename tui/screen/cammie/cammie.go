@@ -60,7 +60,11 @@ func New(repo repository.Repository) screen.Screen {
 }
 
 func (c *Cammie) Init() tea.Cmd {
-	cmds := []tea.Cmd{updateTopIndex(*c), c.messages.Init(), c.bottom.Init()}
+	cmds := make([]tea.Cmd, 3, 3 + len(c.top))
+	cmds[0] = updateTopIndex(*c)
+	cmds[1] = c.messages.Init()
+	cmds[2] = c.bottom.Init()
+
 	for _, view := range c.top {
 		cmds = append(cmds, view.Init())
 	}

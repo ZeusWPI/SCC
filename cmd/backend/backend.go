@@ -37,7 +37,7 @@ func main() {
 	// Repository
 	repo := repository.New(db)
 
-	var dones []chan bool
+	dones := make([]chan bool, 0, 2)
 
 	// Tap
 	_, done := cmd.Tap(*repo)
