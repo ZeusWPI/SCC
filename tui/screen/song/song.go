@@ -46,7 +46,7 @@ func (s *Song) Update(msg tea.Msg) (screen.Screen, tea.Cmd) {
 		break
 	}
 
-	cmds := make([]tea.Cmd, 0)
+	cmds := make([]tea.Cmd, 0, 1)
 	var cmd tea.Cmd
 
 	s.song, cmd = s.song.Update(msg)
